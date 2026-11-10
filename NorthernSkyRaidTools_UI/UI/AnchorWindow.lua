@@ -399,7 +399,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
 
     -- Title
     local title = win:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(title, 11, "")
+    NSI:SetUIFont(title, "tiny", "")
     title:SetTextColor(Accent(0.85))
     title:SetText(T(ANCHOR_SETTING_TITLES[settingsName] or settingsName:gsub("Settings", " Settings")))
     title:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -7)

@@ -204,7 +204,7 @@ local function ShowAuraTrackingExportPopup(text, label)
         auraTrackingExportPopup:SetFrameLevel(100)
 
         auraTrackingExportPopup.infoLabel = auraTrackingExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraTrackingExportPopup.infoLabel, 13, "")
+        NSI:SetUIFont(auraTrackingExportPopup.infoLabel, "label", "")
         auraTrackingExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
         auraTrackingExportPopup.infoLabel:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -30)
 
@@ -215,7 +215,7 @@ local function ShowAuraTrackingExportPopup(text, label)
         DF:ApplyStandardBackdrop(auraTrackingExportPopup.textbox)
         DF:ReskinSlider(auraTrackingExportPopup.textbox.scroll)
         auraTrackingExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraTrackingExportPopup.textbox.editbox, 13, "OUTLINE")
+        NSI:SetUIFont(auraTrackingExportPopup.textbox.editbox, "label")
 
         local doneBtn = CreateLocalizedButton(auraTrackingExportPopup, "Done", function()
             auraTrackingExportPopup:Hide()
@@ -237,7 +237,7 @@ local function ShowAuraTrackingImportPopup(onImport)
         auraTrackingImportPopup:SetFrameLevel(100)
 
         auraTrackingImportPopup.statusLabel = auraTrackingImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraTrackingImportPopup.statusLabel, 13, "")
+        NSI:SetUIFont(auraTrackingImportPopup.statusLabel, "label", "")
         auraTrackingImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
         auraTrackingImportPopup.statusLabel:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -30)
 
@@ -248,7 +248,7 @@ local function ShowAuraTrackingImportPopup(onImport)
         DF:ApplyStandardBackdrop(auraTrackingImportPopup.textbox)
         DF:ReskinSlider(auraTrackingImportPopup.textbox.scroll)
         auraTrackingImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraTrackingImportPopup.textbox.editbox, 13, "OUTLINE")
+        NSI:SetUIFont(auraTrackingImportPopup.textbox.editbox, "label")
 
         local importBtn = CreateLocalizedButton(auraTrackingImportPopup, "Import", function()
             local success, imported = NSI:ImportAuraTrackingString(auraTrackingImportPopup.textbox:GetText())
@@ -370,7 +370,7 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(title, 16, "OUTLINE")
+    NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
     title:SetText(NSI:Loc("|cFF00FFFFAura|r Tracking"))
 
@@ -380,7 +380,7 @@ local function BuildAuraTrackingUI(screen)
     searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
     searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
-    NSI:SetUIFont(searchHint, 14, "")
+    NSI:SetUIFont(searchHint, "body", "")
     local function UpdateSearchHint(eb) searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus()) end
     searchEntry.editBox:SetScript("OnTextChanged", function(self)
         searchText = self:GetText(); UpdateSearchHint(self); RebuildList()
@@ -394,7 +394,7 @@ local function BuildAuraTrackingUI(screen)
         NSI:SetUseBuiltinAuraTrackings(enabled)
     end, leftWidth - pad * 2, 22, "NSUIAuraTrackUseBuiltins", NSI:Loc("Automatically enables all current and future built-in boss Aura Trackings. Manual enabled-state changes are kept."))
     useBuiltinsCheckbox:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 50)
-    NSI:SetUIFont(useBuiltinsCheckbox.label, 11, "")
+    NSI:SetUIFont(useBuiltinsCheckbox.label, "tiny", "")
 
     -- ── Left: bottom buttons ────────────────────────────────────────────────
     local createBtn = CreateLocalizedButton(screen, "Create Aura", function()
@@ -458,7 +458,7 @@ local function BuildAuraTrackingUI(screen)
         row.icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
         row.name = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.name, 13, "")
+        NSI:SetUIFont(row.name, "label", "")
         row.name:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -34, 0)
         row.name:SetJustifyH("LEFT")
@@ -505,7 +505,7 @@ local function BuildAuraTrackingUI(screen)
         row.arrow:SetVertexColor(0.4, 0.85, 1, 1)
 
         row.name = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.name, 13, NSI:GetUIFontFlags())
+        NSI:SetUIFont(row.name, "label")
         row.name:SetTextColor(0.2, 0.85, 1, 1)
         row.name:SetPoint("LEFT", row, "LEFT", 20, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -34, 0)
@@ -513,7 +513,7 @@ local function BuildAuraTrackingUI(screen)
         row.name:SetWordWrap(false)
 
         row.count = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.count, 12, NSI:GetUIFontFlags())
+        NSI:SetUIFont(row.count, "small")
         row.count:SetTextColor(unpack(STYLE.text_hint))
         row.count:SetPoint("RIGHT", row, "RIGHT", -4, 0)
 
@@ -598,39 +598,23 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Context menus ────────────────────────────────────────────────────────
     local function PromptNewGroup(onCreate)
-        StaticPopupDialogs["NSRT_AURATRACK_NEW_GROUP"] = {
-            text = NSI:Loc("Enter new group name:"), button1 = NSI:Loc("OK"), button2 = NSI:Loc("Cancel"),
-            hasEditBox = true, timeout = 0, whileDead = true, hideOnEscape = true,
-            OnAccept = function(self)
-                local newName = self.EditBox:GetText()
-                if newName and newName ~= "" then NSI:AddAuraTrackingGroup(newName); if onCreate then onCreate(newName) end end
+        NSI.UI.Components.CreateInputDialog("AuraTrackNewGroup", NSI:Loc("New Group"), NSI:Loc("Enter new group name:"), {
+            onAccept = function(newName)
+                if newName == "" then return end
+                NSI:AddAuraTrackingGroup(newName)
+                if onCreate then onCreate(newName) end
             end,
-            EditBoxOnEnterPressed = function(self)
-                local parent = self:GetParent()
-                StaticPopupDialogs["NSRT_AURATRACK_NEW_GROUP"].OnAccept(parent); parent:Hide()
-            end,
-        }
-        StaticPopup_Show("NSRT_AURATRACK_NEW_GROUP")
+        })
     end
 
     local function PromptRenameGroup(groupName)
-        StaticPopupDialogs["NSRT_AURATRACK_RENAME_GROUP"] = {
-            text = NSI:Loc("Rename Group"), button1 = NSI:Loc("OK"), button2 = NSI:Loc("Cancel"),
-            hasEditBox = true, timeout = 0, whileDead = true, hideOnEscape = true,
-            OnShow = function(self)
-                self.EditBox:SetText(groupName)
-                self.EditBox:HighlightText()
+        NSI.UI.Components.CreateInputDialog("AuraTrackRenameGroup", NSI:Loc("Rename Group"), NSI:Loc("Enter new group name:"), {
+            default = groupName,
+            onAccept = function(newName)
+                if newName == "" or newName == groupName then return end
+                NSI:RenameAuraTrackingGroup(groupName, newName)
             end,
-            OnAccept = function(self)
-                NSI:RenameAuraTrackingGroup(groupName, self.EditBox:GetText())
-            end,
-            EditBoxOnEnterPressed = function(self)
-                local parent = self:GetParent()
-                StaticPopupDialogs["NSRT_AURATRACK_RENAME_GROUP"].OnAccept(parent)
-                parent:Hide()
-            end,
-        }
-        StaticPopup_Show("NSRT_AURATRACK_RENAME_GROUP")
+        })
     end
 
     local function GetGroupPreviewKeys(groupName)
@@ -921,7 +905,7 @@ local function BuildAuraTrackingUI(screen)
     rightPanel:Hide()
 
     local nameLbl = rightPanel:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(nameLbl, 11, "")
+    NSI:SetUIFont(nameLbl, "tiny", "")
     nameLbl:SetTextColor(unpack(STYLE.text_muted))
     nameLbl:SetText(NSI:Loc("Aura Name"))
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
@@ -933,7 +917,7 @@ local function BuildAuraTrackingUI(screen)
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -14)
 
     local groupLbl = rightPanel:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(groupLbl, 11, "")
+    NSI:SetUIFont(groupLbl, "tiny", "")
     groupLbl:SetTextColor(unpack(STYLE.text_muted))
     groupLbl:SetText(NSI:Loc("Group"))
     groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
@@ -1041,7 +1025,7 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Fixed anchor row below the display type selector ────────────────────
     local anchorLbl = displayF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(anchorLbl, 11, "")
+    NSI:SetUIFont(anchorLbl, "tiny", "")
     anchorLbl:SetTextColor(unpack(STYLE.text_gold))
     anchorLbl:SetText(NSI:Loc("Anchor Frame"))
     anchorLbl:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -displayTypeHeight)
@@ -1065,7 +1049,7 @@ local function BuildAuraTrackingUI(screen)
     anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -displayTypeHeight - 18)
 
     local attachLbl = displayF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(attachLbl, 11, "")
+    NSI:SetUIFont(attachLbl, "tiny", "")
     attachLbl:SetTextColor(unpack(STYLE.text_gold))
     attachLbl:SetText(NSI:Loc("Attach to"))
     attachEntry = CreateTextEntry(displayF, nil,
@@ -1791,7 +1775,7 @@ local function BuildAuraTrackingUI(screen)
     loadScroll:SetScrollChild(loadChild)
 
     local lockedEncounterLabel = loadChild:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(lockedEncounterLabel, 12, "")
+    NSI:SetUIFont(lockedEncounterLabel, "small", "")
     lockedEncounterLabel:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 4, -2)
     lockedEncounterLabel:SetTextColor(unpack(STYLE.text_gold))
     lockedEncounterLabel:Hide()
@@ -1810,7 +1794,7 @@ local function BuildAuraTrackingUI(screen)
         btn.arrow:SetPoint("LEFT", btn, "LEFT", 2, 0)
         btn.arrow:SetVertexColor(unpack(STYLE.text_muted))
         btn.text = btn:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(btn.text, 11, "")
+        NSI:SetUIFont(btn.text, "tiny", "")
         btn.text:SetTextColor(unpack(STYLE.text_muted))
         btn.text:SetPoint("LEFT", btn, "LEFT", 16, 0)
         btn:SetScript("OnEnter", function() btn.text:SetTextColor(unpack(STYLE.text_soft)) end)
@@ -1850,7 +1834,7 @@ local function BuildAuraTrackingUI(screen)
         lblFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
         lblFrame:SetHeight(20)
         row.label = lblFrame:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.label, 12, "")
+        NSI:SetUIFont(row.label, "small", "")
         row.label:SetAllPoints(lblFrame)
         row.label:SetJustifyH("LEFT")
         row.label:SetJustifyV("MIDDLE")
@@ -1885,7 +1869,7 @@ local function BuildAuraTrackingUI(screen)
     end
 
     local namesLabel = loadF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(namesLabel, 11, "")
+    NSI:SetUIFont(namesLabel, "tiny", "")
     namesLabel:SetTextColor(unpack(STYLE.text_muted))
     namesLabel:SetText(NSI:Loc("Character Names (no server name)"))
     namesLabel:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 14)
@@ -1928,7 +1912,7 @@ local function BuildAuraTrackingUI(screen)
         row.bg = row:CreateTexture(nil, "BACKGROUND")
         row.bg:SetAllPoints()
         row.label = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.label, 12, "")
+        NSI:SetUIFont(row.label, "small", "")
         row.label:SetPoint("LEFT", row, "LEFT", 8, 0)
         row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
         row.label:SetJustifyH("LEFT")
@@ -2181,7 +2165,7 @@ local function BuildAuraTrackingUI(screen)
     displaySearchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     displaySearchHint:SetPoint("LEFT", displaySearchEntry.editBox, "LEFT", 2, 0)
     displaySearchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
-    NSI:SetUIFont(displaySearchHint, 14, "")
+    NSI:SetUIFont(displaySearchHint, "body", "")
     local function UpdateDisplaySearchHint(editBox)
         displaySearchHint:SetShown(editBox:GetText() == "" and not editBox:HasFocus())
     end
@@ -2298,12 +2282,12 @@ local function BuildAuraTrackingUI(screen)
         statsPanel:Hide()
 
         local titleLbl = statsPanel:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(titleLbl, 16, "OUTLINE")
+        NSI:SetUIFont(titleLbl, "title")
         titleLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, 0)
         titleLbl:SetText(NSI:Loc("Player Stats Display"))
 
         local descLbl = statsPanel:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(descLbl, 12, "")
+        NSI:SetUIFont(descLbl, "small", "")
         descLbl:SetTextColor(unpack(STYLE.text_soft))
         descLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -22)
         descLbl:SetPoint("RIGHT", statsPanel, "RIGHT", 0, 0)
@@ -2312,7 +2296,7 @@ local function BuildAuraTrackingUI(screen)
         descLbl:SetText(NSI:Loc("Shows a small always-on text block with the combat rating stats you choose below. Disabled by default."))
 
         local anchorLbl = statsPanel:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(anchorLbl, 11, "")
+        NSI:SetUIFont(anchorLbl, "tiny", "")
         anchorLbl:SetTextColor(unpack(STYLE.text_gold))
         anchorLbl:SetText(NSI:Loc("Anchor Frame"))
         anchorLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -60)

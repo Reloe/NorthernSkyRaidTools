@@ -85,7 +85,7 @@ local function BuildExportStringUI()
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, "label")
 
     popup.export_confirm_button = CreateLocalizedButton(popup, "Done", function()
         popup:Hide()
@@ -124,7 +124,7 @@ local function BuildImportStringUI()
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, "label")
 
     local pendingSharedImport
     local pendingConflictImport
@@ -282,7 +282,7 @@ local function BuildGroupExportUI()
     popup.text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    NSI:SetUIFont(popup.text_box.editbox, 13, "OUTLINE")
+    NSI:SetUIFont(popup.text_box.editbox, "label")
 
     popup.done_button = CreateLocalizedButton(popup, "Done", function()
         popup:Hide()

@@ -206,7 +206,7 @@ local function ImportReminderString(name, IsUpdate)
             self:SetFocus()
         end)
     end
-    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, "label")
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
     popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and "Update" or "Import"
@@ -274,7 +274,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
             self:SetFocus()
         end)
     end
-    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, "label")
     popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
     popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and NSI:Loc("Update") or NSI:Loc("Import")
@@ -361,7 +361,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
     -- Title
     local title = screen:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(title, 16, "OUTLINE")
+    NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
     title:SetText(titleText)
 
@@ -595,7 +595,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local nameEntry = DF:CreateTextEntry(screen, function() end, nameEntryW, 22, nil, screenName .. "NameEntry", nil,
         options_dropdown_template)
     nameEntry:SetPoint("TOPLEFT", diffDropdown.widget, "TOPRIGHT", metaGap, 0)
-    NSI:SetUIFont(nameEntry.editbox, 14, "OUTLINE")
+    NSI:SetUIFont(nameEntry.editbox, "body")
     screen.nameEntry = nameEntry
 
     -- Jumps straight to this note in the Timeline (opening it if needed) — mirrors
@@ -615,7 +615,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
     if personal then
         local specLabel = DF:CreateLabel(screen, NSI:Loc("Auto-load specialization:"), 12)
-        NSI:SetUIFont(specLabel.widget, 12)
+        NSI:SetUIFont(specLabel.widget, "small")
         specLabel.widget:SetTextColor(unpack(STYLE.text_color))
         specLabel:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - 31)
         local function BuildSpecOptions()
@@ -751,7 +751,7 @@ local function BuildReminderScreen(personal, parentFrame)
     screen.editor = editor
 
     local function UpdateEditorFont()
-        NSI:SetUIFont(editor.editbox, 14, "OUTLINE")
+        NSI:SetUIFont(editor.editbox, "body")
     end
 
     -- ====================================================================
@@ -946,7 +946,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
         -- "Received X ago" label – bottom-right of editor, visible only while viewing received note
         local recvTimeLabel = screen:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(recvTimeLabel, 11, "")
+        NSI:SetUIFont(recvTimeLabel, "tiny", "")
         recvTimeLabel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -25, 14)
         recvTimeLabel:SetTextColor(unpack(STYLE.text_muted))
         recvTimeLabel:Hide()
@@ -1247,7 +1247,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
         -- Name label (click line to select)
         line.nameLabel = line:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(line.nameLabel, 14, "")
+        NSI:SetUIFont(line.nameLabel, "body", "")
         line.nameLabel:SetPoint("LEFT", line, "LEFT", 4, 0)
         line.nameLabel:SetPoint("RIGHT", line, "RIGHT", -38, 0)
         line.nameLabel:SetJustifyH("LEFT")

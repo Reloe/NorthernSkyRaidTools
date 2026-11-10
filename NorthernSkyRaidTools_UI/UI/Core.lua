@@ -9,15 +9,19 @@ local LDBIcon = LibStub("LibDBIcon-1.0")
 local window_width  = 1200
 local window_height = 640
 
+-- Window shell: header (title bar + header buttons) and footer (version / author / Discord)
+local header_height = 36
+local footer_height = 20
+
 -- Vertical tab sidebar layout constants
 local sidebar_width    = 160
 local content_x        = 162   -- sidebar + 2px separator gap
 local content_width    = window_width - content_x - 2   -- 1036
-local content_height   = window_height - 45              -- 595 (25 titlebar + 20 statusbar)
+local content_height   = window_height - header_height - footer_height   -- 584
 
--- Height of the shared header strip above each tab content frame
--- (tab frames start at y = -(25 + TAB_HEADER_HEIGHT) from NSUI TOPLEFT)
-local TAB_HEADER_HEIGHT = 55
+-- Height of the strip above each tab content frame (holds the Shared/Personal Notes buttons)
+-- (tab frames start at y = -(header_height + TAB_HEADER_HEIGHT) from NSUI TOPLEFT)
+local TAB_HEADER_HEIGHT = 44
 local tab_content_height = content_height - TAB_HEADER_HEIGHT  -- 540
 
 local authorsString = "By Reloe & Rav"
@@ -31,9 +35,31 @@ local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLAT
 
 NSI.UIFontRegistry = NSI.UIFontRegistry or {}
 
+-- Text inside windows is never outlined: outline is for text drawn over the game
+-- world. The user's GlobalFontFlags still drive in-world displays untouched; windows
+-- keep its other flags (SLUG, MONOCHROME) and drop OUTLINE / THICKOUTLINE.
+function NSI:GetWindowFontFlags()
+    local flags = NSRT and NSRT.Settings and NSRT.Settings.GlobalFontFlags or ""
+    if flags == "" then return "" end
+    local kept = {}
+    for flag in flags:gmatch("[^,%s]+") do
+        if flag ~= "OUTLINE" and flag ~= "THICKOUTLINE" then
+            kept[#kept + 1] = flag
+        end
+    end
+    return table.concat(kept, ", ")
+end
+
+-- size is a number or a type-scale name from STYLE.type ("title", "body", "label",
+-- "small", "tiny"). flags: nil follows GetWindowFontFlags(); "" forces plain text.
 function NSI:SetUIFont(object, size, flags)
     if not object or not object.SetFont then return end
-    flags = flags or self:GetUIFontFlags()
+    local explicitFlags = flags
+    flags = flags or self:GetWindowFontFlags()
+    local style = self.UI and self.UI.Style
+    if type(size) == "string" then
+        size = style and style.FontSize(size)
+    end
     if not size and object.GetFont then
         local ok, _, currentSize = pcall(object.GetFont, object)
         if ok then size = currentSize end
@@ -43,15 +69,18 @@ function NSI:SetUIFont(object, size, flags)
     if not ok then
         pcall(object.SetFont, object, self:GetFallbackUIFontPath(), size, flags)
     end
-    self.UIFontRegistry[object] = {size = size, flags = flags}
+    -- Remember what the caller asked for (not the resolved default) so a later change
+    -- of the global flags is followed on the next RefreshUIFonts.
+    self.UIFontRegistry[object] = {size = size, flags = explicitFlags}
 end
 
 function NSI:RefreshUIFonts()
     for object, info in pairs(self.UIFontRegistry) do
         if object and object.SetFont then
-            local ok = pcall(object.SetFont, object, self:GetUIFontPath(), info.size, info.flags or self:GetUIFontFlags())
+            local flags = info.flags or self:GetWindowFontFlags()
+            local ok = pcall(object.SetFont, object, self:GetUIFontPath(), info.size, flags)
             if not ok then
-                pcall(object.SetFont, object, self:GetFallbackUIFontPath(), info.size, info.flags or self:GetUIFontFlags())
+                pcall(object.SetFont, object, self:GetFallbackUIFontPath(), info.size, flags)
             end
         else
             self.UIFontRegistry[object] = nil
@@ -85,50 +114,7 @@ function NSI:ApplySelectedLanguage(skip)
     end
 end
 
--- Create main panel
-local NSUI_panel_options = {
-    UseStatusBar = true,
-}
-local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Raid Tools", "NSUI",
-    NSUI_panel_options)
--- Pixel-space scale x the user's own window scale (DF's scale bar and NSUI:SetScale
--- are redirected through the shim, so they keep driving the user part).
-NSI.UI.Pixel.PixelSpace(NSUI, function()
-    return NSRT and NSRT.NSUI and tonumber(NSRT.NSUI.scale) or 1
-end)
-NSUI:SetPoint("CENTER")
-NSUI:SetFrameStrata("HIGH")
-NSUI:SetFrameLevel(1)
-NSUI:Hide()
-DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, addonId, "x |cFF00FFFFbird|r")
-NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
-
--- Title bar icons
-local northernSkyIconFrame = CreateFrame("Frame", "NSUINorthernSkyTitleIconFrame", NSUI)
-northernSkyIconFrame:SetSize(20, 20)
-northernSkyIconFrame:SetPoint("RIGHT", _G["NSUITitle"], "LEFT", -4, 0)
-northernSkyIconFrame:SetFrameLevel(3)
-
-local velocityIconFrame = CreateFrame("Frame", "NSUIVelocityTitleIconFrame", NSUI)
-velocityIconFrame:SetSize(16, 16)
-velocityIconFrame:SetPoint("LEFT", _G["NSUITitle"], "RIGHT", 4, 0)
-velocityIconFrame:SetFrameLevel(3)
-
-local northernSkyIcon = northernSkyIconFrame:CreateTexture(nil, "OVERLAY")
-northernSkyIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo]])
-northernSkyIcon:SetSize(20, 20)
-northernSkyIcon:SetPoint("CENTER")
-
-local velocityIcon = velocityIconFrame:CreateTexture(nil, "OVERLAY")
-velocityIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\VelocityLogo.png]])
-velocityIcon:SetSize(16, 16)
-velocityIcon:SetPoint("CENTER")
-
-NSUI.OptionsChanged = {
-    ["general"] = {},
-    ["nicknames"] = {},
-    ["versions"] = {},
-}
+-- The main window itself is created in MainWindow.lua (see Window.lua).
 
 -- Shared helper functions
 local function build_media_options(typename, settingname, isTexture, isReminder, Personal, GlobalFont)
@@ -255,9 +241,11 @@ end
 -- Export to namespace
 NSI.UI = NSI.UI or {}
 NSI.UI.Core = {
-    NSUI = NSUI,
+    -- NSUI (the main window) is added by MainWindow.lua
     window_width        = window_width,
     window_height       = window_height,
+    header_height       = header_height,
+    footer_height       = footer_height,
     sidebar_width       = sidebar_width,
     content_x           = content_x,
     content_width       = content_width,
@@ -277,9 +265,3 @@ NSI.UI.Core = {
     build_sound_dropdown = build_sound_dropdown,
     LDBIcon = LDBIcon,
 }
-
--- Make NSUI accessible globally through NSI
-NSI.NSUI = NSUI
-if NSI.UIBootstrap then
-    NSI.UIBootstrap.NSUI = NSUI
-end

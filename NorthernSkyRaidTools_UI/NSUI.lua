@@ -15,6 +15,8 @@ local window_width                 = Core.window_width
 local window_height                = Core.window_height
 local content_width                = Core.content_width
 local content_height               = Core.content_height
+local header_height                = Core.header_height
+local footer_height                = Core.footer_height
 local TAB_HEADER_HEIGHT            = Core.TAB_HEADER_HEIGHT
 local tab_content_height           = Core.tab_content_height
 local authorsString                = Core.authorsString
@@ -96,7 +98,7 @@ local SIDEBAR_BTN_GAP              = 0  -- px between consecutive buttons
 local SIDEBAR_GROUP_GAP            = 14 -- extra px between groups
 
 -- Derived from Core: tab frames start below the shared header strip
-local tab_content_y                = -25 - TAB_HEADER_HEIGHT  -- -80
+local tab_content_y                = -header_height - TAB_HEADER_HEIGHT  -- -80
 
 local CreateButton                 = NSI.UI.Components.CreateButton
 local BuildMenu                    = NSI.UI.Components.BuildMenu
@@ -112,11 +114,10 @@ function NSUI:Init()
     NSI.IsBuilding = true
     local initCoroutine
     initCoroutine = coroutine.create(function()
-    -- Scale bar
-    local scale = NSRT.NSUI.scale
-    NSRT.NSUI.scale = scale
-    DF:CreateScaleBar(NSUI, NSRT.NSUI, true)
-    NSUI:SetScale(scale)
+    -- Scale slider (left of the header)
+    NSRT.NSUI.scale = tonumber(NSRT.NSUI.scale) or 1
+    NSUI:CreateScaleControl(NSRT.NSUI)
+    NSUI:SetScale(NSRT.NSUI.scale)
 
     -- Forward declaration – buttons below need to call SelectTab before it is defined
     local SelectTab
@@ -144,7 +145,7 @@ function NSUI:Init()
         for _, btn in ipairs(self.AllButtons) do
             if btn._textKey then
                 btn:SetText(GetLocalizedText(btn._textKey))
-                NSI:SetUIFont(btn, nil, NSRT.Settings.GlobalFontFlags)
+                NSI:SetUIFont(btn, nil)
             end
         end
     end
@@ -153,7 +154,7 @@ function NSUI:Init()
     -- Sidebar background
     -- --------------------------------------------------------
     local sidebarBg = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUISidebar", NSUI)
-    sidebarBg:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 2, -25)
+    sidebarBg:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 2, -header_height)
     sidebarBg:SetSize(158, content_height)
     sidebarBg:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     sidebarBg:SetBackdropColor(0, 0, 0, 0.18)
@@ -162,8 +163,8 @@ function NSUI:Init()
     local sidebarSep = NSUI:CreateTexture(nil, "artwork")
     sidebarSep:SetColorTexture(Accent(0.25))
     sidebarSep:SetWidth(1)
-    sidebarSep:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 160, -25)
-    sidebarSep:SetPoint("BOTTOMLEFT", NSUI, "BOTTOMLEFT", 160, 22)
+    sidebarSep:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 160, -header_height)
+    sidebarSep:SetPoint("BOTTOMLEFT", NSUI, "BOTTOMLEFT", 160, footer_height + 2)
 
     -- --------------------------------------------------------
     -- Create one content frame + one sidebar button per tab
@@ -222,8 +223,8 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local NOTES_HEADER_BTN_W = 190
     local NOTES_HEADER_BTN_H = 26
-    -- Vertically centred in the 55 px header strip (NSUI y=-25 to y=-80)
-    local NOTES_HEADER_BTN_Y = -38
+    -- Vertically centred in the strip between the header and the tab content
+    local NOTES_HEADER_BTN_Y = -(header_height + (TAB_HEADER_HEIGHT - NOTES_HEADER_BTN_H) / 2)
 
     local notesTabs = {
         { name = "SharedNotes",   textKey = "Shared Notes",   icon = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\users-round.png]] },
@@ -264,55 +265,56 @@ function NSUI:Init()
     end
 
     -- --------------------------------------------------------
-    -- Anchor/Preview button (icon-only, far right of header)
+    -- Header buttons (icon-only), in the title bar next to the close button.
+    -- AddHeaderButton chains them leftwards from the close button, so the order
+    -- added here is the order from the right: anchor, export group, timeline.
     -- --------------------------------------------------------
-    local ANCHOR_BTN_SIZE = 26
+    local HEADER_BTN_SIZE = 26
     if not isForever then
         local anchorBtn = CreateButton(
-            NSUI,
+            NSUI.TitleBar,
             "",  -- icon-only, no text
             function() NSI:TogglePreviewMode() end,
-            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            HEADER_BTN_SIZE, HEADER_BTN_SIZE,
             "NSUIAnchorBtn",
             [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
             nil,  -- textSize
             { title = GetLocalizedText("Preview Alerts"), desc = GetLocalizedText("Preview Reminders and unlock their anchors to move them around") }
         )
-        anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
+        NSUI:AddHeaderButton(anchorBtn)
     end
 
     if NSI.GetGroupExportString then
-        -- Export Group button (icon-only, immediately left of anchor button)
         local exportGroupBtn = CreateButton(
-            NSUI,
+            NSUI.TitleBar,
             "",  -- icon-only, no text
             function()
                 if NSUI.group_export_popup then
                     NSUI.group_export_popup:Show()
                 end
             end,
-            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            HEADER_BTN_SIZE, HEADER_BTN_SIZE,
             "NSUIExportGroupBtn",
             [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\external-link.png]],
             nil,  -- textSize
             { title = GetLocalizedText("Export Group"), desc = GetLocalizedText("Export your current raid composition to use with wowutils.com") },
             function() return not InCombatLockdown() and IsInGroup() end
         )
-        exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
+        NSUI:AddHeaderButton(exportGroupBtn)
     end
 
     if not isForever then
         local timelineBtn = CreateButton(
-            NSUI,
+            NSUI.TitleBar,
             "",  -- icon-only, no text
             function() NSI:ToggleTimelineWindow() end,
-            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            HEADER_BTN_SIZE, HEADER_BTN_SIZE,
             "NSUITimelineBtn",
             [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\clock.png]],
             nil,  -- textSize
             { title = GetLocalizedText("Timeline"), desc = GetLocalizedText("Open the Timeline window") }
         )
-        timelineBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + (ANCHOR_BTN_SIZE + 6) * 2), NOTES_HEADER_BTN_Y)
+        NSUI:AddHeaderButton(timelineBtn)
     end
 
     -- --------------------------------------------------------
@@ -352,6 +354,7 @@ function NSUI:Init()
     end)
 
     NSUI.MenuFrame                = tabSystem
+    NSI.UI.Search.Create(NSUI, tabSystem)
 
     -- --------------------------------------------------------
     -- Convenience locals for the tab frames
@@ -475,7 +478,7 @@ function NSUI:Init()
     end
 
     -- --------------------------------------------------------
-    -- Status bar text
+    -- Footer text (version | author; the Discord link is part of the window)
     -- --------------------------------------------------------
     local versionNumber           = " v" .. C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Version")
     --@debug@
@@ -485,7 +488,7 @@ function NSUI:Init()
     --@end-debug@
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
     local statusBarText = versionTitle .. versionNumber .. " | |cFFFFFFFF" .. (authorsString) .. "|r"
-    NSUI.StatusBar.authorName:SetText(statusBarText)
+    NSUI:SetFooterText(statusBarText)
     -- --------------------------------------------------------
     -- Select the default tab
     -- --------------------------------------------------------

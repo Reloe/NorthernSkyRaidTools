@@ -40,8 +40,14 @@ local STYLE = {
     text_gold       = {1, 0.82, 0, 1},
     text_danger     = {1, 0.35, 0.35, 1},
     danger          = {0.9, 0.3, 0.3, 1},
-    text_size       = 14,
     text_left_pad   = 10,
+
+    -- Type scale in px. Use the names, not literal sizes: MakeFontString, CreateButton's
+    -- textSize and NSI:SetUIFont all accept them, so one edit here retunes the whole UI.
+    --   title  popup / section titles     body   control text (default)
+    --   label  field labels, list rows    small  secondary text, inputs
+    --   tiny   captions, hints, counts
+    type = { title = 16, body = 14, label = 13, small = 12, tiny = 11 },
 
     -- Animation durations in seconds
     hover_in        = 0.12,
@@ -70,6 +76,12 @@ function STYLE.PaintAccent(obj, method, alpha)
     return obj
 end
 
+-- A type-scale name ("small") or a number -> a size in px. nil stays nil.
+function STYLE.FontSize(size)
+    if type(size) == "string" then return STYLE.type[size] or STYLE.type.small end
+    return size
+end
+
 function STYLE.OnAccentChanged(fn)
     accentListeners[#accentListeners + 1] = fn
 end
@@ -85,6 +97,8 @@ function STYLE.SetAccent(r, g, b)
     end
     for _, fn in ipairs(accentListeners) do fn(r, g, b) end
 end
+
+STYLE.text_size = STYLE.type.body   -- default control text
 
 NSI.UI = NSI.UI or {}
 NSI.UI.Style = STYLE
@@ -152,7 +166,7 @@ end
 
 local function RefreshFonts()
     local fontPath = ValidateFont(NSI:GetUIFontPath())
-    local fontFlags = NSI:GetUIFontFlags()
+    local fontFlags = NSI:GetWindowFontFlags()
     for label, size in pairs(labelRegistry) do
         label:SetFont(fontPath, size, fontFlags)
     end
@@ -238,8 +252,8 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     labelFrame:EnableMouse(false)
 
     local label = labelFrame:CreateFontString(nil, "OVERLAY")
-    local labelSize = textSize or STYLE.text_size
-    label:SetFont(ValidateFont(NSI:GetUIFontPath()), labelSize, NSI:GetUIFontFlags())
+    local labelSize = STYLE.FontSize(textSize) or STYLE.text_size
+    label:SetFont(ValidateFont(NSI:GetUIFontPath()), labelSize, NSI:GetWindowFontFlags())
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")
@@ -360,7 +374,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     end
 
     function buttonObj:SetFont(path, size, flags)
-        self.label:SetFont(path, size or STYLE.text_size, flags or "")
+        self.label:SetFont(path, STYLE.FontSize(size) or STYLE.text_size, flags or "")
     end
 
     function buttonObj:SetTextColor(r, g, b, a)
@@ -480,8 +494,9 @@ local function MakeControlBackdrop(frame)
 end
 
 local function MakeFontString(parent, size)
+    size = STYLE.FontSize(size)
     local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(ValidateFont(NSI:GetUIFontPath()), size, NSI:GetUIFontFlags())
+    fs:SetFont(ValidateFont(NSI:GetUIFontPath()), size, NSI:GetWindowFontFlags())
     fs:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[fs] = size
     return fs
@@ -548,7 +563,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     local hoverBg = MakeHoverBg(btn, baseLevel + 1)
 
     -- Label
-    local lbl = MakeFontString(btn, 13)
+    local lbl = MakeFontString(btn, "label")
     lbl:SetText(label or "")
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
@@ -692,7 +707,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     -- Label (only when provided; omitting it makes the input span the full width)
     local lbl
     if hasLabel then
-        lbl = MakeFontString(container, 13)
+        lbl = MakeFontString(container, "label")
         lbl:SetText(label)
         lbl:SetJustifyH("LEFT")
         lbl:SetJustifyV("MIDDLE")
@@ -728,7 +743,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4,  -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), STYLE.type.small, NSI:GetWindowFontFlags())
     edit:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
@@ -873,7 +888,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     -- Optional label
     local lbl
     if hasLabel then
-        lbl = MakeFontString(container, highlighted and 14 or 13)
+        lbl = MakeFontString(container, highlighted and "body" or "label")
         if highlighted then
             lbl:SetTextColor(unpack(STYLE.text_gold))
         end
@@ -895,7 +910,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local dropHover = MakeHoverBg(dropBtn, baseLevel + 2)
 
     -- Current-value text
-    local valText = MakeFontString(dropBtn, 12)
+    local valText = MakeFontString(dropBtn, "small")
     valText:SetJustifyH("LEFT")
     valText:SetJustifyV("MIDDLE")
     valText:SetPoint("LEFT",  dropBtn, "LEFT",  5,   0)
@@ -940,7 +955,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
         MakeControlBackdrop(searchBox)
         searchBox:SetAutoFocus(false)
-        searchBox:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
+        searchBox:SetFont(ValidateFont(NSI:GetUIFontPath()), STYLE.type.small, NSI:GetWindowFontFlags())
         searchBox:SetTextColor(unpack(STYLE.text_color))
         searchBox:SetTextInsets(6, 6, 0, 0)
         searchBox:SetMaxLetters(100)
@@ -1095,7 +1110,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
     local noResultsLabel
     if searchable then
-        noResultsLabel = MakeFontString(content, 12)
+        noResultsLabel = MakeFontString(content, "small")
         noResultsLabel:SetText("No matches")
         noResultsLabel:SetTextColor(unpack(STYLE.text_muted))
         noResultsLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 6, 0)
@@ -1129,7 +1144,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
             iconTex:SetPoint("LEFT", row, "LEFT", 4, 0)
             iconTex:Hide()
-            local rlbl = MakeFontString(row, 12)
+            local rlbl = MakeFontString(row, "small")
             rlbl:SetJustifyH("LEFT")
             rlbl:SetJustifyV("MIDDLE")
             rlbl:SetPoint("RIGHT", row, "RIGHT", 0, 0)
@@ -1312,7 +1327,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     container:SetFrameLevel(baseLevel)
 
     -- Label
-    local lbl = MakeFontString(container, 13)
+    local lbl = MakeFontString(container, "label")
     lbl:SetText(label or "")
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
@@ -1351,9 +1366,9 @@ local function CreateSlider(parent, label, getValue, setValue,
     PaintAccent(thumb, "SetVertexColor", 1)
 
     -- Value text (right side)
-    local valText = MakeFontString(container, 11)
+    local valText = MakeFontString(container, "tiny")
     valText:SetTextColor(unpack(STYLE.text_color))
-    valText:SetJustifyH("RIGHT")
+    valText:SetJustifyH("CENTER")
     valText:SetJustifyV("MIDDLE")
     valText:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     valText:SetWidth(VAL_W)
@@ -1479,9 +1494,9 @@ local function CreateSlider(parent, label, getValue, setValue,
     typeBox:SetAutoFocus(false)
     typeBox:SetNumeric(false)
     typeBox:SetMaxLetters(10)
-    typeBox:SetFont(ValidateFont(NSI:GetFallbackUIFontPath()), 11, "")
+    typeBox:SetFont(ValidateFont(NSI:GetFallbackUIFontPath()), STYLE.type.tiny, "")
     PaintAccent(typeBox, "SetTextColor", 1)
-    typeBox:SetJustifyH("RIGHT")
+    typeBox:SetJustifyH("CENTER")
     typeBox:SetBackdrop({bgFile=[[Interface\Buttons\WHITE8x8]], edgeFile=[[Interface\Buttons\WHITE8x8]], edgeSize=1})
     typeBox:SetBackdropColor(0.04, 0.04, 0.06, 1)
     PaintAccent(typeBox, "SetBackdropBorderColor", 0.8)
@@ -1607,7 +1622,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     container:SetFrameLevel(baseLevel)
 
     -- Label
-    local lbl = MakeFontString(container, 13)
+    local lbl = MakeFontString(container, "label")
     lbl:SetText(label or "")
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
@@ -1769,7 +1784,7 @@ local function CreateLabel(parent, text, width, height, name, highlighted, textC
     local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
 
-    local lbl = MakeFontString(container, highlighted and 14 or 12)
+    local lbl = MakeFontString(container, highlighted and "body" or "small")
     if highlighted then
         lbl:SetTextColor(Accent(1))
     elseif textColor then
@@ -1982,6 +1997,20 @@ local function CreateScrollBox(parent, width, height)
         bar:SetMinMaxValues(0, maxScroll)
         if bar:GetValue() > maxScroll then bar:SetValue(0) end
 
+    end
+
+    -- Scroll so `target` (any frame inside the scroll child) is in view, with a little
+    -- room above it. Does nothing when it is already fully visible. Call it once the
+    -- layout has resolved (a frame shown this very frame has no rectangle yet).
+    function obj:ScrollToFrame(target, topMargin)
+        local bar = _G[boxName .. "ScrollBar"]
+        local top, bottom = target:GetTop(), target:GetBottom()
+        local viewTop, viewBottom = scrollFrame:GetTop(), scrollFrame:GetBottom()
+        local childTop = self.scrollChild:GetTop()
+        if not (bar and top and bottom and viewTop and viewBottom and childTop) then return end
+        if top <= viewTop and bottom >= viewBottom then return end
+        local minV, maxV = bar:GetMinMaxValues()
+        bar:SetValue(math.max(minV, math.min(maxV, childTop - top - (topMargin or 40))))
     end
     return obj
 end
@@ -2402,7 +2431,7 @@ local MENU_ROW_GAP    = 18
 local MENU_PAD        = 14
 local MENU_HEADING_MAX = 48
 local MENU_BUTTON_H   = 20   -- option buttons are compact; tab buttons set their own size
-local MENU_BUTTON_TEXT = 12
+local MENU_BUTTON_TEXT = "small"
 
 local function MenuTooltip(o)
     if not o.desc then return nil end
@@ -2602,7 +2631,7 @@ local function CreateSectionCard(parent, width, hasTitle, headerButton)
     local headerH = 0
     if hasTitle then
         headerH = MENU_HEADER_H
-        local title = MakeFontString(card, 14)
+        local title = MakeFontString(card, "body")
         title:SetPoint("TOPLEFT", card, "TOPLEFT", MENU_CARD_PAD, -MENU_CARD_PAD)
         title:SetHeight(MENU_HEADER_ROW)
         if headerButton then
@@ -2714,6 +2743,7 @@ local function BuildMenu(parent, options, onChange)
     end
 
     parent.RefreshOptions = function() menu:Refresh() end
+    parent.menu = menu   -- the global search indexes stacks -> sections -> defs from here
     menu:Refresh()
     return menu
 end
@@ -2781,13 +2811,14 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
     end)
     titleBar:SetScript("OnMouseUp", function() f:StopMovingOrSizing() end)
 
-    local titleFS = MakeFontString(f, 14)
+    local titleFS = MakeFontString(f, "body")
     titleFS:SetText(title or "")
     titleFS:SetJustifyH("LEFT")
     titleFS:SetJustifyV("MIDDLE")
     titleFS:SetPoint("LEFT",  titleBar, "LEFT",  DIALOG_PAD, 0)
     titleFS:SetPoint("RIGHT", titleBar, "RIGHT", -28, 0)
     titleFS:SetHeight(DIALOG_TITLE_H)
+    f.titleFS = titleFS
 
     local titleSep = f:CreateTexture(nil, "ARTWORK")
     PaintAccent(titleSep, "SetColorTexture", 0.20)
@@ -2807,13 +2838,14 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
     xBtn:SetScript("OnClick", function() f:Hide() end)
 
     -- ── Body text ────────────────────────────────────────────────
-    local bodyFS = MakeFontString(f, 13)
+    local bodyFS = MakeFontString(f, "label")
     bodyFS:SetText(body or "")
     bodyFS:SetJustifyH("LEFT")
     bodyFS:SetJustifyV("TOP")
     bodyFS:SetWordWrap(true)
     bodyFS:SetPoint("TOPLEFT",     f, "TOPLEFT",     DIALOG_PAD, -(DIALOG_TITLE_H + DIALOG_PAD))
     bodyFS:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -DIALOG_PAD, DIALOG_BTN_H + DIALOG_PAD * 2)
+    f.bodyFS = bodyFS
 
     -- ── Buttons ──────────────────────────────────────────────────
     local btn1 = CreateButton(f, btn1Text or "OK", function()
@@ -2837,6 +2869,79 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
 
     Dialogs[name] = f
     f:Show()
+    return f
+end
+
+-- ============================================================
+--  CreateInputDialog
+--
+--  A dialog with a single text box, used instead of Blizzard's StaticPopup (which
+--  runs through secure code paths and can taint). One frame is cached per name and
+--  reused: every call sets the title, prompt, default text and callback again, so the
+--  same dialog can serve different targets (for example "rename group X").
+--
+--  Params
+--    name   - unique key
+--    title  - title bar text
+--    prompt - text above the box
+--    opts   - optional table:
+--               default    initial text (selected on open)
+--               okText     accept button label (default "OK")
+--               cancelText cancel button label (default "Cancel")
+--               maxLetters limit for the text box (default 200)
+--               onAccept   function(text): text is trimmed and may be "" (the
+--                          callback decides whether an empty name is valid)
+--
+--  Accepted by the OK button or Enter; Cancel, Escape and the close button discard.
+--  Returns the dialog frame.
+-- ============================================================
+local INPUT_DIALOG_H = 150
+local INPUT_ENTRY_H  = 24
+
+local function CreateInputDialog(name, title, prompt, opts)
+    opts = opts or {}
+    local key = "Input_" .. name
+    local f = Dialogs[key]
+
+    if not f then
+        local entry
+        local function Accept()
+            if not f:IsShown() then return end
+            local callback = f._onAccept
+            local text = strtrim(entry:GetValue() or "")
+            f:Hide()
+            if callback then callback(text) end
+        end
+
+        f = CreateDialog(key, title, prompt,
+            opts.cancelText or NSI:Loc("Cancel"), nil,
+            opts.okText or NSI:Loc("OK"), Accept)
+        f:SetHeight(INPUT_DIALOG_H)
+        f.bodyFS:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -DIALOG_PAD,
+            DIALOG_BTN_H + DIALOG_PAD * 2 + INPUT_ENTRY_H + 8)
+
+        entry = CreateTextEntry(f, nil, nil, nil, DIALOG_W - DIALOG_PAD * 2, INPUT_ENTRY_H,
+            false, nil, nil, nil, nil, nil, {
+                OnEnterPressed  = Accept,
+                OnEscapePressed = function() f:Hide() end,
+            })
+        entry:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", DIALOG_PAD, DIALOG_BTN_H + DIALOG_PAD * 2)
+        f.entry = entry
+    else
+        f.titleFS:SetText(title or "")
+        f.bodyFS:SetText(prompt or "")
+    end
+
+    f._onAccept = opts.onAccept
+    f.entry.editBox:SetMaxLetters(opts.maxLetters or 200)
+    f.entry:SetValue(opts.default or "")
+    f:Show()
+    C_Timer.After(0, function()
+        if f:IsShown() then
+            f.entry.editBox:SetFocus()
+            f.entry.editBox:HighlightText()
+        end
+    end)
     return f
 end
 
@@ -2934,8 +3039,8 @@ local function CtxMeasureText(text)
     end
     contextMeasureFontString:SetFont(
         ValidateFont(NSI:GetUIFontPath()),
-        13,
-        NSI:GetUIFontFlags())
+        STYLE.type.label,
+        NSI:GetWindowFontFlags())
     contextMeasureFontString:SetText(text or "")
     return contextMeasureFontString:GetStringWidth()
 end
@@ -3141,7 +3246,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
         row.iconFrame = iconFrame
         row.iconTex   = iconTex
 
-        local labelFS = MakeFontString(row, 13)
+        local labelFS = MakeFontString(row, "label")
         labelFS:SetJustifyH("LEFT")
         labelFS:SetJustifyV("MIDDLE")
         row.labelFS = labelFS
@@ -3442,7 +3547,7 @@ local function EnsureLinkPopup()
     closeBtn:SetSize(16, 16)
     closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -LINK_PAD, -LINK_PAD)
     closeBtn:SetFrameLevel(f:GetFrameLevel() + 2)
-    local closeText = MakeFontString(closeBtn, 12)
+    local closeText = MakeFontString(closeBtn, "small")
     closeText:SetText("x")
     closeText:SetTextColor(unpack(STYLE.text_soft))
     closeText:SetJustifyH("CENTER")
@@ -3459,7 +3564,7 @@ local function EnsureLinkPopup()
     end)
 
     -- Hint label
-    local hint = MakeFontString(f, 11)
+    local hint = MakeFontString(f, "tiny")
     hint:SetTextColor(0.45, 0.45, 0.45, 1)
     hint:SetText("Press Ctrl+C to copy")
     hint:SetJustifyH("LEFT")
@@ -3482,7 +3587,7 @@ local function EnsureLinkPopup()
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4, -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), STYLE.type.small, NSI:GetWindowFontFlags())
     edit:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
@@ -3641,7 +3746,7 @@ local function CreateSpellIDList(parent, width, cfg)
         row.icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
         row.label = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.label, 12, "")
+        NSI:SetUIFont(row.label, "small", "")
         row.label:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
         row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
         row.label:SetJustifyH("LEFT")
@@ -3691,7 +3796,7 @@ local function CreateSpellIDList(parent, width, cfg)
         if #ids == 0 then
             if not self.empty then
                 self.empty = frame:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(self.empty, 12, "")
+                NSI:SetUIFont(self.empty, "small", "")
                 self.empty:SetTextColor(unpack(STYLE.text_hint))
                 RegisterLocalizedText(self.empty, "No spell IDs added yet.")
             end
@@ -3736,6 +3841,7 @@ NSI.UI.Components = {
     CreateSpellIDList   = CreateSpellIDList,
     RefreshFonts        = RefreshFonts,
     CreateDialog        = CreateDialog,
+    CreateInputDialog   = CreateInputDialog,
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
     ShowContextMenuAtFrame = ShowContextMenuAtFrame,

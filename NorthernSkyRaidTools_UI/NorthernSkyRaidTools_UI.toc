@@ -12,6 +12,8 @@ UI\Bootstrap.lua [Bootstrap]
 UI\Pixel.lua
 UI\Core.lua
 UI\Components.lua
+UI\Window.lua
+UI\MainWindow.lua
 UI\BossData.lua
 UI\SoundData.lua
 UI\Notes.lua
@@ -35,5 +37,6 @@ UI\Options\PaceComparison.lua
 UI\Options\QoL.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
+UI\Search.lua
 
 NSUI.lua

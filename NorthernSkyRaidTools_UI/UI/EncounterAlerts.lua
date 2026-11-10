@@ -157,7 +157,7 @@ local function ShowExportPopup(str, label)
         alertsExportPopup:SetFrameLevel(100)
 
         alertsExportPopup.infoLabel = alertsExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(alertsExportPopup.infoLabel, 13, "")
+        NSI:SetUIFont(alertsExportPopup.infoLabel, "label", "")
         alertsExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
         alertsExportPopup.infoLabel:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -30)
 
@@ -168,7 +168,7 @@ local function ShowExportPopup(str, label)
         DF:ApplyStandardBackdrop(alertsExportPopup.textbox)
         DF:ReskinSlider(alertsExportPopup.textbox.scroll)
         alertsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(alertsExportPopup.textbox.editbox, 13, "OUTLINE")
+        NSI:SetUIFont(alertsExportPopup.textbox.editbox, "label")
 
         local doneBtn = CreateLocalizedButton(alertsExportPopup, "Done", function()
             alertsExportPopup:Hide()
@@ -190,7 +190,7 @@ local function ShowImportPopup()
         alertsImportPopup:SetFrameLevel(100)
 
         local statusLabel = alertsImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(statusLabel, 13, "")
+        NSI:SetUIFont(statusLabel, "label", "")
         statusLabel:SetTextColor(unpack(STYLE.text_soft))
         SetLocalizedText(statusLabel, "Paste an alerts export string below and click Import.")
         statusLabel:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -30)
@@ -202,7 +202,7 @@ local function ShowImportPopup()
         DF:ApplyStandardBackdrop(alertsImportPopup.textbox)
         DF:ReskinSlider(alertsImportPopup.textbox.scroll)
         alertsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(alertsImportPopup.textbox.editbox, 13, "OUTLINE")
+        NSI:SetUIFont(alertsImportPopup.textbox.editbox, "label")
 
         local importBtn = CreateLocalizedButton(alertsImportPopup, "Import", function()
             local str = alertsImportPopup.textbox:GetText()
@@ -266,7 +266,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Left Panel ── title, filter, list, create button
     -- ================================================================
     local title = screen:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(title, 16, "OUTLINE")
+    NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
     title:SetText(NSI:Loc("|cFF00FFFFEncounter|r Alerts"))
 
@@ -333,7 +333,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
     searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
-    NSI:SetUIFont(searchHint, 14, "")
+    NSI:SetUIFont(searchHint, "body", "")
 
     local function UpdateSearchHint(eb)
         searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus())
@@ -365,7 +365,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         leftWidth - pad * 2, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetLocaleKey("Automatically Enable New Alerts")
     reloeImportCB:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4 - 22 - 6)
-    NSI:SetUIFont(reloeImportCB.label, 11, "")
+    NSI:SetUIFont(reloeImportCB.label, "tiny", "")
 
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
     local scrollTop    = topY - 20 - 22 - 4 - 22 - 6 - 26
@@ -410,7 +410,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.bossIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
         row.nameLabel = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.nameLabel, 13, "")
+        NSI:SetUIFont(row.nameLabel, "label", "")
         row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
         row.nameLabel:SetPoint("RIGHT", row, "RIGHT", -22, 0)
         row.nameLabel:SetJustifyH("LEFT")
@@ -476,7 +476,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.bossIcon = bossIcon
 
         local nameLabel = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(nameLabel, 13, NSI:GetUIFontFlags())
+        NSI:SetUIFont(nameLabel, "label")
         nameLabel:SetTextColor(0.2, 0.85, 1, 1)
         nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)  -- repositioned dynamically
         nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
@@ -485,7 +485,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.nameLabel = nameLabel
 
         local countLabel = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(countLabel, 12, NSI:GetUIFontFlags())
+        NSI:SetUIFont(countLabel, "small")
         countLabel:SetTextColor(unpack(STYLE.text_hint))
         countLabel:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.countLabel = countLabel
@@ -1065,32 +1065,17 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 end })
                             end
                             table.insert(groupSubItems, { type = "button", label = NSI:Loc("New Group..."), fnc = function()
-                                StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
-                                    text = NSI:Loc("Enter new group name:"),
-                                    button1 = NSI:Loc("OK"),
-                                    button2 = NSI:Loc("Cancel"),
-                                    hasEditBox = true,
-                                    timeout = 0,
-                                    whileDead = true,
-                                    hideOnEscape = true,
-                                    OnAccept = function(self)
-                                        local newName = self.EditBox:GetText()
-                                        if newName and newName ~= "" then
-                                            if alert then
-                                                alert.group = newName
-                                                if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
-                                            end
-                                            EnsureGroup(eid, newName)
-                                            RebuildList()
+                                NSI.UI.Components.CreateInputDialog("NewEncounterGroup", NSI:Loc("New Group"), NSI:Loc("Enter new group name:"), {
+                                    onAccept = function(newName)
+                                        if newName == "" then return end
+                                        if alert then
+                                            alert.group = newName
+                                            if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
                                         end
+                                        EnsureGroup(eid, newName)
+                                        RebuildList()
                                     end,
-                                    EditBoxOnEnterPressed = function(self)
-                                        local parent = self:GetParent()
-                                        StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"].OnAccept(parent)
-                                        parent:Hide()
-                                    end,
-                                }
-                                StaticPopup_Show("NSRT_NEW_GROUP_INPUT")
+                                })
                             end })
 
                             -- Build menu conditionally
@@ -1468,7 +1453,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- ── Header: name entry + group entry + enabled checkbox ─────────────────
     local nameLbl = rightPanel:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(nameLbl, 11, "")
+    NSI:SetUIFont(nameLbl, "tiny", "")
     nameLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(nameLbl, "Alert Name")
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
@@ -1478,7 +1463,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -14)
 
     local groupLbl = rightPanel:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(groupLbl, 11, "")
+    NSI:SetUIFont(groupLbl, "tiny", "")
     groupLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(groupLbl, "Group")
     groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
@@ -1514,33 +1499,18 @@ local function BuildEncounterAlertsUI(parentFrame)
             end })
         end
         table.insert(items, { label = NSI:Loc("New Group..."), onclick = function()
-            StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
-                text = NSI:Loc("Enter new group name:"),
-                button1 = NSI:Loc("OK"),
-                button2 = NSI:Loc("Cancel"),
-                hasEditBox = true,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-                OnAccept = function(self)
-                    local newName = self.EditBox:GetText()
-                    if newName and newName ~= "" then
-                        if alert then
-                            alert.group = newName
-                            if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
-                        end
-                        EnsureGroup(eid, newName)
-                        RebuildList()
-                        groupDD:Refresh()
+            NSI.UI.Components.CreateInputDialog("NewEncounterGroup", NSI:Loc("New Group"), NSI:Loc("Enter new group name:"), {
+                onAccept = function(newName)
+                    if newName == "" then return end
+                    if alert then
+                        alert.group = newName
+                        if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
                     end
+                    EnsureGroup(eid, newName)
+                    RebuildList()
+                    groupDD:Refresh()
                 end,
-                EditBoxOnEnterPressed = function(self)
-                    local parent = self:GetParent()
-                    StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"].OnAccept(parent)
-                    parent:Hide()
-                end,
-            }
-            StaticPopup_Show("NSRT_NEW_GROUP_INPUT")
+            })
         end })
         return items
     end
@@ -1567,7 +1537,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
     conditionHint = rightPanel:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(conditionHint, 12, "")
+    NSI:SetUIFont(conditionHint, "small", "")
     conditionHint:SetTextColor(0.9, 0.75, 0.2, 1)
     conditionHint:SetJustifyH("LEFT")
     conditionHint:SetJustifyV("TOP")
@@ -1675,7 +1645,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             conditionEditPopup:SetFrameLevel(100)
 
             conditionEditPopup.nameLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.nameLabel, 12, "")
+            NSI:SetUIFont(conditionEditPopup.nameLabel, "small", "")
             conditionEditPopup.nameLabel:SetTextColor(unpack(STYLE.text_soft))
             SetLocalizedText(conditionEditPopup.nameLabel, "Condition Name")
             conditionEditPopup.nameLabel:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -32)
@@ -1685,13 +1655,13 @@ local function BuildEncounterAlertsUI(parentFrame)
             conditionEditPopup.nameEntry:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -48)
 
             conditionEditPopup.codeLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.codeLabel, 12, "")
+            NSI:SetUIFont(conditionEditPopup.codeLabel, "small", "")
             conditionEditPopup.codeLabel:SetTextColor(unpack(STYLE.text_soft))
             SetLocalizedText(conditionEditPopup.codeLabel, "Condition Function")
             conditionEditPopup.codeLabel:SetPoint("TOPLEFT", conditionEditPopup.nameEntry.frame, "BOTTOMLEFT", 0, -12)
 
             conditionEditPopup.helpLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.helpLabel, 11, "")
+            NSI:SetUIFont(conditionEditPopup.helpLabel, "tiny", "")
             conditionEditPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
             conditionEditPopup.helpLabel:SetJustifyH("LEFT")
             conditionEditPopup.helpLabel:SetPoint("TOPLEFT", conditionEditPopup.codeLabel, "BOTTOMLEFT", 0, -2)
@@ -1704,10 +1674,10 @@ local function BuildEncounterAlertsUI(parentFrame)
             DF:ApplyStandardBackdrop(conditionEditPopup.editor)
             DF:ReskinSlider(conditionEditPopup.editor.scroll)
             conditionEditPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(conditionEditPopup.editor.editbox, 13, "OUTLINE")
+            NSI:SetUIFont(conditionEditPopup.editor.editbox, "label")
 
             conditionEditPopup.statusLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.statusLabel, 11, "")
+            NSI:SetUIFont(conditionEditPopup.statusLabel, "tiny", "")
             conditionEditPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
             conditionEditPopup.statusLabel:SetPoint("BOTTOMLEFT", conditionEditPopup, "BOTTOMLEFT", 10, 14)
             conditionEditPopup.statusLabel:SetWidth(430)
@@ -1825,12 +1795,12 @@ end]]
             encounterHookEditPopup:SetFrameLevel(100)
 
             encounterHookEditPopup.codeLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.codeLabel, 12, "")
+            NSI:SetUIFont(encounterHookEditPopup.codeLabel, "small", "")
             encounterHookEditPopup.codeLabel:SetTextColor(unpack(STYLE.text_soft))
             encounterHookEditPopup.codeLabel:SetPoint("TOPLEFT", encounterHookEditPopup, "TOPLEFT", 10, -32)
 
             encounterHookEditPopup.helpLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.helpLabel, 11, "")
+            NSI:SetUIFont(encounterHookEditPopup.helpLabel, "tiny", "")
             encounterHookEditPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
             encounterHookEditPopup.helpLabel:SetJustifyH("LEFT")
             encounterHookEditPopup.helpLabel:SetPoint("TOPLEFT", encounterHookEditPopup.codeLabel, "BOTTOMLEFT", 0, -2)
@@ -1842,10 +1812,10 @@ end]]
             DF:ApplyStandardBackdrop(encounterHookEditPopup.editor)
             DF:ReskinSlider(encounterHookEditPopup.editor.scroll)
             encounterHookEditPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(encounterHookEditPopup.editor.editbox, 13, "OUTLINE")
+            NSI:SetUIFont(encounterHookEditPopup.editor.editbox, "label")
 
             encounterHookEditPopup.statusLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.statusLabel, 11, "")
+            NSI:SetUIFont(encounterHookEditPopup.statusLabel, "tiny", "")
             encounterHookEditPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
             encounterHookEditPopup.statusLabel:SetPoint("BOTTOMLEFT", encounterHookEditPopup, "BOTTOMLEFT", 10, 14)
             encounterHookEditPopup.statusLabel:SetWidth(430)
@@ -2082,7 +2052,7 @@ end]]
         if transparent then
             -- No background; just intercept mouse. Show a small read-only badge top-right.
             local badge = ov:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(badge, 11, "")
+            NSI:SetUIFont(badge, "tiny", "")
             badge:SetTextColor(0.9, 0.75, 0.2, 0.85)
             NSI.UI.Components.RegisterLocalizedText(badge, "Read-only", function()
                 return "|TInterface\\PetBattles\\PetBattle-LockIcon:12:12:0:-1|t " .. NSI:Loc("Read-only")
@@ -2094,7 +2064,7 @@ end]]
             ov.__background:SetAlpha(0.82)
 
             local lbl = ov:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(lbl, 13, "")
+            NSI:SetUIFont(lbl, "label", "")
             lbl:SetTextColor(unpack(STYLE.text_muted))
             SetLocalizedText(lbl, messageKey)
             lbl:SetPoint("CENTER", ov, "CENTER", 0, 0)
@@ -2115,7 +2085,7 @@ end]]
     dispHint:Hide()
 
     local typeLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(typeLbl, 12, "")
+    NSI:SetUIFont(typeLbl, "small", "")
     typeLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(typeLbl, "Type")
     typeLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -2)
@@ -2141,7 +2111,7 @@ end]]
     end
 
     local textLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(textLbl, 12, "")
+    NSI:SetUIFont(textLbl, "small", "")
     textLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(textLbl, "Display Text")
     textLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -46)
@@ -2157,7 +2127,7 @@ end]]
     dispF.textEntry = textEntry
 
     local spellLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(spellLbl, 12, "")
+    NSI:SetUIFont(spellLbl, "small", "")
     spellLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(spellLbl, "Spell ID")
     spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
@@ -2219,7 +2189,7 @@ end]]
     dispF.useTauntCB = useTauntCB
 
     local customIconLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(customIconLbl, 12, "")
+    NSI:SetUIFont(customIconLbl, "small", "")
     customIconLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(customIconLbl, "Custom Icon (overrides icon in list)")
     customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -90)
@@ -2237,7 +2207,7 @@ end]]
     dispF.customIconEntry = customIconEntry
 
     local durLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(durLbl, 12, "")
+    NSI:SetUIFont(durLbl, "small", "")
     durLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(durLbl, "Duration")
     durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
@@ -2254,7 +2224,7 @@ end]]
     dispF.durEntry = durEntry
 
     local stickyLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(stickyLbl, 12, "")
+    NSI:SetUIFont(stickyLbl, "small", "")
     stickyLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(stickyLbl, "Sticky duration (0 to disable)")
     stickyLbl:SetPoint("TOPLEFT", durLbl, "TOPRIGHT", 55, 0)
@@ -2298,7 +2268,7 @@ end]]
 
     -- ── glowunit ────────────────────────────────────────────────────────
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(glowunitLbl, 12, "")
+    NSI:SetUIFont(glowunitLbl, "small", "")
     glowunitLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(glowunitLbl, "Glow Unit (player names, space seperated)")
     glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
@@ -2315,7 +2285,7 @@ end]]
     dispF.glowunitEntry = glowunitEntry
 
     local glowcolorlbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(glowcolorlbl, 12, "")
+    NSI:SetUIFont(glowcolorlbl, "small", "")
     glowcolorlbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(glowcolorlbl, "Glow Color")
     glowcolorlbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 265, -198)
@@ -2336,7 +2306,7 @@ end]]
 
     -- ── colors ──────────────────────────────────────────────────────────
     local colorsLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(colorsLbl, 12, "")
+    NSI:SetUIFont(colorsLbl, "small", "")
     colorsLbl:SetTextColor(unpack(STYLE.text_muted))
     NSI.UI.Components.RegisterLocalizedText(colorsLbl, "Color", function()
         local t = dispF._alert and (dispF._alert.DisplayType or "Text")
@@ -2372,7 +2342,7 @@ end]]
     circleSection:Hide()
 
     local circleTextureLbl = circleSection:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(circleTextureLbl, 12, "")
+    NSI:SetUIFont(circleTextureLbl, "small", "")
     circleTextureLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(circleTextureLbl, "Texture")
     circleTextureLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
@@ -2411,7 +2381,7 @@ end]]
     dispF.circleTextureDD = circleTextureDD
 
     local ringColorsLbl = circleSection:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(ringColorsLbl, 12, "")
+    NSI:SetUIFont(ringColorsLbl, "small", "")
     ringColorsLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ringColorsLbl, "Ring Color")
     ringColorsLbl:SetPoint("TOPLEFT", circleTextureDD.frame, "BOTTOMLEFT", 0, -8)
@@ -2446,7 +2416,7 @@ end]]
     barsSection:Hide()
 
     local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(ticksLbl, 12, "")
+    NSI:SetUIFont(ticksLbl, "small", "")
     ticksLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ticksLbl, "Ticks (seconds into the display where ticks should appear)")
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
@@ -2499,7 +2469,7 @@ end]]
             else
                 tickRows[i].bg:SetColorTexture(0, 0, 0, 0)
             end
-            NSI:SetUIFont(tickRows[i].tLbl, 13, "")
+            NSI:SetUIFont(tickRows[i].tLbl, "label", "")
             tickRows[i].tLbl:SetText(tostring(v))
 
             tickRows[i].delBtn:SetScript("OnClick", function()
@@ -2524,7 +2494,7 @@ end]]
     dispF.RebuildTickRows = RebuildTickRows
 
     local addTickLbl = barsSection:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(addTickLbl, 11, "")
+    NSI:SetUIFont(addTickLbl, "tiny", "")
     addTickLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(addTickLbl, "Add tick")
     addTickLbl:SetPoint("TOPLEFT", ticksScroll, "BOTTOMLEFT", 0, -4)
@@ -2564,7 +2534,7 @@ end]]
     -- Bar-specific text color picker — shown at the TOP slot (y=-244) for Bar type,
     -- replacing the shared colorsPicker which is hidden when Bar is selected
     local barTextColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(barTextColorsLbl, 12, "")
+    NSI:SetUIFont(barTextColorsLbl, "small", "")
     barTextColorsLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(barTextColorsLbl, "Bar Text Color")
     barTextColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
@@ -2585,7 +2555,7 @@ end]]
 
     -- Bar fill color picker — shown below text color for Bar type
     local barFillColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(barFillColorsLbl, 12, "")
+    NSI:SetUIFont(barFillColorsLbl, "small", "")
     barFillColorsLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(barFillColorsLbl, "Bar Fill Color")
     barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
@@ -2640,7 +2610,7 @@ end]]
     trigF = innerTabFrames["Trigger"]
 
     local trigBossLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(trigBossLbl, 12, "")
+    NSI:SetUIFont(trigBossLbl, "small", "")
     trigBossLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(trigBossLbl, "Boss")
     trigBossLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -2)
@@ -2689,7 +2659,7 @@ end]]
     local TRIG_DIFF_NAMES = { [14] = NSI:Loc("Normal"), [15] = NSI:Loc("Heroic"), [16] = NSI:Loc("Mythic") }
 
     local trigDiffLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(trigDiffLbl, 12, "")
+    NSI:SetUIFont(trigDiffLbl, "small", "")
     trigDiffLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(trigDiffLbl, "Difficulty")
     trigDiffLbl:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 16)
@@ -2742,7 +2712,7 @@ end]]
     local RebuildTimeRows
 
     local phaseLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(phaseLbl, 12, "")
+    NSI:SetUIFont(phaseLbl, "small", "")
     phaseLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(phaseLbl, "Phase")
     phaseLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -50)
@@ -2762,7 +2732,7 @@ end]]
     trigF.phaseEntry = phaseEntry
 
     local timesLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(timesLbl, 12, "")
+    NSI:SetUIFont(timesLbl, "small", "")
     timesLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(timesLbl, "Trigger Times (seconds into phase)")
     timesLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -98)
@@ -2830,7 +2800,7 @@ end]]
                 timeRows[i].bg:SetColorTexture(0, 0, 0, 0)
             end
 
-            NSI:SetUIFont(timeRows[i].tLbl, 13, "")
+            NSI:SetUIFont(timeRows[i].tLbl, "label", "")
             if rowData.phase ~= nil then
                 timeRows[i].tLbl:SetText(string.format("P%s: %.2f s", tostring(rowData.phase), t))
             else
@@ -2868,7 +2838,7 @@ end]]
     trigF.RebuildTimeRows = RebuildTimeRows
 
     local addTimeLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(addTimeLbl, 11, "")
+    NSI:SetUIFont(addTimeLbl, "tiny", "")
     addTimeLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(addTimeLbl, "Add time (s)")
     addTimeLbl:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -4)
@@ -2995,13 +2965,13 @@ end]]
     end
 
     local castDurationLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(castDurationLbl, 12, "")
+    NSI:SetUIFont(castDurationLbl, "small", "")
     castDurationLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(castDurationLbl, "Cast Duration (seconds)")
     castDurationLbl:SetPoint("TOPLEFT", encounterStartCodeBtn.frame, "BOTTOMLEFT", 0, -10)
 
     local bossIDLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(bossIDLbl, 12, "")
+    NSI:SetUIFont(bossIDLbl, "small", "")
     bossIDLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(bossIDLbl, "Boss ID (unit token)")
     bossIDLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
@@ -3024,13 +2994,13 @@ end]]
     trigF.bossIDEntry = bossIDEntry
 
     local bossEventLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(bossEventLbl, 12, "")
+    NSI:SetUIFont(bossEventLbl, "small", "")
     bossEventLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(bossEventLbl, "Boss Event")
     bossEventLbl:SetPoint("TOPLEFT", castDurationEntry.frame, "BOTTOMLEFT", 0, -10)
 
     local timerVarianceLbl = trigF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(timerVarianceLbl, 12, "")
+    NSI:SetUIFont(timerVarianceLbl, "small", "")
     timerVarianceLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(timerVarianceLbl, "Timer Variance (seconds)")
     timerVarianceLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
@@ -3079,7 +3049,7 @@ end]]
     sndF.ttsCB = ttsCB
 
     local ttsTextLbl = sndF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(ttsTextLbl, 12, "")
+    NSI:SetUIFont(ttsTextLbl, "small", "")
     ttsTextLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ttsTextLbl, "TTS Text (leave blank to speak the Display Text)")
     ttsTextLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -34)
@@ -3098,7 +3068,7 @@ end]]
     sndF.ttsTextEntry = ttsTextEntry
 
     local ttsTimerLbl = sndF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(ttsTimerLbl, 12, "")
+    NSI:SetUIFont(ttsTimerLbl, "small", "")
     ttsTimerLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ttsTimerLbl, "TTS Timer (seconds before the Alert expires)")
     ttsTimerLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -82)
@@ -3115,7 +3085,7 @@ end]]
     sndF.ttsTimerEntry = ttsTimerEntry
 
     local cdLbl = sndF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(cdLbl, 12, "")
+    NSI:SetUIFont(cdLbl, "small", "")
     cdLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(cdLbl, "Countdown for")
     cdLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -138)
@@ -3134,13 +3104,13 @@ end]]
     sndF.cdEntry = cdEntry
 
     local cdSecLbl = sndF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(cdSecLbl, 12, "")
+    NSI:SetUIFont(cdSecLbl, "small", "")
     cdSecLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(cdSecLbl, "seconds")
     cdSecLbl:SetPoint("LEFT", cdEntry.frame, "RIGHT", 5, 0)
 
     local sndFileLbl = sndF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(sndFileLbl, 12, "")
+    NSI:SetUIFont(sndFileLbl, "small", "")
     sndFileLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(sndFileLbl, "Sound File")
     sndFileLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -162)
@@ -3274,7 +3244,7 @@ end]]
         btn.arrowTex:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]])
         btn.arrowTex:SetVertexColor(unpack(STYLE.text_muted))
         btn.textLbl = btn:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(btn.textLbl, 11, "")
+        NSI:SetUIFont(btn.textLbl, "tiny", "")
         btn.textLbl:SetTextColor(unpack(STYLE.text_muted))
         btn.textLbl:SetPoint("LEFT", btn, "LEFT", 16, 0)
         btn.textLbl:SetText(label)
@@ -3338,7 +3308,7 @@ end]]
         lblFrame:SetHeight(loadRowH)
 
         row.nameLbl = lblFrame:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.nameLbl, 12, "")
+        NSI:SetUIFont(row.nameLbl, "small", "")
         row.nameLbl:SetAllPoints(lblFrame)
         row.nameLbl:SetJustifyH("LEFT")
         row.nameLbl:SetJustifyV("MIDDLE")
@@ -3413,7 +3383,7 @@ end]]
 
     -- ── Names section (fixed at bottom of loadF) ──────────────────────────────
     local namesHdrLbl = loadF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(namesHdrLbl, 11, "")
+    NSI:SetUIFont(namesHdrLbl, "tiny", "")
     namesHdrLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(namesHdrLbl, "Character Names (no server name)")
     namesHdrLbl:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 12)
@@ -3469,7 +3439,7 @@ end]]
                 nameRows[i].bg = nameRows[i]:CreateTexture(nil, "BACKGROUND")
                 nameRows[i].bg:SetAllPoints(nameRows[i])
                 nameRows[i].nLbl = nameRows[i]:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(nameRows[i].nLbl, 12, "")
+                NSI:SetUIFont(nameRows[i].nLbl, "small", "")
                 nameRows[i].nLbl:SetPoint("LEFT", nameRows[i], "LEFT", 8, 0)
                 nameRows[i].nLbl:SetTextColor(unpack(STYLE.text_color))
                 nameRows[i].delBtn = CreateFrame("Button", nil, nameRows[i])
@@ -3656,7 +3626,7 @@ end]]
             customPreviewPopup:SetFrameLevel(100)
 
             customPreviewPopup.helpLabel = customPreviewPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customPreviewPopup.helpLabel, 11, "")
+            NSI:SetUIFont(customPreviewPopup.helpLabel, "tiny", "")
             customPreviewPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
             customPreviewPopup.helpLabel:SetPoint("TOPLEFT", customPreviewPopup, "TOPLEFT", 10, -32)
             SetLocalizedText(customPreviewPopup.helpLabel, "Return a function(self, alertData, alertTable).")
@@ -3668,10 +3638,10 @@ end]]
             DF:ApplyStandardBackdrop(customPreviewPopup.editor)
             DF:ReskinSlider(customPreviewPopup.editor.scroll)
             customPreviewPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(customPreviewPopup.editor.editbox, 13, "OUTLINE")
+            NSI:SetUIFont(customPreviewPopup.editor.editbox, "label")
 
             customPreviewPopup.statusLabel = customPreviewPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customPreviewPopup.statusLabel, 11, "")
+            NSI:SetUIFont(customPreviewPopup.statusLabel, "tiny", "")
             customPreviewPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
             customPreviewPopup.statusLabel:SetPoint("BOTTOMLEFT", customPreviewPopup, "BOTTOMLEFT", 10, 14)
             customPreviewPopup.statusLabel:SetWidth(430)
@@ -3778,14 +3748,14 @@ end]]
             customOptionEditorPopup.choicesEntry:SetPoint("TOPLEFT", customOptionEditorPopup.minimumEntry.frame, "BOTTOMLEFT", 0, -14)
 
             customOptionEditorPopup.helpLabel = customOptionEditorPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customOptionEditorPopup.helpLabel, 11, "")
+            NSI:SetUIFont(customOptionEditorPopup.helpLabel, "tiny", "")
             customOptionEditorPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
             customOptionEditorPopup.helpLabel:SetPoint("TOPLEFT", customOptionEditorPopup.choicesEntry.frame, "BOTTOMLEFT", 0, -8)
             customOptionEditorPopup.helpLabel:SetWidth(680)
             customOptionEditorPopup.helpLabel:SetJustifyH("LEFT")
 
             customOptionEditorPopup.statusLabel = customOptionEditorPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customOptionEditorPopup.statusLabel, 11, "")
+            NSI:SetUIFont(customOptionEditorPopup.statusLabel, "tiny", "")
             customOptionEditorPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
             customOptionEditorPopup.statusLabel:SetPoint("BOTTOMLEFT", customOptionEditorPopup, "BOTTOMLEFT", 10, 14)
             customOptionEditorPopup.statusLabel:SetWidth(430)
