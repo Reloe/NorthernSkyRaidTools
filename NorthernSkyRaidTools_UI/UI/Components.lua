@@ -2901,6 +2901,8 @@ end
 --
 --  items – array of descriptor tables:
 --    { type="button",  label="…", fnc=fn,    icon=texOrID, spellIcon=spellID }
+--    { type="button",  label="…", fnc=fn,    keepOpen=true }
+--        the menu stays open and redraws; fnc may return a new item list
 --    { type="submenu", label="…", items={…}, icon=texOrID, spellIcon=spellID }
 --    { type="label",   text="…" }
 --    { type="separator", label="…" }   -- label optional; centred in the line
@@ -2923,6 +2925,8 @@ local CTX_SCROLL_W  = 4
 local CTX_SCROLL_MIN_THUMB = 12
 
 local MAX_CTX_LEVELS = 5
+-- Click-away level over an owner frame: above its widgets, below the menu frames (TOOLTIP 200+).
+local CTX_CLICKAWAY_OVER_OWNER = 50
 local ctxFrames      = {}
 local ctxClickaway   = nil
 local contextMeasureFontString
@@ -2969,9 +2973,21 @@ local function EnsureCtxClickaway()
     ctxClickaway = CreateFrame("Frame", nil, UIParent)
     ctxClickaway:SetAllPoints(UIParent)
     ctxClickaway:SetFrameStrata("FULLSCREEN")
+    ctxClickaway.defaultLevel = ctxClickaway:GetFrameLevel()
     ctxClickaway:EnableMouse(true)
     ctxClickaway:Hide()
     ctxClickaway:SetScript("OnMouseDown", function() HideCtxFromLevel(1) end)
+end
+
+-- over: a frame above FULLSCREEN (a TOOLTIP dialog) that a click outside the menu should also reach.
+local function PlaceCtxClickaway(over)
+    if over then
+        ctxClickaway:SetFrameStrata(over:GetFrameStrata())
+        ctxClickaway:SetFrameLevel(over:GetFrameLevel() + CTX_CLICKAWAY_OVER_OWNER)
+    else
+        ctxClickaway:SetFrameStrata("FULLSCREEN")
+        ctxClickaway:SetFrameLevel(ctxClickaway.defaultLevel)
+    end
 end
 
 local function GetOrCreateCtxFrame(level)
@@ -3023,12 +3039,16 @@ end
 
 local ShowContextAtLevel
 
-ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows)
+ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows, startScroll)
     HideCtxFromLevel(level + 1)
     EnsureCtxClickaway()
 
     local f         = GetOrCreateCtxFrame(level)
     local baseLevel = f:GetFrameLevel()
+    -- Redraws this menu in place, for keepOpen items.
+    f._reshow = function(newItems, scroll)
+        ShowContextAtLevel(newItems, level, xNormal, xFlip, yTop, width, maxRows, scroll)
+    end
 
     -- ── Width ────────────────────────────────────────────────────
     local autoWidth = (width == nil)
@@ -3281,6 +3301,12 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
                                     ShowContextAtLevel(item.contextItems, level + 1, rRight + 2, rLeft - 2, rTop, item.contextWidth, maxRows)
                                 end
                             end
+                        elseif item.fnc and item.keepOpen then
+                            -- fnc may return a new item list; either way the menu is redrawn at its scroll position.
+                            local newItems = item.fnc()
+                            if f._reshow and f:IsShown() then
+                                f._reshow(type(newItems) == "table" and newItems or items, f._scroll)
+                            end
                         elseif item.fnc then
                             HideCtxFromLevel(1)
                             item.fnc()
@@ -3313,7 +3339,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
 
     -- ── Scroll ───────────────────────────────────────────────────
     local maxScroll = contentH - viewH   -- 0 when everything fits
-    f._scroll = 0
+    f._scroll = math.min(math.max(startScroll or 0, 0), maxScroll)
 
     local function ApplyScroll()
         for _, e in ipairs(layout) do
@@ -3362,6 +3388,7 @@ end
 
 local function ShowContextMenu(items, width, maxRows)
     EnsureCtxClickaway()
+    PlaceCtxClickaway(nil)
     local scale  = UIParent:GetEffectiveScale()
     local cx, cy = GetCursorPosition()
     local uiX    = cx / scale
@@ -3376,10 +3403,14 @@ end
 --  a frame (e.g. a menu-bar button) instead of at the cursor.
 --  Left edge aligns to the anchor's left edge normally, flipping
 --  to right-align against the anchor's right edge if it would
---  otherwise run off the edge of the screen.
+--  otherwise run off the edge of the screen. Pass `over` when
+--  the anchor sits in a frame above FULLSCREEN, so a click on
+--  that frame closes the menu too.
 -- ============================================================
-local function ShowContextMenuAtFrame(items, anchor, width, maxRows)
+-- beside: open to the right of the anchor, tops aligned, flipping to its left at the screen edge.
+local function ShowContextMenuAtFrame(items, anchor, width, maxRows, over, beside)
     EnsureCtxClickaway()
+    PlaceCtxClickaway(over)
     -- anchor's Get{Left,Right,Bottom} are expressed in ITS OWN effective-scale units,
     -- but the popup frame is parented straight to UIParent, so if anchor sits inside
     -- something with its own SetScale (e.g. a window's adjustable scale bar), the raw
@@ -3388,6 +3419,10 @@ local function ShowContextMenuAtFrame(items, anchor, width, maxRows)
     local left   = (anchor:GetLeft() or 0) * scaleRatio
     local right  = (anchor:GetRight() or 0) * scaleRatio
     local bottom = (anchor:GetBottom() or 0) * scaleRatio
+    if beside then
+        ShowContextAtLevel(items, 1, right + 2, left - 2, (anchor:GetTop() or 0) * scaleRatio, width, maxRows)
+        return
+    end
     ShowContextAtLevel(items, 1, left, right, bottom, width, maxRows)
 end
 
@@ -3739,6 +3774,7 @@ NSI.UI.Components = {
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
     ShowContextMenuAtFrame = ShowContextMenuAtFrame,
+    HideContextMenu     = function() HideCtxFromLevel(1) end,
     CreateLink          = CreateLink,
     Solid               = NSI.UI.Pixel.Solid,
     Border              = NSI.UI.Pixel.Border,

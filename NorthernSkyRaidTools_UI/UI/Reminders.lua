@@ -695,7 +695,7 @@ local function BuildReminderScreen(personal, parentFrame)
             store[newname] = newContent
             store[oldname] = nil
         end
-        if screen.editor then screen.editor:SetText(newContent) end
+        if screen.editor then screen.editor:SetText(store[newname] or newContent) end
         if not personal and NSRT.InviteList then
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             NSRT.InviteList[oldname] = nil

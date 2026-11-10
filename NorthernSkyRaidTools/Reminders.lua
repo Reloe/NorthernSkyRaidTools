@@ -58,21 +58,32 @@ local function CopyReminderInfo(info)
 end
 
 
-function NSI:AddToReminder(reminderInfo)
-    local info = self:CreateReminder(reminderInfo)
+local BuildReminder
+
+-- store defaults to NSI.ProcessedReminder; the timeline preview passes a table of its own.
+function NSI:AddToReminder(reminderInfo, store)
+    local info = BuildReminder(self, reminderInfo, store)
     if not info then return end
-    table.insert(self.ProcessedReminder[info.encID][info.phase], info)
+    store = store or self.ProcessedReminder
+    table.insert(store[info.encID][info.phase], info)
 end
 
 function NSI:CreateReminder(info)
+    return BuildReminder(self, info)
+end
+
+BuildReminder = function(self, info, store)
     if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull or info.isAnchorPreview)) then
         return nil
     end
     info = CopyReminderInfo(info)
     info.time = info.time or info.dur or 60
     info.encID = info.encID or 0
-    self.ProcessedReminder = self.ProcessedReminder or {}
-    self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
+    if not store then
+        self.ProcessedReminder = self.ProcessedReminder or {}
+        store = self.ProcessedReminder
+    end
+    store[info.encID] = store[info.encID] or {}
     if info.isTaunt then
         local class = select(3, UnitClass("player"))
         info.spellID = ClassToTauntID[class] or info.spellID
@@ -165,18 +176,50 @@ function NSI:CreateReminder(info)
         info.sound = NSRT.ReminderSettings.DefaultSound
     end
 
-    self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}
+    store[info.encID][info.phase] = store[info.encID][info.phase] or {}
     info.name = info.name or info.internalID
-    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.id = #store[info.encID][info.phase]+1
     info.countdown = info.countdown and tonumber(info.countdown)
     info.dur = info.dur or 8
     if info.DisplayType == "Icon" and info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText end
-    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.id = #store[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     info.glowColors = info.glowunit and (info.glowColors or NSRT.ReminderSettings.GlowSettings.colors)
     if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
     return info
+end
+
+-- The fields of one note line, as ProcessReminder reads them.
+function NSI:ParseReminderLine(line)
+    local f = {}
+    f.tag = line:match("tag:([^;]+)")
+    f.DisplayType = line:match("DisplayType:([^;]+)")
+    f.time = line:match("time:(%-?%d*%.?%d+)")
+    f.text = line:match("text:([^;]+)")
+    f.spellID = line:match("spellid:(%d+)")
+    f.phase = line:match("ph:(%d*%.?%d+)")
+    f.dur = line:match("dur:(%d*%.?%d+)")
+    f.TTS = line:match("TTS:([^;]+)")
+    f.TTSTimer = line:match("TTSTimer:(%d*%.?%d+)")
+    f.countdown = line:match("countdown:(%d+)")
+    local sound = line:match("sound:([^;]+)")
+    f.rawSound = sound
+     --FIX Remove color codes
+    if sound then
+        local soundPath = self.LSM:Fetch("sound", f.rawSound)
+        if ((not soundPath) or soundPath == 1) then
+            local cleanSound = sound:gsub("|c%x%x%x%x%x%x%x%x", "")
+                                    :gsub("|r", "")
+                                    :match("^[%s|]*(.-)[%s|]*$")
+            sound = cleanSound
+        end
+    end
+    f.sound = sound
+    f.glowunit = line:match("glowunit:([^;]+)")
+    f.bossSpellID = line:match("bossSpell:(%d+)")
+    f.colors = line:match("colors:([^;]+)")
+    return f
 end
 
 function NSI:ProcessReminder()
@@ -266,31 +309,10 @@ function NSI:ProcessReminder()
                     firstline = true
                 end
             end
-            local tag = line:match("tag:([^;]+)")
-            local DisplayType = line:match("DisplayType:([^;]+)")
-            local time = line:match("time:(%-?%d*%.?%d+)")
-            local text = line:match("text:([^;]+)")
-            local spellID = line:match("spellid:(%d+)")
-            local phase = line:match("ph:(%d*%.?%d+)")
-            local dur = line:match("dur:(%d*%.?%d+)")
-            local TTS = line:match("TTS:([^;]+)")
-            local TTSTimer = line:match("TTSTimer:(%d*%.?%d+)")
-            local countdown = line:match("countdown:(%d+)")
-            local sound = line:match("sound:([^;]+)")
-            local rawSound = sound
-             --FIX Remove color codes
-            if sound then
-                local soundPath = self.LSM:Fetch("sound", rawSound)
-                if ((not soundPath) or soundPath == 1) then
-                    local cleanSound = sound:gsub("|c%x%x%x%x%x%x%x%x", "")
-                                            :gsub("|r", "")
-                                            :match("^[%s|]*(.-)[%s|]*$")
-                    sound = cleanSound
-                end
-            end
-            local glowunit = line:match("glowunit:([^;]+)")
-            local bossSpellID = line:match("bossSpell:(%d+)")
-            local colors = line:match("colors:([^;]+)")
+            local f = self:ParseReminderLine(line)
+            local tag, DisplayType, time, text, spellID, phase = f.tag, f.DisplayType, f.time, f.text, f.spellID, f.phase
+            local dur, TTS, TTSTimer, countdown, sound, rawSound = f.dur, f.TTS, f.TTSTimer, f.countdown, f.sound, f.rawSound
+            local glowunit, bossSpellID, colors = f.glowunit, f.bossSpellID, f.colors
             if time and tag and (text or spellID) and encID and encIDs ~= 0 and not firstline then
                 local displayLine = line
                 local phaseText = phase
