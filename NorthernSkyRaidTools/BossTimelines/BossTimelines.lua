@@ -27,6 +27,7 @@ local _, NSI = ... -- Internal namespace
                 phase = number,         -- Phase number (1, 2, 3, etc.)
                 times = {number, ...},  -- Array of cast times (seconds from phase start)
                 duration = number,      -- Ability duration in seconds (0 if instant)
+                castTime = number,      -- Optional cast time in seconds; each time is the cast end, so the cast spans time - castTime .. time
             },
         },
     }
@@ -35,29 +36,33 @@ local _, NSI = ... -- Internal namespace
     Priority order (highest to lowest):
     1.  raid damage      - Raid-wide damage requiring healing cooldowns
     2.  raid aoe         - Raid-wide AOE damage
-    3.  raid soak        - Raid-wide soak mechanics
-    4.  group soak       - Group soak mechanics requiring assignments
-    5.  raid debuff      - Raid-wide debuff application
-    6.  healing absorb   - Healing absorption effects
-    7.  tankbuster       - Tank-specific burst damage
-    8.  tank debuff      - Tank debuff mechanics
-    9.  singletarget     - Single target mechanics
-    10. debuffs          - Multiple debuff application
-    11. debuff           - Single debuff application
-    12. dispel           - Dispellable mechanics
-    13. damage buff      - Damage increase buffs
-    14. damage amp       - Damage amplification effects
-    15. spread           - Spread/positioning mechanics
-    16. frontal          - Frontal cone attacks
-    17. knock            - Knockback mechanics
-    18. soak             - General soak mechanics
-    19. cc               - Crowd control mechanics
-    20. interrupt        - Interruptible casts
-    21. add spawn        - Add spawn events
-    22. phase change     - Phase transition triggers
-    23. event            - Special events
-    24. boss immune      - Boss immunity phases
-    25. intermission     - Intermission phases
+    3.  raid dot         - Raid-wide damage over time
+    4.  ramping rot      - Raid-wide damage that ramps up over time
+    5.  raid soak        - Raid-wide soak mechanics
+    6.  group soak       - Group soak mechanics requiring assignments
+    7.  raid debuff      - Raid-wide debuff application
+    8.  healing absorb   - Healing absorption effects
+    9.  tankbuster       - Tank-specific burst damage
+    10. tank debuff      - Tank debuff mechanics
+    11. singletarget     - Single target mechanics
+    12. debuffs          - Multiple debuff application
+    13. debuff           - Single debuff application
+    14. dispel           - Dispellable mechanics
+    15. damage buff      - Damage increase buffs
+    16. damage amp       - Damage amplification effects
+    17. spread           - Spread/positioning mechanics
+    18. movement         - Mechanics that force movement
+    19. frontal          - Frontal cone attacks
+    20. knock            - Knockback mechanics
+    21. soak             - General soak mechanics
+    22. cc               - Crowd control mechanics
+    23. interrupt        - Interruptible casts
+    24. add spawn        - Add spawn events
+    25. adds             - Mechanics involving adds
+    26. phase change     - Phase transition triggers
+    27. event            - Special events
+    28. boss immune      - Boss immunity phases
+    29. intermission     - Intermission phases
 ]]
 
 -- Initialize the BossTimelines table
@@ -70,6 +75,8 @@ NSI.BossTimelineColors = {
     -- Raid damage categories (Red #B65552)
     ["raid damage"] = {0.71, 0.33, 0.32},
     ["raid aoe"] = {0.71, 0.33, 0.32},
+    ["raid dot"] = {0.97, 0.56, 0.70},       -- #f78fb3 Pink
+    ["ramping rot"] = {0.83, 0.64, 0.45},    -- #d4a373 Tan
 
     -- Soak categories
     ["raid soak"] = {0.75, 0.34, 0},        -- #bf5700 Orange
@@ -100,9 +107,11 @@ NSI.BossTimelineColors = {
     -- Movement/Positioning categories
     ["spread"] = {0.10, 0.74, 0.61},        -- #1abc9c Teal
     ["knock"] = {0, 0.40, 0},               -- #006600 Forest Green
+    ["movement"] = {0.64, 0.90, 0.21},      -- #a3e635 Lime
 
     -- Add spawn / Event / Phase categories (White)
     ["add spawn"] = {1, 1, 1},              -- #FFFFFF White
+    ["adds"] = {0.88, 0.88, 0.63},          -- #e0e0a0 Khaki
     ["phase change"] = {1, 1, 1},           -- #FFFFFF White
     ["event"] = {1, 1, 1},                  -- #FFFFFF White
 
@@ -116,29 +125,33 @@ NSI.BossTimelineColors = {
 NSI.BossTimelineCategoryOrder = {
     ["raid damage"] = 1,
     ["raid aoe"] = 2,
-    ["raid soak"] = 3,
-    ["group soak"] = 4,
-    ["raid debuff"] = 5,
-    ["healing absorb"] = 6,
-    ["tankbuster"] = 7,
-    ["tank debuff"] = 8,
-    ["singletarget"] = 9,
-    ["debuffs"] = 10,
-    ["debuff"] = 11,
-    ["dispel"] = 12,
-    ["damage buff"] = 13,
-    ["damage amp"] = 14,
-    ["spread"] = 15,
-    ["frontal"] = 16,
-    ["knock"] = 17,
-    ["soak"] = 18,
-    ["cc"] = 19,
-    ["interrupt"] = 20,
-    ["add spawn"] = 21,
-    ["phase change"] = 22,
-    ["event"] = 23,
-    ["boss immune"] = 24,
-    ["intermission"] = 25,
+    ["raid dot"] = 3,
+    ["ramping rot"] = 4,
+    ["raid soak"] = 5,
+    ["group soak"] = 6,
+    ["raid debuff"] = 7,
+    ["healing absorb"] = 8,
+    ["tankbuster"] = 9,
+    ["tank debuff"] = 10,
+    ["singletarget"] = 11,
+    ["debuffs"] = 12,
+    ["debuff"] = 13,
+    ["dispel"] = 14,
+    ["damage buff"] = 15,
+    ["damage amp"] = 16,
+    ["spread"] = 17,
+    ["movement"] = 18,
+    ["frontal"] = 19,
+    ["knock"] = 20,
+    ["soak"] = 21,
+    ["cc"] = 22,
+    ["interrupt"] = 23,
+    ["add spawn"] = 24,
+    ["adds"] = 25,
+    ["phase change"] = 26,
+    ["event"] = 27,
+    ["boss immune"] = 28,
+    ["intermission"] = 29,
 }
 
 -- Categories considered "important" for healer filtering
@@ -298,6 +311,28 @@ function NSI:GetBossTimeline(encounterID, difficulty)
     return nil
 end
 
+-- Phase keys in ascending order (keys can be fractional, e.g. 1.5, 1.75)
+function NSI:SortedPhaseKeys(phases)
+    local keys = {}
+    for phaseNum in pairs(phases or {}) do
+        keys[#keys + 1] = phaseNum
+    end
+    table.sort(keys)
+    return keys
+end
+
+-- The trailing "End of Fight" marker phase (default start at or past the duration), or nil
+function NSI:GetEndOfFightPhase(timeline)
+    if not timeline or not timeline.phases or not timeline.duration then return nil end
+    local keys = self:SortedPhaseKeys(timeline.phases)
+    local last = keys[#keys]
+    local lastStart = last and last ~= 1 and timeline.phases[last].start
+    if lastStart and lastStart >= timeline.duration then
+        return last
+    end
+    return nil
+end
+
 -- Get user-adjusted phase start time, or default if not set
 function NSI:GetPhaseStart(encounterID, phaseNum, difficulty)
     -- Phase 1 always starts at 0
@@ -376,13 +411,10 @@ function NSI:GetBossTimelineAbilities(encounterID, difficulty)
     if not timeline then return nil end
 
     -- Pre-calculate all phase start times for filtering
+    local phaseKeys = self:SortedPhaseKeys(timeline.phases)
     local phaseStarts = {}
-    local maxPhase = 0
-    for phaseNum, _ in pairs(timeline.phases) do
+    for _, phaseNum in ipairs(phaseKeys) do
         phaseStarts[phaseNum] = self:GetPhaseStart(encounterID, phaseNum, actualDifficulty)
-        if phaseNum > maxPhase then
-            maxPhase = phaseNum
-        end
     end
 
     local result = {}
@@ -391,11 +423,13 @@ function NSI:GetBossTimelineAbilities(encounterID, difficulty)
         local phaseStart = self:GetPhaseStart(encounterID, ability.phase, actualDifficulty)
         local absoluteTimes = {}
 
-        -- Get the start time of the next phase (if it exists)
         -- Abilities from this phase should not extend past the next phase start
         local nextPhaseStart = nil
-        if ability.phase < maxPhase then
-            nextPhaseStart = phaseStarts[ability.phase + 1]
+        for _, phaseNum in ipairs(phaseKeys) do
+            if phaseNum > ability.phase then
+                nextPhaseStart = phaseStarts[phaseNum]
+                break
+            end
         end
 
         for _, time in ipairs(ability.times) do
@@ -420,6 +454,7 @@ function NSI:GetBossTimelineAbilities(encounterID, difficulty)
                 phase = ability.phase,
                 times = absoluteTimes,
                 duration = ability.duration,
+                castTime = ability.castTime,
                 color = color,
             })
         end

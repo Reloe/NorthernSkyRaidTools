@@ -176,6 +176,7 @@ function NSI:AddMissingDefaults()
             Groups = {},
         },
         PhaseTimings = {},
+        TimelineWindowState = {},
 
         -- Active reminder persistence
         ActiveReminder = nil,
