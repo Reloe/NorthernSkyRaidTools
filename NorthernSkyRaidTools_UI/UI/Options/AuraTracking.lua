@@ -313,19 +313,12 @@ local function BuildAuraTrackingUI(screen)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
     title:SetText(NSI:Loc("|cFF00FFFFAura|r Tracking"))
 
-    local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22, nil, nil, nil, "NSUIAuraTrackSearch")
-    searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 24)
-    local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
-    searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
-    searchHint:SetTextColor(unpack(STYLE.text_hint))
-    NSI:SetUIFont(searchHint, "body", "")
-    local function UpdateSearchHint(eb) searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus()) end
-    searchEntry.editBox:SetScript("OnTextChanged", function(self)
-        searchText = self:GetText(); UpdateSearchHint(self); RebuildList()
+    -- list filter: narrows the entries you can select from
+    local searchEntry = NSI.UI.Components.CreateSearchBox(screen, leftWidth - pad * 2, 22, "NSUIAuraTrackSearch", function(text)
+        searchText = text
+        RebuildList()
     end)
-    searchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateSearchHint(self) end)
-    searchEntry.editBox:HookScript("OnEditFocusLost",   function(self) UpdateSearchHint(self) end)
+    searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 24)
 
     local useBuiltinsCheckbox = CreateCheckButton(screen, NSI:Loc("Enable All Built-in Boss Trackings"), function()
         return NSRT.AuraTrackingSettings.UseBuiltinAuraTrackings
@@ -2113,8 +2106,9 @@ local function BuildAuraTrackingUI(screen)
     -- Text Font/Text Outline fields, bound to NSRT.PlayerStatsDisplay instead
     -- of an aura settings table. No Trigger/Load tab, no icon/grid/border/
     -- duration/stack fields, since none of that applies to plain text.
-    local statsScrollObj, statsAnchorEntry
-    local STATS_HEADER_HEIGHT = 138
+    local statsScrollObj, statsHost
+    local RebuildStatsWidgets
+    local STATS_HEADER_HEIGHT = 54   -- title + description above the cards
 
     local function BuildStatsDisplayDefs()
         local s = NSI:EnsurePlayerStatsDisplaySettings() or NSRT.PlayerStatsDisplay
@@ -2131,7 +2125,26 @@ local function BuildAuraTrackingUI(screen)
                 set = function(_, v) s.Stats[statKey] = v; NSI:RefreshPlayerStatsDisplayLive() end })
         end
 
-        add({ Type = "Label", text = "Position Settings", highlight = true })
+        add({ Type = "Label", text = "Position Settings", highlight = true,
+            headerButton = {
+                label = "Preview/Unlock",
+                tooltip = tip("Preview/Unlock", "Show the stats display so you can drag it into place."),
+                func = function() NSI:TogglePlayerStatsPreview() end,
+            } })
+        add({ Type = "TextEntry", label = "Anchor Frame",
+            tooltip = tip("Anchor Frame", "Enter a frame name (e.g. UIParent) to anchor this display to."),
+            get = function() return s.CustomAnchorFrame or "UIParent" end,
+            set = function(_, v)
+                v = strtrim(tostring(v or ""))
+                if v == "" then v = "UIParent" end
+                if not NSI:IsValidAuraTrackingAnchorFrame(v) then
+                    print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
+                    RebuildStatsWidgets()   -- put the previous, valid value back
+                    return
+                end
+                s.CustomAnchorFrame = v
+                NSI:RefreshPlayerStatsDisplayLive()
+            end })
         add({ Type = "Dropdown", label = "Anchor Point", values = ANCHOR_POINTS,
             tooltip = tip("Anchor Point", "Point on this display that should be anchored."),
             get = function() return s.Anchor or "CENTER" end,
@@ -2152,6 +2165,11 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Frame Strata", "Controls whether this display appears above or below other UI frames."),
             get = function() return s.FrameStrata or "MEDIUM" end,
             set = function(_, v) s.FrameStrata = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Button", label = "Reset Position",
+            func = function()
+                NSI:ResetPlayerStatsDisplayPosition()
+                RebuildStatsWidgets()
+            end })
 
         add({ Type = "Label", text = "Text Style", highlight = true })
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
@@ -2178,26 +2196,24 @@ local function BuildAuraTrackingUI(screen)
         return defs
     end
 
-    local function RebuildStatsWidgets()
+    RebuildStatsWidgets = function()
         if not statsPanel then return end
         local scrollPosition = 0
         if statsScrollObj then scrollPosition = statsScrollObj.frame:GetVerticalScroll() or 0 end
         local defs = BuildStatsDisplayDefs()
+        -- the panel runs from topY down to the tab's bottom padding
+        local scrollH = tab_content_height + topY - pad - STATS_HEADER_HEIGHT
         if not statsScrollObj then
-            statsScrollObj = CreateScrollBox(statsPanel, rightW - 14, tab_content_height - STATS_HEADER_HEIGHT)
+            statsScrollObj = CreateScrollBox(statsPanel, tabScrollW, scrollH)
             statsScrollObj.frame:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -STATS_HEADER_HEIGHT)
+            statsHost = NSI.UI.Components.CreateCardHost(statsScrollObj.scrollChild, statsScrollObj.scrollChild:GetWidth())
         else
-            statsScrollObj.scrollChild:Hide()
-            local newScrollChild = CreateFrame("Frame", nil, statsScrollObj.frame)
-            newScrollChild:SetWidth(statsScrollObj.scrollChild:GetWidth())
-            newScrollChild:SetHeight(1)
-            statsScrollObj.frame:SetScrollChild(newScrollChild)
-            statsScrollObj.scrollChild = newScrollChild
+            statsScrollObj:SetSize(tabScrollW, scrollH)
         end
-        local totalH = BuildWidgets(statsScrollObj.scrollChild, defs, statsScrollObj.scrollChild:GetWidth(), "NSRTPlayerStatsDisplay")
+        local totalH = statsHost:Apply(defs)
         statsScrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         statsScrollObj:UpdateScrollBar()
-        statsScrollObj.frame:SetVerticalScroll(scrollPosition)
+        statsScrollObj.frame:SetVerticalScroll(math.min(scrollPosition, math.max(0, statsScrollObj.scrollChild:GetHeight() - statsScrollObj.frame:GetHeight())))
     end
 
     local function EnsureStatsPanel()
@@ -2220,42 +2236,6 @@ local function BuildAuraTrackingUI(screen)
         descLbl:SetJustifyH("LEFT")
         descLbl:SetWordWrap(true)
         descLbl:SetText(NSI:Loc("Shows a small always-on text block with the combat rating stats you choose below. Disabled by default."))
-
-        local anchorLbl = statsPanel:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(anchorLbl, "tiny", "")
-        anchorLbl:SetTextColor(unpack(STYLE.text_gold))
-        anchorLbl:SetText(NSI:Loc("Anchor Frame"))
-        anchorLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -60)
-
-        statsAnchorEntry = CreateTextEntry(statsPanel, nil,
-            function() return NSRT.PlayerStatsDisplay.CustomAnchorFrame or "UIParent" end,
-            function(_, v)
-                local s = NSRT.PlayerStatsDisplay
-                v = strtrim(tostring(v or ""))
-                if v == "" then v = "UIParent" end
-                if not NSI:IsValidAuraTrackingAnchorFrame(v) then
-                    print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
-                    statsAnchorEntry:SetValue(s.CustomAnchorFrame or "UIParent")
-                    return
-                end
-                s.CustomAnchorFrame = v
-                NSI:RefreshPlayerStatsDisplayLive()
-            end,
-            rightW, 22, nil, nil, nil, "NSUIPlayerStatsAnchorEntry",
-            { title = NSI:Loc("Anchor Frame"), desc = NSI:Loc("Enter a frame name (e.g. UIParent) to anchor this display to.") })
-        statsAnchorEntry:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -78)
-
-        local previewBtn = CreateLocalizedButton(statsPanel, "Preview/Unlock", function()
-            NSI:TogglePlayerStatsPreview()
-        end, 160, 22, "NSUIPlayerStatsPreview")
-        previewBtn:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -108)
-
-        local resetBtn = CreateLocalizedButton(statsPanel, "Reset Position", function()
-            NSI:ResetPlayerStatsDisplayPosition()
-            statsAnchorEntry:SetValue(NSRT.PlayerStatsDisplay.CustomAnchorFrame or "UIParent")
-            RebuildStatsWidgets()
-        end, 160, 22, "NSUIPlayerStatsResetPosition")
-        resetBtn:SetPoint("LEFT", previewBtn.frame, "RIGHT", 8, 0)
     end
 
     ShowPlayerStatsPanel = function()
@@ -2340,6 +2320,9 @@ local function BuildAuraTrackingUI(screen)
 
     -- Header search: expose the selected display's Display/Trigger definitions (see Search.lua).
     screen.SearchPanels = function()
+        if isStatsSelected then
+            return { { id = "Stats", title = "Player Stats Display", defs = BuildStatsDisplayDefs() } }
+        end
         if not selectedKey then return nil end
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
         if not settings then return nil end
@@ -2349,10 +2332,16 @@ local function BuildAuraTrackingUI(screen)
         }
     end
     screen.SearchReveal = function(id)
+        if id == "Stats" then return statsHost, statsScrollObj end
         activeTab = id
         RebuildWidgetTab()
         return tabHost[id], tabScroll[id]
     end
+
+    -- Header search: settings of the selected display (or the Player Stats Display)
+    NSI.UI.ScopedSearch.Create(screen, "NSUIAuraTrackingSettingsSearch", {
+        collect = NSI.UI.ScopedSearch.PanelCollector(screen),
+    })
 
     RebuildList()
     if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then

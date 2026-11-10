@@ -135,12 +135,12 @@ local function BuildAuraGlowsUI(screen)
     useBuiltinsCheckbox:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -60)
     NSI:SetUIFont(useBuiltinsCheckbox.label, "tiny", "")
 
-    local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22, nil, nil, nil, "NSUIAuraGlowSearch")
+    -- list filter: narrows the entries you can select from
+    local searchEntry = NSI.UI.Components.CreateSearchBox(screen, leftWidth - pad * 2, 22, "NSUIAuraGlowSearch", function(text)
+        searchText = text
+        RebuildList()
+    end)
     searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -34)
-    local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
-    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
-    searchEntry.editBox:SetScript("OnTextChanged", function(editBox) searchText = editBox:GetText(); searchHint:SetShown(searchText == ""); RebuildList() end)
 
     local createButton = CreateLocalizedButton(screen, "Create Aura Glow", function()
         local key = NSI:AddCustomAuraGlow()
@@ -1097,6 +1097,11 @@ local function BuildAuraGlowsUI(screen)
         RebuildTab()
         return tabHost[id], tabScroll[id]
     end
+
+    -- Header search: settings of the selected glow
+    NSI.UI.ScopedSearch.Create(screen, "NSUIAuraGlowSettingsSearch", {
+        collect = NSI.UI.ScopedSearch.PanelCollector(screen),
+    })
 
     RebuildList()
     if selectedKey and NSI:GetAuraGlowSettings(selectedKey) then RebuildTab() else rightPanel:Hide() end

@@ -26,150 +26,19 @@ local function SetLocalizedText(object, key)
     NSI.UI.Components.RegisterLocalizedText(object, key)
 end
 
-local CIRCLE_TEXTURES = {
-    {label="2 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_2px.png]]},
-    {label="5 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_5px.png]]},
-    {label="8 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]]},
-    {label="10 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_10px.png]]},
-    {label="15 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_15px.png]]},
-}
-
-local function GetCircleTextureLabel(texture)
-    for _, option in ipairs(CIRCLE_TEXTURES) do
-        if option.value == texture then return option.label end
-    end
-    return texture and tostring(texture) or ""
-end
-
-local function GetDefaultCircleTextureLabel()
-    local texture = NSRT.ReminderSettings and NSRT.ReminderSettings.CircleSettings
-        and NSRT.ReminderSettings.CircleSettings.Texture
-    return NSI:Loc("Default") .. " (" .. GetCircleTextureLabel(texture) .. ")"
-end
-
-local function FormatPhaseValue(phase)
-    if type(phase) == "table" then
-        local values = {}
-        for _, value in ipairs(phase) do
-            values[#values + 1] = tostring(value)
-        end
-        return table.concat(values, ",")
-    end
-    return tostring(phase or 1)
-end
-
-local function ParsePhaseValue(value)
-    local phases = {}
-    local seen = {}
-    for token in tostring(value or ""):gmatch("[^,%s]+") do
-        local phase = tonumber(token)
-        if phase and phase >= 1 and not seen[phase] then
-            seen[phase] = true
-            phases[#phases + 1] = phase
-        end
-    end
-    if #phases == 0 then
-        return 1
-    end
-    if #phases == 1 then
-        return phases[1]
-    end
-    table.sort(phases)
-    return phases
-end
-
-local function GetPhaseList(phase)
-    if type(phase) == "table" then
-        return phase
-    end
-    return {tonumber(phase) or 1}
-end
-
-local function InsertSortedTimer(timers, value)
-    timers = timers or {}
-    local inserted = false
-    for index, existing in ipairs(timers) do
-        if value < existing then
-            table.insert(timers, index, value)
-            inserted = true
-            break
-        end
-    end
-    if not inserted then
-        table.insert(timers, value)
-    end
-    return timers
-end
-
-local function FlattenPhaseTimers(phaseTimers)
-    local timers = {}
-    local seen = {}
-    for _, phase in ipairs(NSI:GetSortedPhaseKeys(phaseTimers)) do
-        for _, time in ipairs(phaseTimers[phase] or {}) do
-            if not seen[time] then
-                seen[time] = true
-                timers = InsertSortedTimer(timers, time)
-            end
-        end
-    end
-    return timers
-end
-
-local function BuildPhaseTimersFromFlatTimers(timers, phases)
-    local phaseTimers = {}
-    for _, phase in ipairs(phases) do
-        phaseTimers[phase] = {}
-        for _, time in ipairs(timers or {}) do
-            phaseTimers[phase] = InsertSortedTimer(phaseTimers[phase], time)
-        end
-    end
-    return phaseTimers
-end
-
-
--- ============================================================================
--- Alert Export / Import popups
--- ============================================================================
-
-function NSI:PromptReloeReminderImport(onImport)
-    local function DoImport()
-        self:ImportReloeReminders(nil, true)
-        local enc = NSUI and NSUI.encounters_frame
-        if enc and enc.RebuildList then enc.RebuildList() end
-        if enc and enc.RefreshSelected then enc.RefreshSelected() end
-        if onImport then onImport() end
-    end
-    local dialog = self.UI.Components.CreateDialog(
-        "NSRTReloeReminderImport",
-        NSI:Loc("Enable Reloe-Alerts"),
-        NSI:Loc("Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."),
-        NSI:Loc("Enable"), DoImport, NSI:Loc("Not Now"), nil)
-    dialog:Show()
-end
-
-local function ShowExportPopup(str, label)
-    NSI.UI.Components.CreateTextBoxDialog("AlertsExport", "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r", { readOnly = true }):Open(str or "", label)
-end
-
-local function ShowImportPopup()
-    local dialog = NSI.UI.Components.CreateTextBoxDialog("AlertsImport", "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
-        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
-    dialog:Open("", NSI:Loc("Paste an alerts export string below and click Import."), function(text, d)
-        local count, overwriteCount = NSAPI:ImportAlertsString(text)
-        if not count then
-            d:SetStatus(NSI:Loc("Invalid import string. Please check and try again."), true)
-            return false
-        end
-        print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
-        if overwriteCount and overwriteCount > 0 then
-            print("|cFFFFFF00NSRT:|r " .. string.format(NSI:Loc("Overwritten %d alert(s)."), overwriteCount))
-        end
-        local enc = NSUI.encounters_frame
-        if enc and enc.RebuildList then enc.RebuildList() end
-        if enc and enc.RefreshSelected then enc.RefreshSelected() end
-        return true
-    end)
-end
+local Parts = NSI.UI.EncounterAlertParts
+local Helpers = Parts.Helpers
+local CIRCLE_TEXTURES                = Helpers.CIRCLE_TEXTURES
+local GetCircleTextureLabel          = Helpers.GetCircleTextureLabel
+local GetDefaultCircleTextureLabel   = Helpers.GetDefaultCircleTextureLabel
+local FormatPhaseValue               = Helpers.FormatPhaseValue
+local ParsePhaseValue                = Helpers.ParsePhaseValue
+local GetPhaseList                   = Helpers.GetPhaseList
+local InsertSortedTimer              = Helpers.InsertSortedTimer
+local FlattenPhaseTimers             = Helpers.FlattenPhaseTimers
+local BuildPhaseTimersFromFlatTimers = Helpers.BuildPhaseTimersFromFlatTimers
+local ShowExportPopup                = Parts.Popups.ShowExportPopup
+local ShowImportPopup                = Parts.Popups.ShowImportPopup
 
 -- ============================================================================
 -- BuildEncounterAlertsUI
@@ -261,28 +130,12 @@ local function BuildEncounterAlertsUI(parentFrame)
         diffDDWidth, 22, "NSUIEncAlertDiffFilter")
     diffDD:SetPoint("TOPLEFT", filterDD.frame, "TOPRIGHT", 6, 0)
 
-    -- ── Search bar ──────────────────────────────────────────────────────────
-    local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22,
-        nil, nil, nil, "NSUIEncAlertSearch")
-    searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
-
-    local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
-    searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
-    searchHint:SetTextColor(unpack(STYLE.text_hint))
-    NSI:SetUIFont(searchHint, "body", "")
-
-    local function UpdateSearchHint(eb)
-        searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus())
-    end
-
-    searchEntry.editBox:SetScript("OnTextChanged", function(self)
-        searchText = self:GetText()
-        UpdateSearchHint(self)
+    -- ── List filter: narrows the alerts you can select from ─────────────────
+    local searchEntry = NSI.UI.Components.CreateSearchBox(screen, leftWidth - pad * 2, 22, "NSUIEncAlertSearch", function(text)
+        searchText = text
         if screen.RebuildList then screen.RebuildList() end
     end)
-    searchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateSearchHint(self) end)
-    searchEntry.editBox:HookScript("OnEditFocusLost",   function(self) UpdateSearchHint(self) end)
+    searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
 
     local reloeImportCB = CreateCheckButton(screen, NSI:Loc("Automatically Enable New Alerts"),
         function() return NSRT.Alerts.ReloeReminders end,
@@ -1510,13 +1363,14 @@ local function BuildEncounterAlertsUI(parentFrame)
     local dispHint, sndHint
     local RebuildOptionsContent
 
-    local function GetConditionText(condition)
-        if type(condition) == "table" and type(condition.func) == "string" and condition.func ~= "" then
-            return (type(condition.text) == "string" and condition.text ~= "" and condition.text) or NSI:Loc("Custom Condition")
-        elseif type(condition) == "string" and condition ~= "" then
-            return NSI:Loc("Custom Condition")
-        end
-        return nil
+    -- Settings registry for the header search (ScopedSearch): every labelled control of
+    -- the selected alert. types limits an entry to the display types that show it.
+    local searchables, searchScroll = {}, {}
+    local searchOptions   -- set by the Options tab: returns entry, definitions fn, host, scroll
+    local function Reg(tab, crumb, key, target, types)
+        local set
+        if types then set = {}; for _, v in ipairs(types) do set[v] = true end end
+        searchables[#searchables + 1] = { tab = tab, crumb = crumb, key = key, target = target, types = set }
     end
 
     local function PositionInnerTabLayout(conditionText)
@@ -1566,231 +1420,23 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
     end
 
-    local DEFAULT_CONDITION_FUNC = "return function()\n    return true\nend"
-    local conditionEditPopup
-    local function OpenConditionEditor()
-        if not trigF or not trigF._alert then return end
-
-        if not conditionEditPopup then
-            conditionEditPopup = DF:CreateSimplePanel(NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Custom Condition") .. "|r",
-                "NSUIEncAlertConditionEditor", { DontRightClickClose = true })
-            conditionEditPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-            conditionEditPopup:SetFrameLevel(100)
-
-            conditionEditPopup.nameLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.nameLabel, "small", "")
-            conditionEditPopup.nameLabel:SetTextColor(unpack(STYLE.text_soft))
-            SetLocalizedText(conditionEditPopup.nameLabel, "Condition Name")
-            conditionEditPopup.nameLabel:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -32)
-
-            conditionEditPopup.nameEntry = CreateTextEntry(conditionEditPopup, nil, nil, nil, 360, 22,
-                nil, nil, nil, "NSUIEncAlertConditionName")
-            conditionEditPopup.nameEntry:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -48)
-
-            conditionEditPopup.codeLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.codeLabel, "small", "")
-            conditionEditPopup.codeLabel:SetTextColor(unpack(STYLE.text_soft))
-            SetLocalizedText(conditionEditPopup.codeLabel, "Condition Function")
-            conditionEditPopup.codeLabel:SetPoint("TOPLEFT", conditionEditPopup.nameEntry.frame, "BOTTOMLEFT", 0, -12)
-
-            conditionEditPopup.helpLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.helpLabel, "tiny", "")
-            conditionEditPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
-            conditionEditPopup.helpLabel:SetJustifyH("LEFT")
-            conditionEditPopup.helpLabel:SetPoint("TOPLEFT", conditionEditPopup.codeLabel, "BOTTOMLEFT", 0, -2)
-            SetLocalizedText(conditionEditPopup.helpLabel, "Return a function which should return true when the alert should show.")
-
-            conditionEditPopup.editor = DF:NewSpecialLuaEditorEntry(conditionEditPopup, 280, 80, nil,
-                "NSUIEncAlertConditionEditorBox", false, true, true)
-            conditionEditPopup.editor:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -112)
-            conditionEditPopup.editor:SetPoint("BOTTOMRIGHT", conditionEditPopup, "BOTTOMRIGHT", -25, 48)
-            DF:ApplyStandardBackdrop(conditionEditPopup.editor)
-            DF:ReskinSlider(conditionEditPopup.editor.scroll)
-            conditionEditPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(conditionEditPopup.editor.editbox, "label")
-
-            conditionEditPopup.statusLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(conditionEditPopup.statusLabel, "tiny", "")
-            conditionEditPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
-            conditionEditPopup.statusLabel:SetPoint("BOTTOMLEFT", conditionEditPopup, "BOTTOMLEFT", 10, 14)
-            conditionEditPopup.statusLabel:SetWidth(430)
-            conditionEditPopup.statusLabel:SetJustifyH("LEFT")
-
-            conditionEditPopup.saveBtn = CreateLocalizedButton(conditionEditPopup, "Save", function()
-                local alert = conditionEditPopup._alert
-                if not alert then return end
-                local conditionName = conditionEditPopup.nameEntry:GetValue() or ""
-                local conditionFunc = conditionEditPopup.editor:GetText() or ""
-                conditionName = strtrim(conditionName)
-                conditionFunc = strtrim(conditionFunc)
-
-                if conditionName == "" and conditionFunc == "" then
-                    NSI:SaveAlertData(alert, "isConditional", nil)
-                    conditionEditPopup:Hide()
-                    PositionInnerTabLayout(nil)
-                    if trigF.conditionBtn then trigF.conditionBtn:SetText(NSI:Loc("Add Condition")) end
-                    RebuildList()
-                    return
-                end
-
-                if conditionFunc == "" then
-                    conditionEditPopup.statusLabel:SetText(NSI:Loc("Condition Function is required."))
-                    return
-                end
-
-                local chunk, err = loadstring(conditionFunc)
-                if not chunk then
-                    conditionEditPopup.statusLabel:SetText(err or NSI:Loc("Invalid condition function."))
-                    return
-                end
-
-                local condition = {
-                    text = conditionName ~= "" and conditionName or NSI:Loc("Custom Condition"),
-                    func = conditionFunc,
-                }
-                NSI:SaveAlertData(alert, "isConditional", condition)
-                conditionEditPopup:Hide()
-                PositionInnerTabLayout(condition.text)
-                if trigF.conditionBtn then trigF.conditionBtn:SetText(NSI:Loc("Edit Condition")) end
-                RebuildList()
-            end, 120, 22)
-            conditionEditPopup.saveBtn:SetPoint("BOTTOMRIGHT", conditionEditPopup, "BOTTOMRIGHT", -138, 12)
-
-            conditionEditPopup.clearBtn = CreateLocalizedButton(conditionEditPopup, "Clear", function()
-                conditionEditPopup.nameEntry:SetValue("")
-                conditionEditPopup.editor:SetText("")
-                conditionEditPopup.statusLabel:SetText("")
-            end, 120, 22)
-            conditionEditPopup.clearBtn:SetPoint("RIGHT", conditionEditPopup.saveBtn.frame, "LEFT", -8, 0)
-
-            conditionEditPopup.cancelBtn = CreateLocalizedButton(conditionEditPopup, "Cancel", function()
-                conditionEditPopup:Hide()
-            end, 120, 22)
-            conditionEditPopup.cancelBtn:SetPoint("LEFT", conditionEditPopup.saveBtn.frame, "RIGHT", 8, 0)
-        end
-
-        local condition = trigF._alert.isConditional
-        conditionEditPopup._alert = trigF._alert
-        conditionEditPopup.statusLabel:SetText("")
-        conditionEditPopup.nameEntry:SetValue(type(condition) == "table" and condition.text or "")
-        conditionEditPopup.editor:SetText(type(condition) == "table" and condition.func or DEFAULT_CONDITION_FUNC)
-        conditionEditPopup:Show()
-        conditionEditPopup.editor:SetFocus()
-    end
-
-    local function RefreshEncounterHookDisplay(alert)
-        local hasHook = (type(alert.onEncounterStart) == "string" and alert.onEncounterStart ~= "")
-            or (type(alert.onEncounterEnd) == "string" and alert.onEncounterEnd ~= "")
-            or (type(alert.onPhaseChange) == "string" and alert.onPhaseChange ~= "")
-        if hasHook and alert.isSpecialDisplay ~= true then
-            alert.EncounterHookSpecialDisplay = true
-            NSI:SaveAlertData(alert, "isSpecialDisplay", true)
-        elseif not hasHook and alert.EncounterHookSpecialDisplay then
-            alert.EncounterHookSpecialDisplay = nil
-            NSI:SaveAlertData(alert, "isSpecialDisplay", nil)
-        end
-    end
-
-    local DEFAULT_ENCOUNTER_START_CODE = [[return function(self, alertData, alertTable, encounterID, encounterName, difficultyID, groupSize)
--- This is an example of how to create and display a standard reminder using the existing alert data
--- local alert = self:CreateReminder(alertData)
--- self:DisplayReminder(alert)
--- self is the internal NSI table so you have access to all internal addon functions here
--- alertData is the data of the alert as written in the savedvariables. Editing this would be the same as editing the alert in the UI, you should probably never do that but you can read and use it's values.
--- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
-end]]
-    local DEFAULT_ENCOUNTER_END_CODE = [[return function(self, alertData, alertTable, encounterID, encounterName, difficultyID, groupSize, success)
--- This is an example of how to create and display a standard reminder using the existing alert data
--- local alert = self:CreateReminder(alertData)
--- self:DisplayReminder(alert)
--- self is the internal NSI table so you have access to all internal addon functions here
--- alertData is the data of the alert as written in the savedvariables. Editing this would be the same as editing the alert in the UI, you should probably never do that but you can read and use it's values.
--- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
-end]]
-    local DEFAULT_PHASE_CHANGE_CODE = [[return function(self, alertData, alertTable, oldPhase, newPhase)
--- oldPhase is the phase the encounter is leaving; newPhase is the phase it is entering
--- This is an example of how to create and display a standard reminder using the existing alert data
--- local alert = self:CreateReminder(alertData)
--- self:DisplayReminder(alert)
--- self is the internal NSI table so you have access to all internal addon functions here
--- alertData is the data of the alert as written in the savedvariables. Editing this would be the same as editing the alert in the UI, you should probably never do that but you can read and use it's values.
--- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
-end]]
-    local encounterHookEditPopup
-    local function OpenEncounterHookEditor(hookKey, labelKey, defaultCode)
-        if not trigF or not trigF._alert then return end
-
-        if not encounterHookEditPopup then
-            encounterHookEditPopup = DF:CreateSimplePanel(NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Encounter Hook Editor") .. "|r",
-                "NSUIEncAlertHookEditor", { DontRightClickClose = true })
-            encounterHookEditPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-            encounterHookEditPopup:SetFrameLevel(100)
-
-            encounterHookEditPopup.codeLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.codeLabel, "small", "")
-            encounterHookEditPopup.codeLabel:SetTextColor(unpack(STYLE.text_soft))
-            encounterHookEditPopup.codeLabel:SetPoint("TOPLEFT", encounterHookEditPopup, "TOPLEFT", 10, -32)
-
-            encounterHookEditPopup.helpLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.helpLabel, "tiny", "")
-            encounterHookEditPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
-            encounterHookEditPopup.helpLabel:SetJustifyH("LEFT")
-            encounterHookEditPopup.helpLabel:SetPoint("TOPLEFT", encounterHookEditPopup.codeLabel, "BOTTOMLEFT", 0, -2)
-
-            encounterHookEditPopup.editor = DF:NewSpecialLuaEditorEntry(encounterHookEditPopup, 280, 80, nil,
-                "NSUIEncAlertHookEditorBox", false, true, true)
-            encounterHookEditPopup.editor:SetPoint("TOPLEFT", encounterHookEditPopup, "TOPLEFT", 10, -72)
-            encounterHookEditPopup.editor:SetPoint("BOTTOMRIGHT", encounterHookEditPopup, "BOTTOMRIGHT", -25, 48)
-            DF:ApplyStandardBackdrop(encounterHookEditPopup.editor)
-            DF:ReskinSlider(encounterHookEditPopup.editor.scroll)
-            encounterHookEditPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(encounterHookEditPopup.editor.editbox, "label")
-
-            encounterHookEditPopup.statusLabel = encounterHookEditPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(encounterHookEditPopup.statusLabel, "tiny", "")
-            encounterHookEditPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
-            encounterHookEditPopup.statusLabel:SetPoint("BOTTOMLEFT", encounterHookEditPopup, "BOTTOMLEFT", 10, 14)
-            encounterHookEditPopup.statusLabel:SetWidth(430)
-            encounterHookEditPopup.statusLabel:SetJustifyH("LEFT")
-
-            encounterHookEditPopup.saveBtn = CreateLocalizedButton(encounterHookEditPopup, "Save", function()
-                local alert = encounterHookEditPopup._alert
-                if not alert then return end
-                local hookCode = strtrim(encounterHookEditPopup.editor:GetText() or "")
-                if hookCode ~= "" then
-                    local chunk, err = loadstring(hookCode)
-                    if not chunk then
-                        encounterHookEditPopup.statusLabel:SetText(err or NSI:Loc("Invalid encounter hook function."))
-                        return
-                    end
-                end
-
-                NSI:SaveAlertData(alert, encounterHookEditPopup._hookKey, hookCode ~= "" and hookCode or nil)
-                RefreshEncounterHookDisplay(alert)
-                encounterHookEditPopup:Hide()
-                trigF.encounterStartCodeBtn:SetText(NSI:Loc(alert.onEncounterStart and "Edit Encounter Start Code" or "Add Encounter Start Code"))
-                trigF.encounterEndCodeBtn:SetText(NSI:Loc(alert.onEncounterEnd and "Edit Encounter End Code" or "Add Encounter End Code"))
-                trigF.phaseChangeCodeBtn:SetText(NSI:Loc(alert.onPhaseChange and "Edit Phase Change Code" or "Add Phase Change Code"))
-            end, 120, 22)
-            encounterHookEditPopup.saveBtn:SetPoint("BOTTOMRIGHT", encounterHookEditPopup, "BOTTOMRIGHT", -138, 12)
-
-            encounterHookEditPopup.cancelBtn = CreateLocalizedButton(encounterHookEditPopup, "Cancel", function()
-                encounterHookEditPopup:Hide()
-            end, 120, 22)
-            encounterHookEditPopup.cancelBtn:SetPoint("LEFT", encounterHookEditPopup.saveBtn.frame, "RIGHT", 8, 0)
-        end
-
-        encounterHookEditPopup._alert = trigF._alert
-        encounterHookEditPopup._hookKey = hookKey
-        encounterHookEditPopup.codeLabel:SetText(NSI:Loc(labelKey))
-        encounterHookEditPopup.helpLabel:SetText(NSI:Loc("Return a function. It receives self (NSI), the alert data, an alertTable shared by this alert's code, and event-specific arguments."))
-        encounterHookEditPopup.statusLabel:SetText("")
-        encounterHookEditPopup.editor:SetText(trigF._alert[hookKey] or defaultCode)
-        encounterHookEditPopup:Show()
-        encounterHookEditPopup.editor:SetFocus()
-    end
+    -- Lua code-editor popups live in EncounterAlerts/CodeEditors.lua; they reach this
+    -- screen's state only through these callbacks (resolved at call time).
+    local Editors = Parts.CodeEditors.Create({
+        GetTrigF = function() return trigF end,
+        PositionInnerTabLayout = function(...) return PositionInnerTabLayout(...) end,
+        RebuildList = function() return RebuildList() end,
+        RebuildOptionsContent = function(...) return RebuildOptionsContent(...) end,
+    })
+    local GetConditionText             = Editors.GetConditionText
+    local OpenConditionEditor          = Editors.OpenConditionEditor
+    local RefreshEncounterHookDisplay  = Editors.RefreshEncounterHookDisplay
+    local OpenEncounterHookEditor      = Editors.OpenEncounterHookEditor
+    local DEFAULT_ENCOUNTER_START_CODE = Editors.DEFAULT_ENCOUNTER_START_CODE
+    local DEFAULT_ENCOUNTER_END_CODE   = Editors.DEFAULT_ENCOUNTER_END_CODE
+    local DEFAULT_PHASE_CHANGE_CODE    = Editors.DEFAULT_PHASE_CHANGE_CODE
+    local OpenCustomPreviewEditor      = Editors.OpenCustomPreviewEditor
+    local OpenCustomOptionEditor       = Editors.OpenCustomOptionEditor
 
     CopyValue = function(v)
         return type(v) == "table" and CopyTable(v) or v
@@ -2008,25 +1654,102 @@ end]]
     end
 
     -- ================================================================
+    -- Card stack helpers for the Display / Sound tabs
+    --   CreateCardStack(tabFrame): a scroll box holding a vertical stack of section cards.
+    --     stack:Add(titleKey, contentH) -> content frame, card
+    --     stack:SetContentHeight(card, h), card.hidden = true/false, stack:Layout()
+    --   StyleListBox(scrollFrame): keep a list's own scrollbar inside the box and draw a
+    --     border, so it is clear the wheel scrolls the list and not the window.
+    -- ================================================================
+    local function CreateCardStack(tabFrame)
+        local Components = NSI.UI.Components
+        local pad, gap = Components.CardPad, Components.CardGap
+        local scroll = Components.CreateScrollBox(tabFrame, rightW, 100)
+        scroll.frame:ClearAllPoints()
+        scroll.frame:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 0)
+        scroll.frame:SetPoint("BOTTOMRIGHT", tabFrame, "BOTTOMRIGHT", 0, 0)
+        scroll.frame:HookScript("OnSizeChanged", function() scroll:UpdateScrollBar() end)
+        tabFrame:HookScript("OnShow", function() scroll:UpdateScrollBar() end)
+        local child = scroll.scrollChild
+        local stack = { scroll = scroll, child = child, width = child:GetWidth(),
+                        innerW = child:GetWidth() - pad * 2, cards = {} }
+        function stack:Layout()
+            local y = 0
+            for _, card in ipairs(self.cards) do
+                if card.hidden then
+                    card:Hide()
+                else
+                    card.content:SetHeight(card.contentH)
+                    card:SetHeight(card.headerH + pad * 2 + card.contentH)
+                    card:ClearAllPoints()
+                    card:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+                    card:Show()
+                    y = y + card:GetHeight() + gap
+                end
+            end
+            child:SetHeight(math.max(y - gap, 1))
+            scroll:UpdateScrollBar()
+        end
+        function stack:Add(titleKey, contentH)
+            local card = Components.CreateSectionCard(child, self.width, true)
+            if titleKey then
+                SetLocalizedText(card.title, titleKey)
+            else
+                card.title:SetText("")
+                card.title:Hide()
+            end
+            card.contentH = contentH
+            self.cards[#self.cards + 1] = card
+            self:Layout()
+            return card.content, card
+        end
+        return stack
+    end
+
+    local function StyleListBox(scrollFrame)
+        local bar = _G[scrollFrame:GetName() .. "ScrollBar"]
+        if bar then
+            bar:ClearAllPoints()
+            bar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+            bar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+        end
+        local borderFrame = CreateFrame("Frame", nil, scrollFrame)
+        borderFrame:SetAllPoints(scrollFrame)
+        borderFrame:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
+        borderFrame:EnableMouse(false)
+        NSI.UI.Pixel.Border(borderFrame, { Accent(0.55) })
+    end
+
+    -- ================================================================
     -- DISPLAY TAB
     -- ================================================================
     do
     dispF = innerTabFrames["Display"]
 
+    local dispStack = CreateCardStack(dispF)
+    local dispInnerW = dispStack.innerW
+    -- Display type card: header row = Text/Bar/Icon/Circle buttons, body = only the
+    -- settings of the selected type.
+    local typeC, typeCard = dispStack:Add("Display", 22)
+    -- keep the title short so the type buttons sit right after it in the header row
+    local TYPE_TITLE_W = 62
+    typeCard.title:ClearAllPoints()
+    typeCard.title:SetPoint("TOPLEFT", typeCard, "TOPLEFT", NSI.UI.Components.CardPad, -NSI.UI.Components.CardPad)
+    typeCard.title:SetWidth(TYPE_TITLE_W)
+    local alertC          = dispStack:Add("Alert", 82)
+    local timingC         = dispStack:Add("Timing", 38)
+    local colorC          = dispStack:Add("Glow", 38)
+    dispStack:Layout()
+
     dispHint = dispF:CreateFontString(nil, "OVERLAY")
     dispHint:Hide()
-
-    local typeLbl = dispF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(typeLbl, "small", "")
-    typeLbl:SetTextColor(unpack(STYLE.text_muted))
-    SetLocalizedText(typeLbl, "Type")
-    typeLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -2)
 
     local TYPES    = { "Text", "Bar", "Icon", "Circle" }
     local typeBtns = {}
     local typeBtnW = 70
 
     local function SetDisplayType(t)
+        dispF._displayType = t
         for _, tn in ipairs(TYPES) do
             if tn == t then typeBtns[tn]:Select() else typeBtns[tn]:Deselect() end
         end
@@ -2034,23 +1757,23 @@ end]]
     dispF.SetDisplayType = SetDisplayType
 
     for i, tn in ipairs(TYPES) do
-        local tb = CreateLocalizedSubButton(dispF, tn, function()
+        local tb = CreateLocalizedSubButton(typeCard, tn, function()
             if dispF._alert then NSI:SaveAlertData(dispF._alert, "DisplayType", tn) end
             SetDisplayType(tn)
         end, typeBtnW, "NSUIEncAlertType_" .. tn)
-        tb:SetPoint("TOPLEFT", dispF, "TOPLEFT", (i - 1) * (typeBtnW + 3), -18)
+        tb:SetPoint("TOPLEFT", typeCard, "TOPLEFT", NSI.UI.Components.CardPad + TYPE_TITLE_W + 8 + (i - 1) * (typeBtnW + 3), -NSI.UI.Components.CardPad)
         typeBtns[tn] = tb
     end
 
-    local textLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local textLbl = alertC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(textLbl, "small", "")
     textLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(textLbl, "Display Text")
-    textLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -46)
+    textLbl:SetPoint("TOPLEFT", alertC, "TOPLEFT", 0, 0)
 
-    local textEntry = CreateTextEntry(dispF, nil, nil, nil, rightW, 22,
+    local textEntry = CreateTextEntry(alertC, nil, nil, nil, dispInnerW, 22,
         nil, nil, nil, "NSUIEncAlertDisplayText")
-    textEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -62)
+    textEntry:SetPoint("TOPLEFT", alertC, "TOPLEFT", 0, -16)
     local function SaveDispText(self)
         local v = self:GetText()
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "text", v) end
@@ -2058,19 +1781,19 @@ end]]
     textEntry.editBox:SetScript("OnEditFocusLost", SaveDispText)
     dispF.textEntry = textEntry
 
-    local spellLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local spellLbl = alertC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(spellLbl, "small", "")
     spellLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(spellLbl, "Spell ID")
-    spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
+    spellLbl:SetPoint("TOPLEFT", alertC, "TOPLEFT", 0, -44)
 
-    local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
+    local spellEntry = CreateTextEntry(alertC, nil, nil, nil, 130, 22,
         nil, nil, nil, "NSUIEncAlertSpellID",
         { title = "Spell ID", desc = "The icon of this spellid will be used for the in-combat display" })
-    spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -106)
+    spellEntry:SetPoint("TOPLEFT", alertC, "TOPLEFT", 0, -60)
 
     -- Spell icon preview: shown immediately to the right of the entry
-    local spellIconFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, dispF)
+    local spellIconFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, alertC)
     spellIconFrame:SetSize(22, 22)
     spellIconFrame:SetPoint("LEFT", spellEntry.frame, "RIGHT", 4, 0)
     NSI.UI.Components.StyleRow(spellIconFrame, STYLE.row_plain)
@@ -2102,7 +1825,7 @@ end]]
     spellEntry.editBox:SetScript("OnEditFocusLost", SaveSpellID)
     dispF.spellEntry = spellEntry
 
-    local useTauntCB = CreateCheckButton(dispF, NSI:Loc("Use Taunt spellid"),
+    local useTauntCB = CreateCheckButton(alertC, NSI:Loc("Use Taunt spellid"),
         function()
             return dispF._alert and dispF._alert.isTaunt == true or false
         end,
@@ -2117,19 +1840,19 @@ end]]
             desc = "Automatically uses the spellid for the taunt of your current class."
         })
     useTauntCB:SetLocaleKey("Use Taunt spellid")
-    useTauntCB:SetPoint("TOPLEFT", dispF, "TOPLEFT", 164, -106)
+    useTauntCB:SetPoint("TOPLEFT", alertC, "TOPLEFT", 164, -60)
     dispF.useTauntCB = useTauntCB
 
-    local customIconLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local customIconLbl = alertC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(customIconLbl, "small", "")
     customIconLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(customIconLbl, "Custom Icon (overrides icon in list)")
-    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -90)
+    customIconLbl:SetPoint("TOPLEFT", alertC, "TOPLEFT", 330, -44)
 
-    local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
+    local customIconEntry = CreateTextEntry(alertC, nil, nil, nil, 180, 22,
         nil, nil, nil, "NSUIEncAlertCustomIcon",
         { title = "Custom Icon", desc = "Uses the spellid's icon for display in the alert-list. Does NOT change the in-combat display" })
-    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -106)
+    customIconEntry:SetPoint("TOPLEFT", alertC, "TOPLEFT", 330, -60)
     local function SaveCustomIcon(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "customIcon", v) end
@@ -2138,16 +1861,16 @@ end]]
     customIconEntry.editBox:SetScript("OnEditFocusLost", SaveCustomIcon)
     dispF.customIconEntry = customIconEntry
 
-    local durLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local durLbl = timingC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(durLbl, "small", "")
     durLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(durLbl, "Duration")
-    durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
+    durLbl:SetPoint("TOPLEFT", timingC, "TOPLEFT", 0, 0)
 
-    local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
+    local durEntry = CreateTextEntry(timingC, nil, nil, nil, 80, 22,
         nil, nil, nil, "NSUIEncAlertDuration",
         { title = "Duration", desc = "How long before the specified time this alert should start showing up" })
-    durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -150)
+    durEntry:SetPoint("TOPLEFT", timingC, "TOPLEFT", 0, -16)
     local function SaveDur(self)
         local v = tonumber(self:GetText())
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "dur", v or 8) end
@@ -2155,13 +1878,13 @@ end]]
     durEntry.editBox:SetScript("OnEditFocusLost", SaveDur)
     dispF.durEntry = durEntry
 
-    local stickyLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local stickyLbl = timingC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(stickyLbl, "small", "")
     stickyLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(stickyLbl, "Sticky duration (0 to disable)")
     stickyLbl:SetPoint("TOPLEFT", durLbl, "TOPRIGHT", 55, 0)
 
-    local stickyEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
+    local stickyEntry = CreateTextEntry(timingC, nil, nil, nil, 80, 22,
         nil, nil, nil, "NSUIEncAlertSticky",
         { title = "Sticky duration", desc = "How long the alert should remain on screen when duration hits 0" })
     stickyEntry:SetPoint("TOPLEFT", durEntry.frame, "TOPRIGHT", 20, 0)
@@ -2172,7 +1895,7 @@ end]]
     stickyEntry.editBox:SetScript("OnEditFocusLost", SaveSticky)
     dispF.stickyEntry = stickyEntry
 
-    local hideTimerCB = CreateCheckButton(dispF, NSI:Loc("Hide Timer Text"),
+    local hideTimerCB = CreateCheckButton(timingC, NSI:Loc("Hide Timer Text"),
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideTimer ~= nil then return dispF._alert.HideTimer end
@@ -2185,7 +1908,7 @@ end]]
     hideTimerCB:SetPoint("LEFT", stickyEntry.frame, "RIGHT", 14, 0)
     dispF.hideTimerCB = hideTimerCB
 
-    local hideSwipeCB = CreateCheckButton(dispF, NSI:Loc("Hide Swipe"),
+    local hideSwipeCB = CreateCheckButton(typeC, NSI:Loc("Hide Swipe"),
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideSwipe ~= nil then return dispF._alert.HideSwipe end
@@ -2194,21 +1917,21 @@ end]]
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v) end end,
         110, 22, "NSUIEncAlertHideSwipe")
     hideSwipeCB:SetLocaleKey("Hide Swipe")
-    hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 20, 0)
+    hideSwipeCB:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, -30)
     hideSwipeCB.frame:Hide()   -- only shown for Icon type
     dispF.hideSwipeCB = hideSwipeCB
 
     -- ── glowunit ────────────────────────────────────────────────────────
-    local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local glowunitLbl = colorC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(glowunitLbl, "small", "")
     glowunitLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(glowunitLbl, "Glow Unit (player names, space seperated)")
-    glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
+    glowunitLbl:SetPoint("TOPLEFT", colorC, "TOPLEFT", 0, 0)
 
-    local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
+    local glowunitEntry = CreateTextEntry(colorC, nil, nil, nil, 200, 22,
         nil, nil, nil, "NSUIEncAlertGlowUnit",
         { title = "Glow unit", desc = "Creates a glow on these player's Raidframes" })
-    glowunitEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -194)
+    glowunitEntry:SetPoint("TOPLEFT", colorC, "TOPLEFT", 0, -16)
     local function SaveGlowUnit(self)
         local v = self:GetText()
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "glowunit", (v ~= "") and v or nil) end
@@ -2216,14 +1939,14 @@ end]]
     glowunitEntry.editBox:SetScript("OnEditFocusLost", SaveGlowUnit)
     dispF.glowunitEntry = glowunitEntry
 
-    local glowcolorlbl = dispF:CreateFontString(nil, "OVERLAY")
+    local glowcolorlbl = colorC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(glowcolorlbl, "small", "")
     glowcolorlbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(glowcolorlbl, "Glow Color")
-    glowcolorlbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 265, -198)
+    glowcolorlbl:SetPoint("TOPLEFT", colorC, "TOPLEFT", 265, -20)
     dispF.glowcolorlbl = glowcolorlbl
 
-    local glowunitColor = CreateColorPicker(dispF, nil,
+    local glowunitColor = CreateColorPicker(colorC, nil,
         function()
             local c = dispF._alert and dispF._alert.glowColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
@@ -2233,11 +1956,11 @@ end]]
             if dispF._alert then NSI:SaveAlertData(dispF._alert, "glowColors", {r, g, b, a}) end
         end,
         200, 22, "NSUIEncAlertGlowColors")
-    glowunitColor:SetPoint("TOPLEFT", dispF, "TOPLEFT", 60, -194)
+    glowunitColor:SetPoint("TOPLEFT", colorC, "TOPLEFT", 60, -16)
     dispF.glowunitColor = glowunitColor
 
     -- ── colors ──────────────────────────────────────────────────────────
-    local colorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local colorsLbl = typeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(colorsLbl, "small", "")
     colorsLbl:SetTextColor(unpack(STYLE.text_muted))
     NSI.UI.Components.RegisterLocalizedText(colorsLbl, "Color", function()
@@ -2247,10 +1970,10 @@ end]]
         end
         return NSI:Loc("Color")
     end)
-    colorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    colorsLbl:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, 0)
     dispF.colorsLbl = colorsLbl
 
-    local colorsPicker = CreateColorPicker(dispF, nil,
+    local colorsPicker = CreateColorPicker(typeC, nil,
         function()
             local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
@@ -2264,20 +1987,20 @@ end]]
             if dispF._alert then NSI:SaveAlertData(dispF._alert, "textColors", {r, g, b, a}) end
         end,
         200, 22, "NSUIEncAlertColors")
-    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    colorsPicker:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, 0)
     dispF.colorsPicker = colorsPicker
 
     -- ── Circle section (shown only when display type = "Circle") ────────
-    local circleSection = CreateFrame("Frame", nil, dispF)
-    circleSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -266)
-    circleSection:SetSize(rightW, 88)
+    local circleSection = CreateFrame("Frame", nil, typeC)
+    circleSection:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, -30)
+    circleSection:SetSize(dispInnerW, 96)
     circleSection:Hide()
 
     local circleTextureLbl = circleSection:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(circleTextureLbl, "small", "")
     circleTextureLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(circleTextureLbl, "Texture")
-    circleTextureLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
+    circleTextureLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 0)
 
     local function BuildCircleTextureOptions()
         local opts = {
@@ -2309,7 +2032,7 @@ end]]
 
     local circleTextureDD = CreateDropdown(circleSection, nil, BuildCircleTextureOptions,
         GetSelectedCircleTexture, 200, 22, "NSUIEncAlertCircleTexture")
-    circleTextureDD:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 10)
+    circleTextureDD:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, -16)
     dispF.circleTextureDD = circleTextureDD
 
     local ringColorsLbl = circleSection:CreateFontString(nil, "OVERLAY")
@@ -2342,9 +2065,9 @@ end]]
     dispF.showBgCB = showBgCB
 
     -- ── Bars section: Ticks (shown only when display type = "Bar") ───────
-    local barsSection = CreateFrame("Frame", nil, dispF)
-    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -300)
-    barsSection:SetSize(rightW, 130)
+    local barsSection = CreateFrame("Frame", nil, typeC)
+    barsSection:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, -56)
+    barsSection:SetSize(dispInnerW, 158)
     barsSection:Hide()
 
     local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
@@ -2354,7 +2077,7 @@ end]]
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
 
     local ticksListH = 100
-    local ticksListW = rightW - 20
+    local ticksListW = dispInnerW
 
     local ticksScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTicksScroll", barsSection,
         "UIPanelScrollFrameTemplate")
@@ -2362,6 +2085,7 @@ end]]
     ticksScroll:SetSize(ticksListW, ticksListH)
     ticksScroll:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, -16)
     ReskinScrollbar(ticksScroll)
+    StyleListBox(ticksScroll)
     local ticksBg = ticksScroll:CreateTexture(nil, "BACKGROUND")
     ticksBg:SetAllPoints(ticksScroll)
     ticksBg:SetColorTexture(unpack(STYLE.surface_inset))
@@ -2466,14 +2190,14 @@ end]]
 
     -- Bar-specific text color picker — shown at the TOP slot (y=-244) for Bar type,
     -- replacing the shared colorsPicker which is hidden when Bar is selected
-    local barTextColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local barTextColorsLbl = typeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(barTextColorsLbl, "small", "")
     barTextColorsLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(barTextColorsLbl, "Bar Text Color")
-    barTextColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    barTextColorsLbl:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, 0)
     barTextColorsLbl:Hide()
 
-    local barTextColorsPicker = CreateColorPicker(dispF, nil,
+    local barTextColorsPicker = CreateColorPicker(typeC, nil,
         function()
             local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
@@ -2481,20 +2205,20 @@ end]]
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "textColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertBarTextColors")
-    barTextColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    barTextColorsPicker:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, 0)
     barTextColorsPicker.frame:Hide()
     dispF.barTextColorsPicker = barTextColorsPicker
     dispF.barTextColorsLbl    = barTextColorsLbl
 
     -- Bar fill color picker — shown below text color for Bar type
-    local barFillColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    local barFillColorsLbl = typeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(barFillColorsLbl, "small", "")
     barFillColorsLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(barFillColorsLbl, "Bar Fill Color")
-    barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
+    barFillColorsLbl:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, -24)
     barFillColorsLbl:Hide()
 
-    local barFillColorsPicker = CreateColorPicker(dispF, nil,
+    local barFillColorsPicker = CreateColorPicker(typeC, nil,
         function()
             local c = dispF._alert and dispF._alert.barColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
@@ -2502,7 +2226,7 @@ end]]
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "barColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertBarFillColors")
-    barFillColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
+    barFillColorsPicker:SetPoint("TOPLEFT", typeC, "TOPLEFT", 0, -24)
     barFillColorsPicker.frame:Hide()
     dispF.barFillColorsPicker = barFillColorsPicker
     dispF.barFillColorsLbl    = barFillColorsLbl
@@ -2524,6 +2248,8 @@ end]]
         -- Type sections
         barsSection:SetShown(isBar)
         circleSection:SetShown(isCircle)
+        typeCard.contentH = (isBar and 214) or (isCircle and 126) or (t == "Icon" and 52) or 22
+        dispStack:Layout()
         -- HideSwipe only relevant for Icon type
         dispF.hideSwipeCB.frame:SetShown(t == "Icon")
         -- Label for the shared picker (used for non-Bar types)
@@ -2534,6 +2260,26 @@ end]]
     dispF.SetDisplayType = SetDisplayType
     dispF.lockOverlay = MakeLockOverlay(dispF,
         "Display settings are fixed\nfor this alert.")
+
+    searchScroll.Display = dispStack.scroll
+    Reg("Display", "Alert", "Display Text", textLbl)
+    Reg("Display", "Alert", "Spell ID", spellLbl)
+    Reg("Display", "Alert", "Use Taunt spellid", useTauntCB)
+    Reg("Display", "Alert", "Custom Icon (overrides icon in list)", customIconLbl)
+    Reg("Display", "Timing", "Duration", durLbl)
+    Reg("Display", "Timing", "Sticky duration (0 to disable)", stickyLbl)
+    Reg("Display", "Timing", "Hide Timer Text", hideTimerCB)
+    Reg("Display", "Glow", "Glow Unit (player names, space seperated)", glowunitLbl)
+    Reg("Display", "Glow", "Glow Color", glowcolorlbl)
+    Reg("Display", "Display", "Text Color", colorsLbl, { "Text", "Icon", "Circle" })
+    Reg("Display", "Display", "Hide Swipe", hideSwipeCB, { "Icon" })
+    Reg("Display", "Display", "Bar Text Color", barTextColorsLbl, { "Bar" })
+    Reg("Display", "Display", "Bar Fill Color", barFillColorsLbl, { "Bar" })
+    Reg("Display", "Display", "Ticks (seconds into the display where ticks should appear)", ticksLbl, { "Bar" })
+    Reg("Display", "Display", "Add tick", addTickLbl, { "Bar" })
+    Reg("Display", "Display", "Texture", circleTextureLbl, { "Circle" })
+    Reg("Display", "Display", "Ring Color", ringColorsLbl, { "Circle" })
+    Reg("Display", "Display", "Show Background Ring", showBgCB, { "Circle" })
     end -- DISPLAY TAB
 
     -- ================================================================
@@ -2542,11 +2288,40 @@ end]]
     do
     trigF = innerTabFrames["Trigger"]
 
-    local trigBossLbl = trigF:CreateFontString(nil, "OVERLAY")
+    -- Cards: the tab is a scrollable stack of section cards, the same look as the rest of
+    -- the addon. Every widget keeps its trigF.<name> handle; only parents/anchors moved.
+    local trigScroll = NSI.UI.Components.CreateScrollBox(trigF, rightW, 100)
+    trigScroll.frame:ClearAllPoints()
+    trigScroll.frame:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, 0)
+    trigScroll.frame:SetPoint("BOTTOMRIGHT", trigF, "BOTTOMRIGHT", 0, 0)
+    trigScroll.frame:HookScript("OnSizeChanged", function() trigScroll:UpdateScrollBar() end)
+    trigF:HookScript("OnShow", function() trigScroll:UpdateScrollBar() end)
+    local trigChild  = trigScroll.scrollChild
+    local trigCardW  = trigChild:GetWidth()
+    local trigInnerW = trigCardW - NSI.UI.Components.CardPad * 2
+    local trigStackH = 0
+    local function NewTrigCard(titleKey, contentH)
+        local Components = NSI.UI.Components
+        local card = Components.CreateSectionCard(trigChild, trigCardW, true)
+        SetLocalizedText(card.title, titleKey)
+        card.content:SetHeight(contentH)
+        card:SetHeight(card.headerH + Components.CardPad * 2 + contentH)
+        card:SetPoint("TOPLEFT", trigChild, "TOPLEFT", 0, -trigStackH)
+        trigStackH = trigStackH + card:GetHeight() + Components.CardGap
+        trigChild:SetHeight(trigStackH - Components.CardGap)
+        return card.content
+    end
+    local encC  = NewTrigCard("Encounter", 38)
+    local timeC = NewTrigCard("Timing", 256)
+    local codeC = NewTrigCard("Conditions & Code", 46)
+    local castC = NewTrigCard("Boss Cast Sync", 90)
+    trigScroll:UpdateScrollBar()
+
+    local trigBossLbl = encC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(trigBossLbl, "small", "")
     trigBossLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(trigBossLbl, "Boss")
-    trigBossLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -2)
+    trigBossLbl:SetPoint("TOPLEFT", encC, "TOPLEFT", 0, 0)
 
     local function BuildTrigBossOptions()
         return BossData.BuildBossDropdownOptions(function(v)
@@ -2583,15 +2358,15 @@ end]]
         return tostring(selectedEncID)
     end
 
-    local trigBossDD = CreateDropdown(trigF, nil, BuildTrigBossOptions, getTrigBossSelected,
+    local trigBossDD = CreateDropdown(encC, nil, BuildTrigBossOptions, getTrigBossSelected,
         200, 22, "NSUIEncAlertTrigBoss", nil, 9)
-    trigBossDD:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -18)
+    trigBossDD:SetPoint("TOPLEFT", encC, "TOPLEFT", 0, -16)
     trigF.bossDD = trigBossDD
 
     -- Difficulty dropdown — moves the alert to a different diff table on change
     local TRIG_DIFF_NAMES = { [14] = NSI:Loc("Normal"), [15] = NSI:Loc("Heroic"), [16] = NSI:Loc("Mythic") }
 
-    local trigDiffLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local trigDiffLbl = encC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(trigDiffLbl, "small", "")
     trigDiffLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(trigDiffLbl, "Difficulty")
@@ -2637,23 +2412,23 @@ end]]
         return TRIG_DIFF_NAMES[filterDiffID] or tostring(filterDiffID)
     end
 
-    local trigDiffDD = CreateDropdown(trigF, nil, BuildTrigDiffOptions, getTrigDiffSelected,
+    local trigDiffDD = CreateDropdown(encC, nil, BuildTrigDiffOptions, getTrigDiffSelected,
         90, 22, "NSUIEncAlertTrigDiff")
     trigDiffDD:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 0)
     trigF.trigDiffDD = trigDiffDD
 
     local RebuildTimeRows
 
-    local phaseLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local phaseLbl = timeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(phaseLbl, "small", "")
     phaseLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(phaseLbl, "Phase")
-    phaseLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -50)
+    phaseLbl:SetPoint("TOPLEFT", timeC, "TOPLEFT", 0, 0)
 
-    local phaseEntry = CreateTextEntry(trigF, nil, nil, nil, 60, 22,
+    local phaseEntry = CreateTextEntry(timeC, nil, nil, nil, 60, 22,
         nil, nil, nil, "NSUIEncAlertPhase",
         { title = "Phase", desc = "The phase number will often not be equal to what you see in the Dungeon Journal or what WCL shows. Use a comma-separated list, like 1,2,3, when one alert should work in multiple phases." })
-    phaseEntry:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -66)
+    phaseEntry:SetPoint("TOPLEFT", timeC, "TOPLEFT", 0, -16)
     phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
             local phase = ParsePhaseValue(self:GetText())
@@ -2664,22 +2439,37 @@ end]]
     end)
     trigF.phaseEntry = phaseEntry
 
-    local timesLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local timesLbl = timeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(timesLbl, "small", "")
     timesLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(timesLbl, "Trigger Times (seconds into phase)")
-    timesLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -98)
+    timesLbl:SetPoint("TOPLEFT", timeC, "TOPLEFT", 0, -48)
 
     -- Times list: native ScrollFrame
     local timesListH = 150
-    local timesListW = rightW - 20
+    local timesListW = trigInnerW
 
-    local timesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTimesScroll", trigF,
+    local timesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTimesScroll", timeC,
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(timesScroll)
     timesScroll:SetSize(timesListW, timesListH)
-    timesScroll:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -114)
+    timesScroll:SetPoint("TOPLEFT", timeC, "TOPLEFT", 0, -64)
     ReskinScrollbar(timesScroll)
+    -- Keep the list's own scrollbar inside the box. The template parks it outside the
+    -- right edge, where it collided with the window scrollbar.
+    local timesBar = _G["NSUIEncAlertTimesScrollScrollBar"]
+    if timesBar then
+        timesBar:ClearAllPoints()
+        timesBar:SetPoint("TOPRIGHT", timesScroll, "TOPRIGHT", 0, -16)
+        timesBar:SetPoint("BOTTOMRIGHT", timesScroll, "BOTTOMRIGHT", 0, 16)
+    end
+    -- Border so it is clear the wheel scrolls this list rather than the window. It sits
+    -- on its own frame above the rows so the stripes never cover it.
+    local timesBorderFrame = CreateFrame("Frame", nil, timesScroll)
+    timesBorderFrame:SetAllPoints(timesScroll)
+    timesBorderFrame:SetFrameLevel(timesScroll:GetFrameLevel() + 5)
+    timesBorderFrame:EnableMouse(false)
+    NSI.UI.Pixel.Border(timesBorderFrame, { Accent(0.55) })
     local timesBg = timesScroll:CreateTexture(nil, "BACKGROUND")
     timesBg:SetAllPoints(timesScroll)
     timesBg:SetColorTexture(unpack(STYLE.surface_inset))
@@ -2771,13 +2561,13 @@ end]]
     end
     trigF.RebuildTimeRows = RebuildTimeRows
 
-    local addTimeLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local addTimeLbl = timeC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(addTimeLbl, "tiny", "")
     addTimeLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(addTimeLbl, "Add time (s)")
     addTimeLbl:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -4)
 
-    local addTimeEntry = CreateTextEntry(trigF, nil, nil, nil, 90, 22,
+    local addTimeEntry = CreateTextEntry(timeC, nil, nil, nil, 90, 22,
         nil, nil, nil, "NSUIEncAlertAddTime")
     addTimeEntry:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -20)
     trigF.addTimeEntry = addTimeEntry
@@ -2815,11 +2605,11 @@ end]]
         self:ClearFocus()
     end)
 
-    local addTimeBtn = CreateLocalizedSubButton(trigF, "Add", DoAddTime, 54,
+    local addTimeBtn = CreateLocalizedSubButton(timeC, "Add", DoAddTime, 54,
         "NSUIEncAlertAddTimeBtn")
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
-    phaseSpecificCB = CreateCheckButton(trigF, NSI:Loc("Phase-specific timers"), nil, function(_, value)
+    phaseSpecificCB = CreateCheckButton(timeC, NSI:Loc("Phase-specific timers"), nil, function(_, value)
         if not trigF._alert then return end
         if value then
             local phaseValue = phaseSpecificEntry and phaseSpecificEntry:GetValue() or trigF.phaseEntry:GetValue()
@@ -2841,34 +2631,34 @@ end]]
     phaseSpecificCB:SetPoint("LEFT", addTimeBtn.frame, "RIGHT", 8, 0)
     trigF.phaseSpecificCB = phaseSpecificCB
 
-    phaseSpecificEntry = CreateTextEntry(trigF, nil, nil, nil, 48, 22,
+    phaseSpecificEntry = CreateTextEntry(timeC, nil, nil, nil, 48, 22,
         nil, nil, nil, "NSUIEncAlertPhaseSpecificTimerPhase")
     phaseSpecificEntry:SetPoint("LEFT", phaseSpecificCB.frame, "RIGHT", 6, 0)
     phaseSpecificEntry:SetValue("1")
     phaseSpecificEntry.frame:Hide()
     trigF.phaseSpecificEntry = phaseSpecificEntry
 
-    local conditionBtn = CreateLocalizedSubButton(trigF, "Add Condition", OpenConditionEditor, 130,
+    local conditionBtn = CreateLocalizedSubButton(codeC, "Add Condition", OpenConditionEditor, 130,
         "NSUIEncAlertConditionBtn",
         { title = "Add/Edit Condition", desc = "Add/Edit the condition that needs to be fullfilled for this alert to show. This is only evaluated once at the time of the alert popping up" })
-    conditionBtn:SetPoint("TOPLEFT", addTimeEntry.frame, "BOTTOMLEFT", 0, -12)
+    conditionBtn:SetPoint("TOPLEFT", codeC, "TOPLEFT", 0, 0)
     trigF.conditionBtn = conditionBtn
 
-    local encounterStartCodeBtn = CreateLocalizedSubButton(trigF, "Add Encounter Start Code", function()
+    local encounterStartCodeBtn = CreateLocalizedSubButton(codeC, "Add Encounter Start Code", function()
         OpenEncounterHookEditor("onEncounterStart", "Encounter Start Function", DEFAULT_ENCOUNTER_START_CODE)
     end, 170, "NSUIEncAlertStartHookBtn",
         { title = "Encounter Start Code", desc = "Run custom code when this encounter starts. Alerts with encounter hooks are excluded from TimelineReminders." })
     encounterStartCodeBtn:SetPoint("TOPLEFT", conditionBtn.frame, "BOTTOMLEFT", 0, -8)
     trigF.encounterStartCodeBtn = encounterStartCodeBtn
 
-    local encounterEndCodeBtn = CreateLocalizedSubButton(trigF, "Add Encounter End Code", function()
+    local encounterEndCodeBtn = CreateLocalizedSubButton(codeC, "Add Encounter End Code", function()
         OpenEncounterHookEditor("onEncounterEnd", "Encounter End Function", DEFAULT_ENCOUNTER_END_CODE)
     end, 170, "NSUIEncAlertEndHookBtn",
         { title = "Encounter End Code", desc = "Run custom code when this encounter ends. Alerts with encounter hooks are excluded from TimelineReminders." })
     encounterEndCodeBtn:SetPoint("LEFT", encounterStartCodeBtn.frame, "RIGHT", 8, 0)
     trigF.encounterEndCodeBtn = encounterEndCodeBtn
 
-    local phaseChangeCodeBtn = CreateLocalizedSubButton(trigF, "Add Phase Change Code", function()
+    local phaseChangeCodeBtn = CreateLocalizedSubButton(codeC, "Add Phase Change Code", function()
         OpenEncounterHookEditor("onPhaseChange", "Phase Change Function", DEFAULT_PHASE_CHANGE_CODE)
     end, 170, "NSUIEncAlertPhaseChangeHookBtn",
         { title = "Phase Change Code", desc = "Run custom code when this encounter changes phase. Alerts with encounter hooks are excluded from TimelineReminders." })
@@ -2898,20 +2688,20 @@ end]]
         if trigF._alert then NSI:SaveAlertData(trigF._alert, key, value) end
     end
 
-    local castDurationLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local castDurationLbl = castC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(castDurationLbl, "small", "")
     castDurationLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(castDurationLbl, "Cast Duration (seconds)")
-    castDurationLbl:SetPoint("TOPLEFT", encounterStartCodeBtn.frame, "BOTTOMLEFT", 0, -10)
+    castDurationLbl:SetPoint("TOPLEFT", castC, "TOPLEFT", 0, 0)
 
-    local bossIDLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local bossIDLbl = castC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(bossIDLbl, "small", "")
     bossIDLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(bossIDLbl, "Boss ID (unit token)")
-    bossIDLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
+    bossIDLbl:SetPoint("LEFT", castC, "LEFT", math.floor(trigInnerW / 2), 0)
     bossIDLbl:SetPoint("TOP", castDurationLbl, "TOP")
 
-    local castDurationEntry = CreateTextEntry(trigF, nil, nil, nil, 120, 22,
+    local castDurationEntry = CreateTextEntry(castC, nil, nil, nil, 120, 22,
         nil, nil, nil, "NSUIEncAlertCastDuration")
     castDurationEntry:SetPoint("TOPLEFT", castDurationLbl, "BOTTOMLEFT", 0, -3)
     castDurationEntry.editBox:SetScript("OnEditFocusLost", function(self)
@@ -2919,7 +2709,7 @@ end]]
     end)
     trigF.castDurationEntry = castDurationEntry
 
-    local bossIDEntry = CreateTextEntry(trigF, nil, nil, nil, 150, 22,
+    local bossIDEntry = CreateTextEntry(castC, nil, nil, nil, 150, 22,
         nil, nil, nil, "NSUIEncAlertBossID")
     bossIDEntry:SetPoint("TOPLEFT", bossIDLbl, "BOTTOMLEFT", 0, -3)
     bossIDEntry.editBox:SetScript("OnEditFocusLost", function(self)
@@ -2927,20 +2717,20 @@ end]]
     end)
     trigF.bossIDEntry = bossIDEntry
 
-    local bossEventLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local bossEventLbl = castC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(bossEventLbl, "small", "")
     bossEventLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(bossEventLbl, "Boss Event")
     bossEventLbl:SetPoint("TOPLEFT", castDurationEntry.frame, "BOTTOMLEFT", 0, -10)
 
-    local timerVarianceLbl = trigF:CreateFontString(nil, "OVERLAY")
+    local timerVarianceLbl = castC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(timerVarianceLbl, "small", "")
     timerVarianceLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(timerVarianceLbl, "Timer Variance (seconds)")
-    timerVarianceLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
+    timerVarianceLbl:SetPoint("LEFT", castC, "LEFT", math.floor(trigInnerW / 2), 0)
     timerVarianceLbl:SetPoint("TOP", bossEventLbl, "TOP")
 
-    local bossEventEntry = CreateTextEntry(trigF, nil, nil, nil, 150, 22,
+    local bossEventEntry = CreateTextEntry(castC, nil, nil, nil, 150, 22,
         nil, nil, nil, "NSUIEncAlertBossEvent")
     bossEventEntry:SetPoint("TOPLEFT", bossEventLbl, "BOTTOMLEFT", 0, -3)
     bossEventEntry.editBox:SetScript("OnEditFocusLost", function(self)
@@ -2948,7 +2738,7 @@ end]]
     end)
     trigF.bossEventEntry = bossEventEntry
 
-    local timerVarianceEntry = CreateTextEntry(trigF, nil, nil, nil, 120, 22,
+    local timerVarianceEntry = CreateTextEntry(castC, nil, nil, nil, 120, 22,
         nil, nil, nil, "NSUIEncAlertTimerVariance")
     timerVarianceEntry:SetPoint("TOPLEFT", timerVarianceLbl, "BOTTOMLEFT", 0, -3)
     timerVarianceEntry.editBox:SetScript("OnEditFocusLost", function(self)
@@ -2959,6 +2749,22 @@ end]]
     -- Lock overlay for Trigger tab (shown when ReloeReminder is selected)
     -- transparent=true so the triggers are still visible, just not interactable
     trigF.lockOverlay = MakeLockOverlay(trigF, nil, true)
+
+    searchScroll.Trigger = trigScroll
+    Reg("Trigger", "Encounter", "Boss", trigBossLbl)
+    Reg("Trigger", "Encounter", "Difficulty", trigDiffLbl)
+    Reg("Trigger", "Timing", "Phase", phaseLbl)
+    Reg("Trigger", "Timing", "Trigger Times (seconds into phase)", timesLbl)
+    Reg("Trigger", "Timing", "Add time (s)", addTimeLbl)
+    Reg("Trigger", "Timing", "Phase-specific timers", phaseSpecificCB)
+    Reg("Trigger", "Conditions & Code", "Add Condition", conditionBtn)
+    Reg("Trigger", "Conditions & Code", "Add Encounter Start Code", encounterStartCodeBtn)
+    Reg("Trigger", "Conditions & Code", "Add Encounter End Code", encounterEndCodeBtn)
+    Reg("Trigger", "Conditions & Code", "Add Phase Change Code", phaseChangeCodeBtn)
+    Reg("Trigger", "Boss Cast Sync", "Cast Duration (seconds)", castDurationLbl)
+    Reg("Trigger", "Boss Cast Sync", "Boss ID (unit token)", bossIDLbl)
+    Reg("Trigger", "Boss Cast Sync", "Boss Event", bossEventLbl)
+    Reg("Trigger", "Boss Cast Sync", "Timer Variance (seconds)", timerVarianceLbl)
     end -- TRIGGER TAB
 
     -- ================================================================
@@ -2966,31 +2772,35 @@ end]]
     -- ================================================================
     do
     sndF = innerTabFrames["Sound"]
+    local sndStack = CreateCardStack(sndF)
+    local sndInnerW = sndStack.innerW
+    local ttsC   = sndStack:Add("Text-to-Speech", 156)
+    local soundC = sndStack:Add("Sound File", 38)
 
     sndHint = sndF:CreateFontString(nil, "OVERLAY")
     sndHint:Hide()
 
-    local ttsCB = CreateCheckButton(sndF, NSI:Loc("Enable Text-to-Speech"),
+    local ttsCB = CreateCheckButton(ttsC, NSI:Loc("Enable Text-to-Speech"),
         function() return false end,
         function(_, v)
             if not sndF._alert then return end
             local txt = sndF.ttsTextEntry and sndF.ttsTextEntry:GetValue() or ""
             NSI:SaveAlertData(sndF._alert, "TTS", v and ((txt ~= "") and txt or true) or false)
         end,
-        rightW, 22, "NSUIEncAlertTTSCB")
+        sndInnerW, 22, "NSUIEncAlertTTSCB")
     ttsCB:SetLocaleKey("Enable Text-to-Speech")
-    ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
+    ttsCB:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, 0)
     sndF.ttsCB = ttsCB
 
-    local ttsTextLbl = sndF:CreateFontString(nil, "OVERLAY")
+    local ttsTextLbl = ttsC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ttsTextLbl, "small", "")
     ttsTextLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ttsTextLbl, "TTS Text (leave blank to speak the Display Text)")
-    ttsTextLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -34)
+    ttsTextLbl:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, -30)
 
-    local ttsTextEntry = CreateTextEntry(sndF, nil, nil, nil, rightW, 22,
+    local ttsTextEntry = CreateTextEntry(ttsC, nil, nil, nil, sndInnerW, 22,
         nil, nil, nil, "NSUIEncAlertTTSText")
-    ttsTextEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -50)
+    ttsTextEntry:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, -46)
     local function SaveTTSText(self)
         local v = self:GetText()
         if not sndF._alert then return end
@@ -3001,16 +2811,16 @@ end]]
     ttsTextEntry.editBox:SetScript("OnEditFocusLost", SaveTTSText)
     sndF.ttsTextEntry = ttsTextEntry
 
-    local ttsTimerLbl = sndF:CreateFontString(nil, "OVERLAY")
+    local ttsTimerLbl = ttsC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ttsTimerLbl, "small", "")
     ttsTimerLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(ttsTimerLbl, "TTS Timer (seconds before the Alert expires)")
-    ttsTimerLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -82)
+    ttsTimerLbl:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, -78)
 
-    local ttsTimerEntry = CreateTextEntry(sndF, nil, nil, nil, 80, 22,
+    local ttsTimerEntry = CreateTextEntry(ttsC, nil, nil, nil, 80, 22,
         nil, nil, nil, "NSUIEncAlertTTSTimer",
         { title = "TTS Timer", desc = "Remaining duration at which the TTS or Sound should play" })
-    ttsTimerEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -98)
+    ttsTimerEntry:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, -94)
     local function SaveTTSTimer(self)
         local v = tonumber(self:GetText())
         if sndF._alert then NSI:SaveAlertData(sndF._alert, "TTSTimer", v or 8) end
@@ -3018,14 +2828,14 @@ end]]
     ttsTimerEntry.editBox:SetScript("OnEditFocusLost", SaveTTSTimer)
     sndF.ttsTimerEntry = ttsTimerEntry
 
-    local cdLbl = sndF:CreateFontString(nil, "OVERLAY")
+    local cdLbl = ttsC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(cdLbl, "small", "")
     cdLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(cdLbl, "Countdown for")
-    cdLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -138)
+    cdLbl:SetPoint("TOPLEFT", ttsC, "TOPLEFT", 0, -134)
     sndF.cdLbl = cdLbl
 
-    local cdEntry = CreateTextEntry(sndF, nil, nil, nil, 60, 22,
+    local cdEntry = CreateTextEntry(ttsC, nil, nil, nil, 60, 22,
         nil, nil, nil, "NSUIEncAlertCountdown",
         { title = "Countdown", desc = "At how many seconds remaining you would like to hear a TTS countdown" })
     cdEntry:SetPoint("LEFT", cdLbl, "RIGHT", 6, 0)
@@ -3037,28 +2847,35 @@ end]]
     cdEntry.editBox:SetScript("OnEditFocusLost", SaveCountdown)
     sndF.cdEntry = cdEntry
 
-    local cdSecLbl = sndF:CreateFontString(nil, "OVERLAY")
+    local cdSecLbl = ttsC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(cdSecLbl, "small", "")
     cdSecLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(cdSecLbl, "seconds")
     cdSecLbl:SetPoint("LEFT", cdEntry.frame, "RIGHT", 5, 0)
 
-    local sndFileLbl = sndF:CreateFontString(nil, "OVERLAY")
+    local sndFileLbl = soundC:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(sndFileLbl, "small", "")
     sndFileLbl:SetTextColor(unpack(STYLE.text_muted))
     SetLocalizedText(sndFileLbl, "Sound File")
-    sndFileLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -162)
+    sndFileLbl:SetPoint("TOPLEFT", soundC, "TOPLEFT", 0, 0)
 
     local soundGetItems, soundGetSelected = NSI:BuildSoundDropdown(
         function() return sndF._alert and sndF._alert.sound end,
         function(v) if sndF._alert then NSI:SaveAlertData(sndF._alert, "sound", v) end end
     )
-    local soundDD = CreateDropdown(sndF, nil, soundGetItems, soundGetSelected,
-        rightW, 22, "NSUIEncAlertSound",
+    local soundDD = CreateDropdown(soundC, nil, soundGetItems, soundGetSelected,
+        sndInnerW, 22, "NSUIEncAlertSound",
         { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" },
         nil, nil, true)
-    soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
+    soundDD:SetPoint("TOPLEFT", soundC, "TOPLEFT", 0, -16)
     sndF.soundDD = soundDD
+
+    searchScroll.Sound = sndStack.scroll
+    Reg("Sound", "Text-to-Speech", "Enable Text-to-Speech", ttsCB)
+    Reg("Sound", "Text-to-Speech", "TTS Text (leave blank to speak the Display Text)", ttsTextLbl)
+    Reg("Sound", "Text-to-Speech", "TTS Timer (seconds before the Alert expires)", ttsTimerLbl)
+    Reg("Sound", "Text-to-Speech", "Countdown for", cdLbl)
+    Reg("Sound", "Sound File", "Sound File", sndFileLbl)
     end -- SOUND TAB
 
     -- ================================================================
@@ -3131,19 +2948,33 @@ end]]
     local loadListH = 240
 
     -- ── Names section constants (anchored to bottom of loadF) ────────────────
-    local NAMES_SEC_H    = 180   -- total height reserved at the bottom
-    local namesListH     = 112   -- height of the names scroll list
+    local namesListH     = 90    -- height of the names scroll list
+    local Components     = NSI.UI.Components
+    local CARD_PAD, CARD_GAP = Components.CardPad, Components.CardGap
+    local namesContentH  = 22 + 8 + namesListH
+    local namesCard = Components.CreateSectionCard(loadF, rightW, true)
+    SetLocalizedText(namesCard.title, "Character Names (no server name)")
+    namesCard.content:SetHeight(namesContentH)
+    namesCard:SetHeight(namesCard.headerH + CARD_PAD * 2 + namesContentH)
+    namesCard:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
+    local NAMES_SEC_H = namesCard:GetHeight() + CARD_GAP   -- reserved at the bottom
 
     -- ── Main scroll (classes + specs), fills loadF above the names section ───
     -- Height = panel height - rightPanel margins(20) - inner-tab header(68) - names section(NAMES_SEC_H+4)
-    local loadScrollH = tab_content_height - 20 - 68 - NAMES_SEC_H - 4
-    local loadScroll = CreateFrame("ScrollFrame", "NSUIEncAlertLoadScroll", loadF,
+    local rolesCard = Components.CreateSectionCard(loadF, rightW, true)
+    SetLocalizedText(rolesCard.title, "Roles, Classes & Specs")
+    rolesCard:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    local loadScrollH = tab_content_height - 20 - 68 - NAMES_SEC_H - rolesCard.headerH - CARD_PAD * 2
+    rolesCard.content:SetHeight(loadScrollH)
+    rolesCard:SetHeight(rolesCard.headerH + CARD_PAD * 2 + loadScrollH)
+    local loadScroll = CreateFrame("ScrollFrame", "NSUIEncAlertLoadScroll", rolesCard.content,
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(loadScroll)
-    loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    loadScroll:SetPoint("TOPLEFT", rolesCard.content, "TOPLEFT", 0, 0)
     loadScroll:SetSize(loadListW, loadScrollH)
     loadScroll:EnableMouseWheel(true)
     ReskinScrollbar(loadScroll)
+    StyleListBox(loadScroll)
 
     local loadScrollChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadScrollChild:SetSize(loadListW - 18, loadListH)
@@ -3309,28 +3140,24 @@ end]]
     end
 
     -- ── Names section (fixed at bottom of loadF) ──────────────────────────────
-    local namesHdrLbl = loadF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(namesHdrLbl, "tiny", "")
-    namesHdrLbl:SetTextColor(unpack(STYLE.text_muted))
-    SetLocalizedText(namesHdrLbl, "Character Names (no server name)")
-    namesHdrLbl:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 12)
 
-    local nameAddEntry = CreateTextEntry(loadF, nil, nil, nil, 180, 22,
+    local nameAddEntry = CreateTextEntry(namesCard.content, nil, nil, nil, 180, 22,
         nil, nil, nil, "NSUIEncAlertNameAdd")
-    nameAddEntry:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 36)
+    nameAddEntry:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, 0)
 
     local DoAddName  -- forward declaration so nameAddBtn closure can reference it
-    local nameAddBtn = CreateLocalizedSubButton(loadF, "Add", function() if DoAddName then DoAddName() end end,
+    local nameAddBtn = CreateLocalizedSubButton(namesCard.content, "Add", function() if DoAddName then DoAddName() end end,
         54, "NSUIEncAlertNameAddBtn")
     nameAddBtn:SetPoint("LEFT", nameAddEntry.frame, "RIGHT", 6, 0)
 
-    local namesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertNamesScroll", loadF,
+    local namesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertNamesScroll", namesCard.content,
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(namesScroll)
     namesScroll:SetSize(loadListW, namesListH)
-    namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 4)
+    namesScroll:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, -30)
     namesScroll:EnableMouseWheel(true)
     ReskinScrollbar(namesScroll)
+    StyleListBox(namesScroll)
     local namesBg = namesScroll:CreateTexture(nil, "BACKGROUND")
     namesBg:SetAllPoints(namesScroll)
     namesBg:SetColorTexture(unpack(STYLE.surface_inset))
@@ -3523,6 +3350,9 @@ end]]
     -- Lock overlay for Sound tab (reloeCreated alerts — sound is managed by the addon)
     sndF.lockOverlay = MakeLockOverlay(sndF,
         "Sound settings are fixed\nfor this alert.")
+
+    Reg("Load", "Load", "Roles, Classes & Specs", rolesCard)
+    Reg("Load", "Load", "Character Names (no server name)", namesCard)
     end -- LOAD TAB
 
     -- ================================================================
@@ -3531,325 +3361,37 @@ end]]
     do
     local optF = innerTabFrames["Options"]
 
-    local CUSTOM_PREVIEW_DEFAULT = [[return function(self, alertData, alertTable)
--- local alert = self:CreateReminder(alertData)
--- self:DisplayReminder(alert)
--- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
-end]]
-    local customPreviewPopup
-    local function OpenCustomPreviewEditor(alert)
-        if not customPreviewPopup then
-            customPreviewPopup = DF:CreateSimplePanel(NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Custom Preview Code") .. "|r",
-                "NSUIEncAlertCustomPreviewEditor", { DontRightClickClose = true })
-            customPreviewPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-            customPreviewPopup:SetFrameLevel(100)
-
-            customPreviewPopup.helpLabel = customPreviewPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customPreviewPopup.helpLabel, "tiny", "")
-            customPreviewPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
-            customPreviewPopup.helpLabel:SetPoint("TOPLEFT", customPreviewPopup, "TOPLEFT", 10, -32)
-            SetLocalizedText(customPreviewPopup.helpLabel, "Return a function(self, alertData, alertTable).")
-
-            customPreviewPopup.editor = DF:NewSpecialLuaEditorEntry(customPreviewPopup, 280, 80, nil,
-                "NSUIEncAlertCustomPreviewEditorBox", false, true, true)
-            customPreviewPopup.editor:SetPoint("TOPLEFT", customPreviewPopup, "TOPLEFT", 10, -56)
-            customPreviewPopup.editor:SetPoint("BOTTOMRIGHT", customPreviewPopup, "BOTTOMRIGHT", -25, 48)
-            DF:ApplyStandardBackdrop(customPreviewPopup.editor)
-            DF:ReskinSlider(customPreviewPopup.editor.scroll)
-            customPreviewPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-            NSI:SetUIFont(customPreviewPopup.editor.editbox, "label")
-
-            customPreviewPopup.statusLabel = customPreviewPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customPreviewPopup.statusLabel, "tiny", "")
-            customPreviewPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
-            customPreviewPopup.statusLabel:SetPoint("BOTTOMLEFT", customPreviewPopup, "BOTTOMLEFT", 10, 14)
-            customPreviewPopup.statusLabel:SetWidth(430)
-            customPreviewPopup.statusLabel:SetJustifyH("LEFT")
-
-            customPreviewPopup.saveBtn = CreateLocalizedButton(customPreviewPopup, "Save", function()
-                local selectedAlert = customPreviewPopup._alert
-                if not selectedAlert then return end
-                local previewCode = strtrim(customPreviewPopup.editor:GetText() or "")
-                if previewCode ~= "" then
-                    local chunk, err = loadstring(previewCode)
-                    if not chunk then
-                        customPreviewPopup.statusLabel:SetText(err or NSI:Loc("Invalid custom preview function."))
-                        return
-                    end
-                end
-                NSI:SaveAlertData(selectedAlert, "customPreview", previewCode ~= "" and previewCode or nil)
-                customPreviewPopup:Hide()
-                RebuildOptionsContent(selectedAlert)
-            end, 120, 22)
-            customPreviewPopup.saveBtn:SetPoint("BOTTOMRIGHT", customPreviewPopup, "BOTTOMRIGHT", -138, 12)
-
-            customPreviewPopup.cancelBtn = CreateLocalizedButton(customPreviewPopup, "Cancel", function()
-                customPreviewPopup:Hide()
-            end, 120, 22)
-            customPreviewPopup.cancelBtn:SetPoint("LEFT", customPreviewPopup.saveBtn.frame, "RIGHT", 8, 0)
-        end
-
-        customPreviewPopup._alert = alert
-        customPreviewPopup.statusLabel:SetText("")
-        customPreviewPopup.editor:SetText(alert.customPreview or CUSTOM_PREVIEW_DEFAULT)
-        customPreviewPopup:Show()
-        customPreviewPopup.editor:SetFocus()
-    end
-
-    local customOptionEditorPopup
     local authorMode = false
     local authorModeAlert
-    local function GetNextCustomOptionID(alert)
-        local maxID = 0
-        for definitionIndex, definition in ipairs(alert.customOptionDefinitions or {}) do
-            local number = type(definition.id) == "string" and tonumber(definition.id:match("^option(%d+)$"))
-            if number and number > maxID then maxID = number end
-        end
-        return "option" .. (maxID + 1)
-    end
-
-    local function OpenCustomOptionEditor(alert, existingDefinition)
-        if not customOptionEditorPopup then
-            customOptionEditorPopup = DF:CreateSimplePanel(NSUI, 720, 430,
-                "|cFF00FFFF" .. NSI:Loc("Custom Alert Option") .. "|r",
-                "NSUIEncAlertCustomOptionEditor", { DontRightClickClose = true })
-            customOptionEditorPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-            customOptionEditorPopup:SetFrameLevel(100)
-
-            customOptionEditorPopup.nameEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Option Name"), nil, nil, 390, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionName", nil, 230)
-            customOptionEditorPopup.nameEntry:SetPoint("TOPLEFT", customOptionEditorPopup, "TOPLEFT", 10, -42)
-            customOptionEditorPopup.keyEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Option Key"), nil, nil, 280, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionKey", nil, 160)
-            customOptionEditorPopup.keyEntry:SetPoint("LEFT", customOptionEditorPopup.nameEntry.frame, "RIGHT", 10, 0)
-
-            customOptionEditorPopup.selectedType = "Text"
-            customOptionEditorPopup.typeDropdown = CreateDropdown(customOptionEditorPopup, NSI:Loc("Option Type"), function()
-                local types = { "Text", "Number", "Dropdown", "Checkbox", "Color" }
-                local items = {}
-                for typeIndex, optionType in ipairs(types) do
-                    local value = optionType
-                    items[#items + 1] = { label = NSI:Loc(value), value = value, onclick = function()
-                        customOptionEditorPopup.selectedType = value
-                        customOptionEditorPopup.RefreshTypeControls()
-                    end }
-                end
-                return items
-            end, function()
-                return NSI:Loc(customOptionEditorPopup.selectedType)
-            end, 300, 22, "NSUIEncAlertCustomOptionType")
-            customOptionEditorPopup.typeDropdown:SetPoint("TOPLEFT", customOptionEditorPopup.nameEntry.frame, "BOTTOMLEFT", 0, -14)
-
-            customOptionEditorPopup.defaultEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Default Value"), nil, nil, 680, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionDefault", nil, 400)
-            customOptionEditorPopup.defaultEntry:SetPoint("TOPLEFT", customOptionEditorPopup.typeDropdown.frame, "BOTTOMLEFT", 0, -14)
-            customOptionEditorPopup.defaultColor = {1, 1, 1, 1}
-            customOptionEditorPopup.defaultColorPicker = CreateColorPicker(customOptionEditorPopup, NSI:Loc("Default Color"),
-                function() return unpack(customOptionEditorPopup.defaultColor) end,
-                function(_, r, g, b, a)
-                    customOptionEditorPopup.defaultColor = {r, g, b, a}
-                end,
-                680, 22, "NSUIEncAlertCustomOptionDefaultColor")
-            customOptionEditorPopup.defaultColorPicker:SetPoint("TOPLEFT", customOptionEditorPopup.defaultEntry.frame, "TOPLEFT", 0, 0)
-
-            customOptionEditorPopup.minimumEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Minimum"), nil, nil, 210, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionMinimum", nil, 100)
-            customOptionEditorPopup.minimumEntry:SetPoint("TOPLEFT", customOptionEditorPopup.defaultEntry.frame, "BOTTOMLEFT", 0, -14)
-            customOptionEditorPopup.maximumEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Maximum"), nil, nil, 210, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionMaximum", nil, 100)
-            customOptionEditorPopup.maximumEntry:SetPoint("LEFT", customOptionEditorPopup.minimumEntry.frame, "RIGHT", 12, 0)
-            customOptionEditorPopup.stepEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Step Size"), nil, nil, 210, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionStep", nil, 100)
-            customOptionEditorPopup.stepEntry:SetPoint("LEFT", customOptionEditorPopup.maximumEntry.frame, "RIGHT", 12, 0)
-
-            customOptionEditorPopup.choicesEntry = CreateTextEntry(customOptionEditorPopup, NSI:Loc("Dropdown Choices (comma separated)"), nil, nil, 680, 22,
-                nil, nil, nil, "NSUIEncAlertCustomOptionChoices", nil, 500)
-            customOptionEditorPopup.choicesEntry:SetPoint("TOPLEFT", customOptionEditorPopup.minimumEntry.frame, "BOTTOMLEFT", 0, -14)
-
-            customOptionEditorPopup.helpLabel = customOptionEditorPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customOptionEditorPopup.helpLabel, "tiny", "")
-            customOptionEditorPopup.helpLabel:SetTextColor(unpack(STYLE.text_muted))
-            customOptionEditorPopup.helpLabel:SetPoint("TOPLEFT", customOptionEditorPopup.choicesEntry.frame, "BOTTOMLEFT", 0, -8)
-            customOptionEditorPopup.helpLabel:SetWidth(680)
-            customOptionEditorPopup.helpLabel:SetJustifyH("LEFT")
-
-            customOptionEditorPopup.statusLabel = customOptionEditorPopup:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(customOptionEditorPopup.statusLabel, "tiny", "")
-            customOptionEditorPopup.statusLabel:SetTextColor(unpack(STYLE.text_danger))
-            customOptionEditorPopup.statusLabel:SetPoint("BOTTOMLEFT", customOptionEditorPopup, "BOTTOMLEFT", 10, 14)
-            customOptionEditorPopup.statusLabel:SetWidth(430)
-            customOptionEditorPopup.statusLabel:SetJustifyH("LEFT")
-
-            customOptionEditorPopup.RefreshTypeControls = function()
-                local optionType = customOptionEditorPopup.selectedType
-                customOptionEditorPopup.defaultEntry.frame:SetShown(optionType ~= "Color")
-                customOptionEditorPopup.defaultColorPicker.frame:SetShown(optionType == "Color")
-                customOptionEditorPopup.minimumEntry.frame:SetShown(optionType == "Number")
-                customOptionEditorPopup.maximumEntry.frame:SetShown(optionType == "Number")
-                customOptionEditorPopup.stepEntry.frame:SetShown(optionType == "Number")
-                customOptionEditorPopup.choicesEntry.frame:SetShown(optionType == "Dropdown")
-                customOptionEditorPopup.helpLabel:SetText(NSI:Loc(optionType == "Number" and "Number options use a stepped slider." or optionType == "Dropdown" and "Enter the choices in display order, separated by commas." or optionType == "Checkbox" and "Use true or false as the default value." or optionType == "Color" and "Choose the default color for this option." or "Text options accept any text value."))
-            end
-
-            customOptionEditorPopup.saveBtn = CreateLocalizedButton(customOptionEditorPopup, "Save", function()
-                local selectedAlert = customOptionEditorPopup._alert
-                if not selectedAlert then return end
-                local optionName = strtrim(customOptionEditorPopup.nameEntry:GetValue() or "")
-                local optionKey = strtrim(customOptionEditorPopup.keyEntry:GetValue() or "")
-                local optionType = customOptionEditorPopup.selectedType
-                if optionName == "" then
-                    customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Option Name is required."))
-                    return
-                end
-                if optionKey == "" then
-                    customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Option Key is required."))
-                    return
-                end
-
-                selectedAlert.customOptionDefinitions = selectedAlert.customOptionDefinitions or {}
-                for _, currentDefinition in ipairs(selectedAlert.customOptionDefinitions) do
-                    if currentDefinition.id == optionKey and currentDefinition.id ~= customOptionEditorPopup._definitionID then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Option Key is already in use."))
-                        return
-                    end
-                end
-
-                local definition = {
-                    id = optionKey,
-                    name = optionName,
-                    type = optionType,
-                }
-                local defaultValue = customOptionEditorPopup.defaultEntry:GetValue() or ""
-                if optionType == "Number" then
-                    definition.min = tonumber(customOptionEditorPopup.minimumEntry:GetValue())
-                    definition.max = tonumber(customOptionEditorPopup.maximumEntry:GetValue())
-                    definition.step = tonumber(customOptionEditorPopup.stepEntry:GetValue()) or 1
-                    definition.defaultValue = tonumber(defaultValue)
-                    if not definition.min or not definition.max or definition.min >= definition.max or not definition.defaultValue or definition.step <= 0 then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Enter a valid number default, minimum, maximum, and positive step size."))
-                        return
-                    end
-                    if definition.defaultValue < definition.min or definition.defaultValue > definition.max then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("The default value must be between the minimum and maximum."))
-                        return
-                    end
-                elseif optionType == "Checkbox" then
-                    local normalizedDefault = strlower(strtrim(defaultValue))
-                    if normalizedDefault ~= "true" and normalizedDefault ~= "false" then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Checkbox default must be true or false."))
-                        return
-                    end
-                    definition.defaultValue = normalizedDefault == "true"
-                elseif optionType == "Color" then
-                    local defaultColor = customOptionEditorPopup.defaultColor
-                    definition.defaultValue = {defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]}
-                elseif optionType == "Dropdown" then
-                    definition.choices = {}
-                    for choiceValue in (customOptionEditorPopup.choicesEntry:GetValue() or ""):gmatch("[^,]+") do
-                        local normalizedChoice = strtrim(choiceValue)
-                        if normalizedChoice ~= "" then definition.choices[#definition.choices + 1] = normalizedChoice end
-                    end
-                    if #definition.choices == 0 then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("Add at least one dropdown choice."))
-                        return
-                    end
-                    definition.defaultValue = defaultValue ~= "" and defaultValue or definition.choices[1]
-                    if not tContains(definition.choices, definition.defaultValue) then
-                        customOptionEditorPopup.statusLabel:SetText(NSI:Loc("The default value must match one of the dropdown choices."))
-                        return
-                    end
-                else
-                    definition.defaultValue = defaultValue
-                end
-
-                selectedAlert.customOptionValues = selectedAlert.customOptionValues or {}
-                local previousDefinitionID = customOptionEditorPopup._definitionID
-                local previousValue = previousDefinitionID and selectedAlert.customOptionValues[previousDefinitionID]
-                local previousType
-                local foundDefinition
-                for index, currentDefinition in ipairs(selectedAlert.customOptionDefinitions) do
-                    if currentDefinition.id == previousDefinitionID then
-                        previousType = currentDefinition.type
-                        selectedAlert.customOptionDefinitions[index] = definition
-                        foundDefinition = true
-                        break
-                    end
-                end
-                if not foundDefinition then
-                    selectedAlert.customOptionDefinitions[#selectedAlert.customOptionDefinitions + 1] = definition
-                end
-                local keepPreviousValue = previousType == definition.type and previousValue ~= nil
-                if optionType == "Number" and keepPreviousValue then
-                    keepPreviousValue = type(previousValue) == "number" and previousValue >= definition.min and previousValue <= definition.max
-                elseif optionType == "Dropdown" and keepPreviousValue then
-                    keepPreviousValue = tContains(definition.choices, previousValue)
-                elseif optionType == "Checkbox" and keepPreviousValue then
-                    keepPreviousValue = type(previousValue) == "boolean"
-                elseif optionType == "Text" and keepPreviousValue then
-                    keepPreviousValue = type(previousValue) == "string"
-                elseif optionType == "Color" and keepPreviousValue then
-                    keepPreviousValue = type(previousValue) == "table" and #previousValue >= 4
-                    if keepPreviousValue then
-                        for colorIndex = 1, 4 do
-                            local channel = previousValue[colorIndex]
-                            if type(channel) ~= "number" or channel < 0 or channel > 1 then
-                                keepPreviousValue = false
-                                break
-                            end
-                        end
-                    end
-                end
-                if previousDefinitionID and previousDefinitionID ~= definition.id then
-                    selectedAlert.customOptionValues[previousDefinitionID] = nil
-                end
-                if keepPreviousValue then
-                    selectedAlert.customOptionValues[definition.id] = previousValue
-                else
-                    selectedAlert.customOptionValues[definition.id] = definition.defaultValue
-                end
-                NSI:SaveAlertData(selectedAlert, "customOptionDefinitions", selectedAlert.customOptionDefinitions)
-                NSI:SaveAlertData(selectedAlert, "customOptionValues", selectedAlert.customOptionValues)
-                customOptionEditorPopup:Hide()
-                RebuildOptionsContent(selectedAlert)
-            end, 120, 22)
-            customOptionEditorPopup.saveBtn:SetPoint("BOTTOMRIGHT", customOptionEditorPopup, "BOTTOMRIGHT", -138, 12)
-
-            customOptionEditorPopup.cancelBtn = CreateLocalizedButton(customOptionEditorPopup, "Cancel", function()
-                customOptionEditorPopup:Hide()
-            end, 120, 22)
-            customOptionEditorPopup.cancelBtn:SetPoint("LEFT", customOptionEditorPopup.saveBtn.frame, "RIGHT", 8, 0)
-        end
-
-        customOptionEditorPopup._alert = alert
-        customOptionEditorPopup._definitionID = existingDefinition and existingDefinition.id
-        customOptionEditorPopup.selectedType = existingDefinition and existingDefinition.type or "Text"
-        customOptionEditorPopup.nameEntry:SetValue(existingDefinition and existingDefinition.name or "")
-        customOptionEditorPopup.keyEntry:SetValue(existingDefinition and tostring(existingDefinition.id) or GetNextCustomOptionID(alert))
-        customOptionEditorPopup.defaultEntry:SetValue(existingDefinition and existingDefinition.type ~= "Color" and tostring(existingDefinition.defaultValue) or "")
-        local defaultColor = existingDefinition and existingDefinition.type == "Color" and existingDefinition.defaultValue
-        local fallbackColor = NSRT.ReminderSettings.DebuffOverviewSettings.barColors
-        customOptionEditorPopup.defaultColor = defaultColor and {defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]}
-            or {fallbackColor[1], fallbackColor[2], fallbackColor[3], fallbackColor[4]}
-        customOptionEditorPopup.defaultColorPicker:Refresh()
-        customOptionEditorPopup.minimumEntry:SetValue(existingDefinition and tostring(existingDefinition.min or "") or "")
-        customOptionEditorPopup.maximumEntry:SetValue(existingDefinition and tostring(existingDefinition.max or "") or "")
-        customOptionEditorPopup.stepEntry:SetValue(existingDefinition and tostring(existingDefinition.step or "") or "")
-        customOptionEditorPopup.choicesEntry:SetValue(existingDefinition and table.concat(existingDefinition.choices or {}, ", ") or "")
-        customOptionEditorPopup.statusLabel:SetText("")
-        customOptionEditorPopup.RefreshTypeControls()
-        customOptionEditorPopup.typeDropdown:Refresh()
-        customOptionEditorPopup:Show()
-    end
 
     -- The Options tab is built once. Its scroll box, buttons and widget hosts are
     -- created on first use and re-dressed for each entry; building them per
     -- selection leaked a scroll box and every widget on each click.
-    local optScroll, optReloeHost, optCustomHost, optCustomFrame
+    local optScroll, optReloeHost, optCustomHost, optCustomFrame, optAuthorCard
     local optAuthorButton, optPreviewButton, optAddOptionButton
     local optAuthorRows = {}
     local optEntry, optScrollEntry
     local optContentWidth = 0
+
+    -- extraOptions are written in the boss files (code-owned tables shared by every
+    -- load). A short first Label is the card title, like the other tabs. The
+    -- definitions are copied so card splitting never mutates the boss data.
+    local TITLE_LABEL_MAX = 40
+    local function ReloeOptionDefinitions(extraOptions)
+        local defs = {}
+        for index, def in ipairs(extraOptions or {}) do
+            local copy = {}
+            for key, value in pairs(def) do copy[key] = value end
+            if index == 1 and copy.Type == "Label" and copy.highlight == nil then
+                if #NSI:Loc(copy.text or "") <= TITLE_LABEL_MAX then
+                    copy.highlight = true
+                    copy.height = 22
+                end
+            end
+            defs[index] = copy
+        end
+        return defs
+    end
 
     local function OptionsAuthorRowRemove(self)
         local row = self.authorRow
@@ -3867,13 +3409,13 @@ end]]
         RebuildOptionsContent(entry)
     end
 
-    local function NewOptionsAuthorRow(scrollChild)
+    local function NewOptionsAuthorRow(parent)
         local row = {}
-        row.label = CreateLabel(scrollChild, "", optContentWidth - 76, 20)
-        row.edit = CreateLocalizedSubButton(scrollChild, "Edit", function()
+        row.label = CreateLabel(parent, "", optContentWidth - NSI.UI.Components.CardPad * 2 - 76, 20)
+        row.edit = CreateLocalizedSubButton(parent, "Edit", function()
             if optEntry and row.definition then OpenCustomOptionEditor(optEntry, row.definition) end
         end, 48)
-        local removeButton = CreateFrame("Button", nil, scrollChild)
+        local removeButton = CreateFrame("Button", nil, parent)
         removeButton:SetSize(14, 14)
         removeButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
         removeButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
@@ -3897,29 +3439,38 @@ end]]
         optContentWidth = scrollChild:GetWidth()
         optReloeHost = NSI.UI.Components.CreateCardHost(scrollChild, optContentWidth)
 
-        optAuthorButton = CreateLocalizedSubButton(scrollChild, "Enable Author Mode", function()
+        -- Author tools (custom alerts only) sit in their own card.
+        optAuthorCard = NSI.UI.Components.CreateSectionCard(scrollChild, optContentWidth, true)
+        SetLocalizedText(optAuthorCard.title, "Author Mode")
+        optAuthorCard:Hide()
+        local authorContent = optAuthorCard.content
+
+        optAuthorButton = CreateLocalizedSubButton(authorContent, "Enable Author Mode", function()
             authorMode = not authorMode
             if optEntry then RebuildOptionsContent(optEntry) end
         end, 160)
-        optAuthorButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, 0)
+        optAuthorButton:SetPoint("TOPLEFT", authorContent, "TOPLEFT", 0, 0)
 
-        optPreviewButton = CreateLocalizedSubButton(scrollChild, "Add Custom Preview Code", function()
+        optPreviewButton = CreateLocalizedSubButton(authorContent, "Add Custom Preview Code", function()
             if optEntry then OpenCustomPreviewEditor(optEntry) end
         end, 190)
-        optPreviewButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -26)
+        optPreviewButton:SetPoint("TOPLEFT", authorContent, "TOPLEFT", 0, -26)
 
-        optAddOptionButton = CreateLocalizedSubButton(scrollChild, "Add Custom Option", function()
+        optAddOptionButton = CreateLocalizedSubButton(authorContent, "Add Custom Option", function()
             if optEntry then OpenCustomOptionEditor(optEntry) end
         end, 150)
         optAddOptionButton:SetPoint("LEFT", optPreviewButton.frame, "RIGHT", 8, 0)
 
+        -- The user's custom options are drawn as a card too (a host parent frame that
+        -- CardHost stacks its cards in).
         optCustomFrame = CreateFrame("Frame", nil, scrollChild)
         optCustomFrame:SetWidth(optContentWidth)
-        optCustomHost = NSI.UI.Components.CreateWidgetHost(optCustomFrame, optContentWidth)
+        optCustomHost = NSI.UI.Components.CreateCardHost(optCustomFrame, optContentWidth)
     end
 
     -- Everything the custom-alert layout shows, hidden for built-in alerts.
     local function HideCustomOptionsUI()
+        optAuthorCard:Hide()
         optAuthorButton.frame:Hide()
         optPreviewButton.frame:Hide()
         optAddOptionButton.frame:Hide()
@@ -3948,13 +3499,15 @@ end]]
 
         if entry.ReloeReminder then
             HideCustomOptionsUI()
-            totalH = optReloeHost:Apply(entry.extraOptions or {})
+            totalH = optReloeHost:Apply(ReloeOptionDefinitions(entry.extraOptions))
         else
             optReloeHost:Hide()
+            local authorContent = optAuthorCard.content
+            optAuthorCard:Show()
             optAuthorButton:SetLocaleKey(authorMode and "Disable Author Mode" or "Enable Author Mode")
             optAuthorButton.frame:Show()
 
-            local y = 26
+            local y = 26   -- card-local y below the author-mode button
             if authorMode then
                 optPreviewButton:SetLocaleKey(entry.customPreview and "Edit Custom Preview Code" or "Add Custom Preview Code")
                 optPreviewButton.frame:Show()
@@ -3972,17 +3525,17 @@ end]]
                     authorRowCount = authorRowCount + 1
                     local row = optAuthorRows[authorRowCount]
                     if not row then
-                        row = NewOptionsAuthorRow(scrollChild)
+                        row = NewOptionsAuthorRow(authorContent)
                         optAuthorRows[authorRowCount] = row
                     end
                     row.definition = definition
                     row.label:SetText((definition.name or NSI:Loc("Unnamed Option")) .. " (" .. NSI:Loc(definition.type or "Text") .. ")")
                     row.label.frame:ClearAllPoints()
-                    row.label:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -y)
+                    row.label:SetPoint("TOPLEFT", authorContent, "TOPLEFT", 0, -y)
                     row.edit.frame:ClearAllPoints()
-                    row.edit:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -24, -y)
+                    row.edit:SetPoint("TOPRIGHT", authorContent, "TOPRIGHT", -24, -y)
                     row.remove:ClearAllPoints()
-                    row.remove:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, -y - 3)
+                    row.remove:SetPoint("TOPRIGHT", authorContent, "TOPRIGHT", -2, -y - 3)
                     row.label.frame:Show(); row.edit.frame:Show(); row.remove:Show()
                     y = y + 24
                 end
@@ -3992,6 +3545,14 @@ end]]
                 row.definition = nil
                 row.label.frame:Hide(); row.edit.frame:Hide(); row.remove:Hide()
             end
+
+            -- Size and place the author card; the custom options card goes below it.
+            local authorH = math.max(y - 4, 22)
+            authorContent:SetHeight(authorH)
+            optAuthorCard:SetHeight(optAuthorCard.headerH + NSI.UI.Components.CardPad * 2 + authorH)
+            optAuthorCard:ClearAllPoints()
+            optAuthorCard:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, 0)
+            y = optAuthorCard:GetHeight() + NSI.UI.Components.CardGap
 
             local widgetDefinitions = {}
             entry.customOptionValues = entry.customOptionValues or {}
@@ -4061,12 +3622,15 @@ end]]
                 end
             end
 
+            if #widgetDefinitions > 0 then
+                table.insert(widgetDefinitions, 1, { Type = "Label", text = "Custom Options", highlight = true, height = 22 })
+            end
             optCustomFrame:ClearAllPoints()
             optCustomFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -y)
             optCustomFrame:Show()
             local optionWidgetsHeight = optCustomHost:Apply(widgetDefinitions)
             optCustomFrame:SetHeight(math.max(optionWidgetsHeight, 1))
-            totalH = y + optionWidgetsHeight
+            totalH = optionWidgetsHeight > 0 and (y + optionWidgetsHeight) or (y - NSI.UI.Components.CardGap)
             if customOptionDefaultsAdded then
                 NSI:SaveAlertData(entry, "customOptionValues", entry.customOptionValues)
             end
@@ -4080,6 +3644,7 @@ end]]
         end
         optScroll:UpdateScrollBar()
     end
+    searchOptions = function() return optEntry, ReloeOptionDefinitions, optReloeHost, optScroll end
     end -- OPTIONS TAB
 
     -- ================================================================
@@ -4266,7 +3831,6 @@ end]]
         innerTabBtns["Options"].frame:SetShown(hasOptions)
         if hasOptions then
             RebuildOptionsContent(entry)
-            if isReloe then activeInnerTab = "Options" end
         else
             if activeInnerTab == "Options" then activeInnerTab = "Display" end
         end
@@ -4313,6 +3877,56 @@ end]]
             SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
         end
     end)
+
+    -- Header search: settings of the selected alert (all five inner tabs, plus the
+    -- boss-specific options Reloe defines in extraOptions).
+    do
+        local I = NSI.UI.Search.Internals
+        local function Reveal(tab, getItem, getScroll)
+            SelectInnerTab(tab)
+            -- the inner tab was just shown: measure on the next frame
+            C_Timer.After(0, function()
+                local item = getItem()
+                if not item or not item:IsShown() then return end
+                local scroll = getScroll and getScroll()
+                if scroll then scroll:ScrollToFrame(item) end
+                I.Pulse(item)
+            end)
+        end
+
+        NSI.UI.ScopedSearch.Create(screen, "NSUIEncAlertSettingsSearch", {
+            collect = function(add)
+                if not dispF._alert then return end
+                local displayType = dispF._displayType
+                for _, r in ipairs(searchables) do
+                    if not r.types or (displayType and r.types[displayType]) then
+                        local target = r.target.frame or r.target
+                        add(r.key, NSI:Loc(r.tab) .. "  >  " .. NSI:Loc(r.crumb), nil, function()
+                            Reveal(r.tab, function() return target end, function() return searchScroll[r.tab] end)
+                        end)
+                    end
+                end
+                -- Reloe's boss-specific options
+                local optEntry, ReloeOptionDefinitions = searchOptions()
+                local hasOptions = optEntry and optEntry.extraOptions and innerTabBtns["Options"].frame:IsShown()
+                if hasOptions then
+                    for index, def in ipairs(ReloeOptionDefinitions(optEntry.extraOptions)) do
+                        local label = def.label or def.text
+                        if def.Type ~= "Label" and def.Type ~= "Breakline" and label then
+                            add(label, NSI:Loc("Options"), def.tooltip, function()
+                                Reveal("Options", function()
+                                    local _, _, host = searchOptions()
+                                    local set = host and host.current
+                                    local item = set and set.byIndex[index]
+                                    return item and item.frame
+                                end, function() local _, _, _, scroll = searchOptions(); return scroll end)
+                            end)
+                        end
+                    end
+                end
+            end,
+        })
+    end
 
     return screen
 end

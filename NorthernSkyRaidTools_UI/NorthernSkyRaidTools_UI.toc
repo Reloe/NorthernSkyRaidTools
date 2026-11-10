@@ -21,6 +21,9 @@ UI\Notes.lua
 UI\VersionCheck.lua
 UI\Nicknames.lua
 UI\Reminders.lua
+UI\EncounterAlerts\Helpers.lua
+UI\EncounterAlerts\Popups.lua
+UI\EncounterAlerts\CodeEditors.lua
 UI\EncounterAlerts.lua
 UI\Cooldowns.lua
 UI\AuraSounds.lua
@@ -39,6 +42,7 @@ UI\Options\QoL.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
 UI\Search.lua
+UI\ScopedSearch.lua
 UI\EditMode.lua
 UI\EditModeElements.lua
 

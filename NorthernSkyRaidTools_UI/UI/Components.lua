@@ -4134,6 +4134,31 @@ end
 --  Export
 -- ============================================================
 NSI.UI = NSI.UI or {}
+-- ============================================================
+--  CreateSearchBox(parent, width, height, name, onChange, placeholder)
+--  A text entry with a search icon hint. onChange(text) runs on every edit. The caller
+--  places it. Returns the entry (entry.editBox is the edit box, entry.Clear() empties it).
+-- ============================================================
+local function CreateSearchBox(parent, width, height, name, onChange, placeholder)
+    local entry = CreateTextEntry(parent, nil, nil, nil, width, height, nil, nil, nil, name)
+    local eb = entry.editBox
+    local hint = eb:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    hint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. (placeholder or NSI:Loc("Search...")))
+    hint:SetPoint("LEFT", eb, "LEFT", 2, 0)
+    hint:SetTextColor(unpack(STYLE.text_hint))
+    NSI:SetUIFont(hint, "body", "")
+    local function UpdateHint() hint:SetShown(eb:GetText() == "" and not eb:HasFocus()) end
+
+    eb:SetScript("OnTextChanged", function(self)
+        UpdateHint()
+        if onChange then onChange(self:GetText()) end
+    end)
+    eb:HookScript("OnEditFocusGained", UpdateHint)
+    eb:HookScript("OnEditFocusLost", UpdateHint)
+    entry.Clear = function() eb:SetText(""); eb:ClearFocus() end
+    return entry
+end
+
 NSI.UI.Components = {
     CreateButton        = CreateButton,
     CreateSubButton     = CreateSubButton,
@@ -4143,6 +4168,7 @@ NSI.UI.Components = {
     RegisterLocalizedText = RegisterLocalizedText,
     CreateCheckButton   = CreateCheckButton,
     CreateTextEntry     = CreateTextEntry,
+    CreateSearchBox     = CreateSearchBox,
     CreateDropdown      = CreateDropdown,
     CreateSlider        = CreateSlider,
     CreateColorPicker   = CreateColorPicker,

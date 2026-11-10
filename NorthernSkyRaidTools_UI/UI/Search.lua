@@ -73,7 +73,7 @@ local function Localized(text)
 end
 
 -- kind: "page" | "section" | "row". ref carries what the jump needs.
-local function AddEntry(kind, tabName, tabTitle, sectionTitle, rawLabel, tooltip, section, defIndex)
+local function MakeEntry(kind, tabName, tabTitle, sectionTitle, rawLabel, tooltip, section, defIndex)
     if type(rawLabel) ~= "string" or rawLabel == "" then return end
     local english = StripEscapes(rawLabel)
     local shown   = Localized(rawLabel)
@@ -87,7 +87,12 @@ local function AddEntry(kind, tabName, tabTitle, sectionTitle, rawLabel, tooltip
     if english ~= shown then e.english = english:lower() end   -- guides quote English names
     if type(tooltip) == "table" then tooltip = tooltip.desc end
     if type(tooltip) == "string" and tooltip ~= "" then e.tip = Localized(tooltip):lower() end
-    index[#index + 1] = e
+    return e
+end
+
+local function AddEntry(...)
+    local e = MakeEntry(...)
+    if e then index[#index + 1] = e end
 end
 
 local function BuildIndex()
@@ -441,3 +446,10 @@ function Search.Create(window, tabs)
         scale.frame:SetPoint("LEFT", entryBox.frame, "RIGHT", 14, 0)
     end
 end
+
+-- Shared with ScopedSearch (per-tab search boxes): same scoring, markup and pulse.
+Search.Internals = {
+    MakeEntry = MakeEntry, Score = Score, Squash = Squash, ByScore = ByScore,
+    Pulse = Pulse, Mark = Mark, Esc = Esc, Localized = Localized,
+    MAX_RESULTS = MAX_RESULTS,
+}

@@ -371,9 +371,17 @@ local function BuildAuraSoundsUI(parent)
     local title = CreateLabel(screen, T("|cFF00FFFFAura|r Sounds"), 14)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
+    -- list filter: narrows the categories you can select from
+    local categorySearchText = ""
+    local categorySearch = NSI.UI.Components.CreateSearchBox(screen, leftWidth, 22, "NSUIAuraSoundsCategorySearch", function(text)
+        categorySearchText = text
+        if screen.RefreshCategoryList then screen.RefreshCategoryList() end
+    end)
+    categorySearch:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -62)   -- below the Raid / Dungeons / Custom buttons
+
     local leftScroll = CreateFrame("ScrollFrame", "$parentAuraSoundCategoryScroll", screen, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(leftScroll)
-    leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -62)
+    leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -90)
     leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 78)
     leftScroll:SetWidth(leftWidth)
     NSI.UI.Components.ReskinScrollbar(leftScroll)
@@ -525,9 +533,31 @@ local function BuildAuraSoundsUI(parent)
             sections = {{categories = categories}}
         end
 
+        -- list filter: keep matching categories, drop sections left empty
+        local query = strtrim(categorySearchText:lower())
+        if query ~= "" then
+            local kept = {}
+            for _, section in ipairs(sections) do
+                local matches = {}
+                for _, category in ipairs(section.categories) do
+                    local name = screen.categoryType == "Raid"
+                        and NSI:Loc(NSI.BossNames[category.key] or tostring(category.key))
+                        or NSI:Loc(category.label or tostring(category.key))
+                    if name:lower():find(query, 1, true) then matches[#matches + 1] = category end
+                end
+                if #matches > 0 then
+                    local copy = {}
+                    for k, v in pairs(section) do copy[k] = v end
+                    copy.categories = matches
+                    kept[#kept + 1] = copy
+                end
+            end
+            sections = kept
+        end
+
         local categoryIndex, sectionIndex, slot = 0, 0, 0
         for _, section in ipairs(sections) do
-            local collapsed = section.key and screen.collapsedSections[section.key]
+            local collapsed = query == "" and section.key and screen.collapsedSections[section.key]
             if section.key then
                 sectionIndex = sectionIndex + 1
                 slot = slot + 1
@@ -651,6 +681,7 @@ local function BuildAuraSoundsUI(parent)
     AddTypeExport(dungeonTypeButton, "Dungeons", "Dungeons")
     AddTypeExport(customTypeButton, "Custom", "Custom")
 
+    screen.RefreshCategoryList = RefreshCategoryList
     RefreshCategorySelection = function()
         RefreshCategoryList()
         if screen.scrollbox then screen.scrollbox:MasterRefresh() end
@@ -1112,6 +1143,28 @@ local function BuildAuraSoundsUI(parent)
         scrollbox:UpdateScrollBar()
     end
     scrollbox.MasterRefresh = function(self) RefreshAuraScrollbox() end
+
+    -- Header search: jump to a spell of the selected category (name or spell ID)
+    screen.headerSearch = NSI.UI.ScopedSearch.Create(screen, "NSUIAuraSoundsSettingsSearch", {
+        placeholder = T("Search module..."),
+        collect = function(add)
+            local category = FindAuraSoundCategory(screen.categoryType, screen.categoryKey)
+            local crumb = category and (screen.categoryType == "Raid"
+                and NSI:Loc(NSI.BossNames[category.key] or tostring(category.key))
+                or NSI:Loc(category.label or tostring(category.key))) or ""
+            for i, entry in ipairs(PrepareAuraSoundData(screen)) do
+                local label = string.format("%s (%d)", entry.name or "", entry.spellID or 0)
+                add(label, crumb, nil, function()
+                    local row = auraRows[i]
+                    if not row or not row:IsShown() then return end
+                    C_Timer.After(0, function()
+                        scrollbox:ScrollToFrame(row)
+                        NSI.UI.Search.Internals.Pulse(row)
+                    end)
+                end)
+            end
+        end,
+    })
 
     local newSpellLabel = CreateLabel(rightPanel, T("SpellID:"), 11)
     newSpellLabel:SetPoint("TOPLEFT", scrollbox.frame, "BOTTOMLEFT", 0, -18)
