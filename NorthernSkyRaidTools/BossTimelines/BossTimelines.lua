@@ -27,6 +27,7 @@ local _, NSI = ... -- Internal namespace
                 phase = number,         -- Phase number (1, 2, 3, etc.)
                 times = {number, ...},  -- Array of cast times (seconds from phase start)
                 duration = number,      -- Ability duration in seconds (0 if instant)
+                castTime = number,      -- Optional cast time in seconds; each time is the cast end, so the cast spans time - castTime .. time
             },
         },
     }
@@ -420,6 +421,7 @@ function NSI:GetBossTimelineAbilities(encounterID, difficulty)
                 phase = ability.phase,
                 times = absoluteTimes,
                 duration = ability.duration,
+                castTime = ability.castTime,
                 color = color,
             })
         end
