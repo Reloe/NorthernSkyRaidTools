@@ -158,6 +158,7 @@ function Window.Create(opts)
 
     local close = Components.CreateButton(titleBar, "", function() window:Hide() end,
         HEADER_BTN, HEADER_BTN, name .. "CloseButton", CLOSE_ICON)
+    Components.StyleBareIconButton(close, 16)
     window:AddHeaderButton(close)
     window.Close = close.frame
     window.closeButton = close.frame

@@ -281,6 +281,7 @@ function NSUI:Init()
             nil,  -- textSize
             { title = GetLocalizedText("Edit Layout"), desc = GetLocalizedText("Move and resize reminders, notes and other displays in one place") }
         )
+        NSI.UI.Components.StyleBareIconButton(anchorBtn, 16)
         NSUI:AddHeaderButton(anchorBtn)
     end
 
@@ -300,6 +301,7 @@ function NSUI:Init()
             { title = GetLocalizedText("Export Group"), desc = GetLocalizedText("Export your current raid composition to use with wowutils.com") },
             function() return not InCombatLockdown() and IsInGroup() end
         )
+        NSI.UI.Components.StyleBareIconButton(exportGroupBtn, 16)
         NSUI:AddHeaderButton(exportGroupBtn)
     end
 
@@ -314,6 +316,7 @@ function NSUI:Init()
             nil,  -- textSize
             { title = GetLocalizedText("Timeline"), desc = GetLocalizedText("Open the Timeline window") }
         )
+        NSI.UI.Components.StyleBareIconButton(timelineBtn, 16)
         NSUI:AddHeaderButton(timelineBtn)
     end
 

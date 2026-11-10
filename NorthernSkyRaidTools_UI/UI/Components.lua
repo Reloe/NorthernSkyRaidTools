@@ -4135,6 +4135,38 @@ end
 -- ============================================================
 NSI.UI = NSI.UI or {}
 -- ============================================================
+--  StyleBareIconButton(buttonObj, iconSize)
+--  Turns an icon-only CreateButton into a bare icon: no box, no hover fill, white icon
+--  that turns the accent colour on hover (and dim when the button is disabled).
+-- ============================================================
+local function StyleBareIconButton(buttonObj, iconSize)
+    local btn = buttonObj.frame
+    btn:SetBackdropColor(0, 0, 0, 0)
+    -- hover / selected fills are regions of their own frames: hide the regions
+    for _, fillFrame in ipairs({ buttonObj.hoverBg, buttonObj.selectedBg }) do
+        for _, region in ipairs({ fillFrame:GetRegions() }) do region:SetAlpha(0) end
+    end
+    if iconSize and buttonObj.iconFrame then buttonObj.iconFrame:SetSize(iconSize, iconSize) end
+    local icon = btn.icon
+    if icon then
+        icon:SetTexCoord(0, 1, 0, 1)   -- the whole glyph, not the cropped button icon
+        btn:HookScript("OnEnter", function(self)
+            if self:IsEnabled() then icon:SetVertexColor(STYLE.Accent(1)) end
+        end)
+        btn:HookScript("OnLeave", function(self)
+            if self:IsEnabled() then icon:SetVertexColor(unpack(STYLE.text_color)) end
+        end)
+        -- a button with a condition re-enables itself every 0.5s: keep the hover colour
+        local enable = buttonObj.Enable
+        buttonObj.Enable = function(self)
+            enable(self)
+            if btn:IsMouseOver() then icon:SetVertexColor(STYLE.Accent(1)) end
+        end
+    end
+    return buttonObj
+end
+
+-- ============================================================
 --  CreateSearchBox(parent, width, height, name, onChange, placeholder)
 --  A text entry with a search icon hint. onChange(text) runs on every edit. The caller
 --  places it. Returns the entry (entry.editBox is the edit box, entry.Clear() empties it).
@@ -4169,6 +4201,7 @@ NSI.UI.Components = {
     CreateCheckButton   = CreateCheckButton,
     CreateTextEntry     = CreateTextEntry,
     CreateSearchBox     = CreateSearchBox,
+    StyleBareIconButton = StyleBareIconButton,
     CreateDropdown      = CreateDropdown,
     CreateSlider        = CreateSlider,
     CreateColorPicker   = CreateColorPicker,
