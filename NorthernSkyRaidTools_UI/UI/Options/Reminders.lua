@@ -548,24 +548,9 @@ local function BuildReminderNoteOptions()
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             headerButton = {
             type = "button",
-            name = "Unlock All Reminders",
-            desc = "Locks/Unlocks the All Reminders Note to be moved around",
-            func = function(self)
-                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame(false, true)
-                    NSI:MakeDraggable(NSI.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame, false, true)
-                    NSI.ReminderFrameMover.Resizer:Hide()
-                    NSI.ReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.ReminderFrame.Moveable = false
-                else
-                    NSI:UpdateReminderFrame(false, true)
-                    NSI:MakeDraggable(NSI.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame, true, true)
-                    NSI.ReminderFrameMover.Resizer:Show()
-                    NSI.ReminderFrameMover:SetResizable(true)
-                    NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.ReminderFrame.Moveable = true
-                end
-            end,
+            name = "Edit Layout",
+            desc = "Opens the layout editor to move and resize this note together with every other display.",
+            func = function(self) NSI:TogglePreviewMode() end,
             nocombat = true,
         },
         },
@@ -757,24 +742,9 @@ local function BuildReminderNoteOptions()
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             headerButton = {
             type = "button",
-            name = "Unlock Pers Reminder",
-            desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
-            func = function(self)
-                if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame(false, false, true)
-                    NSI:MakeDraggable(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame, false, true)
-                    NSI.PersonalReminderFrameMover.Resizer:Hide()
-                    NSI.PersonalReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.PersonalReminderFrame.Moveable = false
-                else
-                    NSI:UpdateReminderFrame(false, false, true)
-                    NSI:MakeDraggable(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame, true, true)
-                    NSI.PersonalReminderFrameMover.Resizer:Show()
-                    NSI.PersonalReminderFrameMover:SetResizable(true)
-                    NSI.PersonalReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.PersonalReminderFrame.Moveable = true
-                end
-            end,
+            name = "Edit Layout",
+            desc = "Opens the layout editor to move and resize this note together with every other display.",
+            func = function(self) NSI:TogglePreviewMode() end,
             nocombat = true,
         },
         },
@@ -918,24 +888,9 @@ local function BuildReminderNoteOptions()
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             headerButton = {
             type = "button",
-            name = "Unlock Text Note",
-            desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
-            func = function(self)
-                if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame(false, false, false, true)
-                    NSI:MakeDraggable(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame, false, true)
-                    NSI.ExtraReminderFrameMover.Resizer:Hide()
-                    NSI.ExtraReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.ExtraReminderFrame.Moveable = false
-                else
-                    NSI:UpdateReminderFrame(false, false, false, true)
-                    NSI:MakeDraggable(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame, true, true)
-                    NSI.ExtraReminderFrameMover.Resizer:Show()
-                    NSI.ExtraReminderFrameMover:SetResizable(true)
-                    NSI.ExtraReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.ExtraReminderFrame.Moveable = true
-                end
-            end,
+            name = "Edit Layout",
+            desc = "Opens the layout editor to move and resize this note together with every other display.",
+            func = function(self) NSI:TogglePreviewMode() end,
             nocombat = true,
         },
         },

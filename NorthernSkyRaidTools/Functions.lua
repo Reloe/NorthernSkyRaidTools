@@ -599,10 +599,13 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
     if not F then return end
 
     if enable then
+        -- While the layout editor is open it owns dragging (overlays on top of the frame),
+        -- so the frame only shows its preview visuals here and is never made movable.
+        local editing = self.LayoutEditorActive
         if not F._nsrtPreservedOnUpdate then
             F._nsrtPreservedOnUpdate = F:GetScript("OnUpdate")
         end
-        if (not F.dragBorder) and (not isNote) then
+        if (not F.dragBorder) and (not isNote) and not editing then
             F.dragBorder = CreateFrame("Frame", nil, F, "BackdropTemplate")
             F.dragBorder:SetPoint("TOPLEFT",     F, "TOPLEFT",     -8,  8)
             F.dragBorder:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT",  8, -8)
@@ -613,19 +616,26 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
             F.dragBorder:SetBackdropColor(0, 0, 0, 0)
             F.dragBorder:SetBackdropBorderColor(0.3, 0.67, 0.78, 1)
         end
-        F:SetMovable(true)
-        F:EnableMouse(true)
-        F:RegisterForDrag("LeftButton")
-        F:SetClampedToScreen(true)
-        if not isNote then F:SetFrameStrata("DIALOG") end
+        if not editing then
+            F:SetMovable(true)
+            F:EnableMouse(true)
+            F:RegisterForDrag("LeftButton")
+            F:SetClampedToScreen(true)
+            if not isNote then F:SetFrameStrata("DIALOG") end
+        end
         F:Show()
         if F.Border and isNote then F.Border:Show() end
-        if F.dragBorder then F.dragBorder:Show() end
+        if F.dragBorder and not editing then F.dragBorder:Show() end
         if F.Text then F.Text:Show() end
         if F.IsDebuffOverview then
             for _, row in ipairs(F.PreviewRows) do
                 row:Show()
             end
+        end
+        if editing then
+            F:SetScript("OnDragStart", nil)
+            F:SetScript("OnDragStop", nil)
+            return
         end
         if F.TitleLabel then F.TitleLabel:Show() end
         if F.GearButton then F.GearButton:Show() end

@@ -387,7 +387,8 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
 
     local win = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTAnchorWin_" .. settingsName, moverFrame)
     win:SetSize(winWidth, 100)   -- height filled in below
-    win:SetFrameStrata("DIALOG")
+    -- above the layout editor's overlays when it is open
+    win:SetFrameStrata(NSI.LayoutEditorActive and "FULLSCREEN_DIALOG" or "DIALOG")
     win:SetFrameLevel(moverFrame:GetFrameLevel() + 10)
     win:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",

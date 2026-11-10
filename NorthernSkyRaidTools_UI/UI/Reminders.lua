@@ -89,13 +89,13 @@ function NSI:SpawnPreviewReminders()
         TTS = false,
         isAnchorPreview = true,
     }
-    self:DisplayReminder(self:CreateReminder(info1, true))
-    self:DisplayReminder(self:CreateReminder(info2, true))
-    self:DisplayReminder(self:CreateReminder(info3, true))
-    self:DisplayReminder(self:CreateReminder(info4, true))
-    self:DisplayReminder(self:CreateReminder(info5, true))
-    self:DisplayReminder(self:CreateReminder(info6, true))
-    self:DisplayReminder(self:CreateReminder(info7, true))
+    -- In the layout editor the player can hide reminder types ("reminder_icon", ...).
+    local hidden = self.LayoutEditorActive and NSRT.NSUI and NSRT.NSUI.editMode and NSRT.NSUI.editMode.hidden
+    for _, info in ipairs({ info1, info2, info3, info4, info5, info6, info7 }) do
+        if not (hidden and hidden["reminder_" .. info.DisplayType:lower()]) then
+            self:DisplayReminder(self:CreateReminder(info, true))
+        end
+    end
     local loopInterval = 8
     if self.PreviewTicker then self.PreviewTicker:Cancel() end
     self.PreviewTicker = C_Timer.NewTicker(loopInterval, function()
@@ -107,78 +107,10 @@ function NSI:SpawnPreviewReminders()
     self:UpdateExistingFrames()
 end
 
+-- The anchors now live in the layout editor (UI/EditMode.lua); this keeps the old entry
+-- point for the header button and the options buttons.
 function NSI:TogglePreviewMode()
-    -- If already in preview, stop it
-    if self.IsInPreview then
-        if self.PreviewTicker then
-            self.PreviewTicker:Cancel()
-            self.PreviewTicker = nil
-        end
-        self.IsInPreview = false
-        self:HideAllReminders()
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
-            if self[v] then
-                self[v]:StopMovingOrSizing()
-            end
-            self:MakeDraggable(self[v], nil, false)
-        end
-        if self.PreviewBar then self.PreviewBar:Hide() end
-        NSUI:Show()
-        return
-    end
-
-    local allMovers = {"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}
-    local allSettings = {
-        IconMover = NSRT.ReminderSettings.IconSettings,
-        BarMover = NSRT.ReminderSettings.BarSettings,
-        TextMover = NSRT.ReminderSettings.TextSettings,
-        CircleMover = NSRT.ReminderSettings.CircleSettings,
-        DebuffOverviewMover = NSRT.ReminderSettings.DebuffOverviewSettings,
-    }
-
-    -- Build the floating preview bar once
-    if not self.PreviewBar then
-        local bar = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTPreviewBar", UIParent)
-        bar:SetSize(230, 30)
-        bar:SetPoint("TOP", UIParent, "TOP", 0, -150)
-        bar:SetFrameStrata("DIALOG")
-        bar:SetFrameLevel(100)
-        bar:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        bar:SetBackdropColor(unpack(STYLE.surface_panel))
-        bar:SetBackdropBorderColor(Accent(1))
-
-        local lbl = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        lbl:SetPoint("LEFT", bar, "LEFT", 10, 0)
-        lbl:SetText(NSI:Loc("Preview Mode"))
-        lbl:SetTextColor(Accent(1))
-
-        local exitBtn = CreateFrame("Button", nil, bar)
-        exitBtn:SetSize(70, 22)
-        exitBtn:SetPoint("RIGHT", bar, "RIGHT", -10, 0)
-        exitBtn:SetNormalFontObject("GameFontNormalSmall")
-        exitBtn:SetText(NSI:Loc("Exit Preview"))
-        exitBtn:GetFontString():SetTextColor(unpack(STYLE.danger))
-        exitBtn:SetScript("OnEnter", function(b) b:GetFontString():SetTextColor(1, 0.1, 0.1) end)
-        exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(unpack(STYLE.danger)) end)
-        exitBtn:SetScript("OnClick", function() NSI:TogglePreviewMode() end)
-
-        bar:Hide()
-        self.PreviewBar = bar
-    end
-
-    -- Start preview
-    self.IsInPreview = true
-    for _, v in ipairs(allMovers) do
-        self:MakeDraggable(self[v], allSettings[v], true)
-    end
-
-    self:SpawnPreviewReminders()
-    self.PreviewBar:Show()
-    NSUI:Hide()
+    if NSI.UI.EditMode then NSI.UI.EditMode.Toggle() end
 end
 
 -- ============================================================================

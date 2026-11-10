@@ -2666,17 +2666,13 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     if not self[Name] then
         self:UpdateReminderFrame(false, Shared, Personal, Extra)
     end
-    if SettingsTable.Moveable then
-        self:MakeDraggable(mover, SettingsTable, true, true)
-        mover.Resizer:Show()
-        mover:SetResizable(true)
-        mover:SetResizeBounds(100, 100, 2000, 2000)
-    else
+    -- Notes are moved and resized in the layout editor (UI/EditMode.lua), never in place.
+    if not self.LayoutEditorActive then
         self:MakeDraggable(mover, SettingsTable, false, true)
-        mover.Resizer:Hide()
-        mover:SetResizable(false)
-        mover:StopMovingOrSizing()
     end
+    mover.Resizer:Hide()
+    mover:SetResizable(false)
+    mover:StopMovingOrSizing()
     mover:Show()
 end
 
@@ -2891,9 +2887,7 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
         SettingsTable.xOffset = Round(xOffset)
         SettingsTable.yOffset = Round(yOffset)
     end)
-    if not SettingsTable.Moveable then
-        mover.Resizer:Hide()
-    end
+    mover.Resizer:Hide()
 end
 
 function NSI:UpdateNoteFrame(Name, SettingsTable, text)
@@ -2901,17 +2895,13 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
     local mover = self[Name.."Mover"]
     if SettingsTable.enabled then
         self[Name]:SetAllPoints(mover)
-        if SettingsTable.Moveable then
-            self:MakeDraggable(mover, SettingsTable, true, true)
-            mover.Resizer:Show()
-            mover:SetResizable(true)
-            mover:SetResizeBounds(100, 100, 2000, 2000)
-        else
+        -- Notes are moved and resized in the layout editor (UI/EditMode.lua), never in place.
+        if not self.LayoutEditorActive then
             self:MakeDraggable(mover, SettingsTable, false, true)
-            mover.Resizer:Hide()
-            mover:SetResizable(false)
-            mover:StopMovingOrSizing()
         end
+        mover.Resizer:Hide()
+        mover:SetResizable(false)
+        mover:StopMovingOrSizing()
         mover:Show()
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
         self[Name].Text:SetWidth(SettingsTable.Width)

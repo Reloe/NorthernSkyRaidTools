@@ -38,5 +38,7 @@ UI\Options\QoL.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
 UI\Search.lua
+UI\EditMode.lua
+UI\EditModeElements.lua
 
 NSUI.lua

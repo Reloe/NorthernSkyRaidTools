@@ -15,3 +15,4 @@
 - Options window text is no longer outlined (in-world displays keep their outline setting)
 - Add a search box to the options window header that finds any setting across all tabs, shows where it lives, and jumps to it, scrolls it into view and highlights it
 - Replace Blizzard's text-entry popups (new/rename group) with an addon dialog
+- New layout editor (the anchor button in the options header, or "Edit Layout" on each note): move and resize reminder anchors, all three notes, Interrupt Display, Pace Comparison, Break Timer, Player Stats, QoL Text and the generic text display in one place, with a grid, snapping and alignment guides, arrow-key nudging, per-display show/hide checkboxes and Save / Cancel. Aura Tracking anchors and encounter alert frames keep their own anchoring

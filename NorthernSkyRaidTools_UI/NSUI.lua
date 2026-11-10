@@ -279,7 +279,7 @@ function NSUI:Init()
             "NSUIAnchorBtn",
             [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
             nil,  -- textSize
-            { title = GetLocalizedText("Preview Alerts"), desc = GetLocalizedText("Preview Reminders and unlock their anchors to move them around") }
+            { title = GetLocalizedText("Edit Layout"), desc = GetLocalizedText("Move and resize reminders, notes and other displays in one place") }
         )
         NSUI:AddHeaderButton(anchorBtn)
     end
