@@ -59,29 +59,36 @@ local BuildAuraGlowsUI             = NSI.UI.Options.AuraGlows.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildCallback
+local BuildRaidManagerOptions      = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildRaidManagerOptions
 -- ============================================================
 -- Vertical tab sidebar layout
 -- ============================================================
 
--- Tab groups – blank strings become visual spacers between groups
+-- Tab groups: each group is a titled section of the sidebar with a separator above it.
+-- Retail-only tabs are skipped on other clients; a group with no visible tab is skipped.
 local TABS_GROUPS                  = {
     {
+        title = "Core",
         { name = "General",    textKey = "General" },
         { name = "ReadyCheck", textKey = "Ready Check", retailOnly = true },
-    },
-    {
         { name = "Reminders",        textKey = "Reminders", retailOnly = true },
         { name = "Reminders-Note",   textKey = "Note-Display", retailOnly = true },
-        { name = "EncounterAlerts",  textKey = "Encounter Alerts", retailOnly = true },
     },
     {
+        title = "Combat",
+        { name = "EncounterAlerts",  textKey = "Encounter Alerts", retailOnly = true },
+        { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true },
+        { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
+    },
+    {
+        title = "Auras",
         { name = "AuraSounds", textKey = "Aura Sounds" },
         { name = "AuraTracking", textKey = "Aura Tracking" },
         { name = "AuraGlows", textKey = "Aura Glows" },
     },
     {
-        { name = "Assignments",      textKey = "Assignments", retailOnly = true },
-        { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
+        title = "Tools",
+        { name = "Assignments", textKey = "Assignments", retailOnly = true },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
     },
@@ -89,13 +96,16 @@ local TABS_GROUPS                  = {
 if BuildQoLOptions then
     table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
 end
-table.insert(TABS_GROUPS[3], { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
+if BuildRaidManagerOptions then
+    table.insert(TABS_GROUPS[4], 2, { name = "RaidManager", textKey = "Raid Manager" })
+end
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
 local SIDEBAR_BTN_HEIGHT           = 26
 local SIDEBAR_BTN_GAP              = 0  -- px between consecutive buttons
 local SIDEBAR_GROUP_GAP            = 14 -- extra px between groups
+local SIDEBAR_HEADER_H             = 18 -- section title row above each group
 
 -- Derived from Core: tab frames start below the shared header strip
 local tab_content_y                = -header_height - TAB_HEADER_HEIGHT  -- -80
@@ -142,6 +152,11 @@ function NSUI:Init()
     end
 
     function tabSystem:RefreshTabLabels()
+        if self.GroupHeaders then
+            for _, header in ipairs(self.GroupHeaders) do
+                header:SetText(GetLocalizedText(header._titleKey))
+            end
+        end
         for _, btn in ipairs(self.AllButtons) do
             if btn._textKey then
                 btn:SetText(GetLocalizedText(btn._textKey))
@@ -171,6 +186,8 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local btnY = -5 -- running y cursor inside sidebarBg
     local isForever = NSI:IsForever()
+    local groupHeaders = {}   -- section title font strings, relocalised with the tab labels
+    tabSystem.GroupHeaders = groupHeaders
 
     for groupIndex, group in ipairs(TABS_GROUPS) do
         local groupHasButtons = false
@@ -189,12 +206,34 @@ function NSUI:Init()
             if not (isForever and tab.retailOnly) then
                 -- Add spacing only when a group has a visible sidebar button.
                 if not groupHasButtons and #tabSystem.AllButtons > 0 then
-                    btnY = btnY - SIDEBAR_GROUP_GAP
-                    local rule = sidebarBg:CreateTexture(nil, "artwork")
-                    rule:SetColorTexture(Accent(0.12))
-                    rule:SetHeight(1)
-                    rule:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
-                    rule:SetPoint("TOPRIGHT", sidebarBg, "TOPRIGHT", -8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
+                    btnY = btnY - math.floor(SIDEBAR_GROUP_GAP / 2)
+                end
+                if not groupHasButtons and group.title then
+                    -- section header:  ------ Title ------
+                    local row = CreateFrame("Frame", nil, sidebarBg)
+                    row:SetSize(SIDEBAR_BTN_WIDTH, SIDEBAR_HEADER_H)
+                    row:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 5, btnY)
+
+                    local header = row:CreateFontString(nil, "OVERLAY")
+                    NSI:SetUIFont(header, "tiny", "")
+                    header:SetTextColor(Accent(0.9))
+                    header:SetPoint("CENTER", row, "CENTER", 0, 0)
+                    header._titleKey = group.title
+                    header:SetText(GetLocalizedText(group.title))
+                    groupHeaders[#groupHeaders + 1] = header
+
+                    local leftLine = row:CreateTexture(nil, "ARTWORK")
+                    leftLine:SetColorTexture(Accent(0.30))
+                    leftLine:SetHeight(1)
+                    leftLine:SetPoint("LEFT", row, "LEFT", 3, 0)
+                    leftLine:SetPoint("RIGHT", header, "LEFT", -6, 0)
+                    local rightLine = row:CreateTexture(nil, "ARTWORK")
+                    rightLine:SetColorTexture(Accent(0.30))
+                    rightLine:SetHeight(1)
+                    rightLine:SetPoint("LEFT", header, "RIGHT", 6, 0)
+                    rightLine:SetPoint("RIGHT", row, "RIGHT", -3, 0)
+
+                    btnY = btnY - SIDEBAR_HEADER_H
                 end
                 groupHasButtons = true
 
@@ -376,6 +415,7 @@ function NSUI:Init()
     local auraglows_tab           = tabSystem:GetTabFrameByName("AuraGlows")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = BuildQoLOptions and tabSystem:GetTabFrameByName("QoL")
+    local RaidManager_tab         = BuildRaidManagerOptions and tabSystem:GetTabFrameByName("RaidManager")
 
     -- --------------------------------------------------------
     -- Build options tables
@@ -389,6 +429,7 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = NSI.RaidBuffCheck and BuildRaidBuffMenu()
     local QoL_options1_table             = BuildQoLOptions and BuildQoLOptions()
+    local RaidManager_options1_table     = BuildRaidManagerOptions and BuildRaidManagerOptions()
     local option_tables = {
         general_options1_table,
         nicknames_options1_table,
@@ -400,6 +441,7 @@ function NSUI:Init()
     }
     if RaidBuffMenu then option_tables[#option_tables + 1] = RaidBuffMenu end
     if QoL_options1_table then option_tables[#option_tables + 1] = QoL_options1_table end
+    if RaidManager_options1_table then option_tables[#option_tables + 1] = RaidManager_options1_table end
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
     end
@@ -447,6 +489,10 @@ function NSUI:Init()
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     if QoL_options1_table then
         BuildMenu(QoL_tab, QoL_options1_table, QoL_callback)
+        coroutine.yield()
+    end
+    if RaidManager_options1_table then
+        BuildMenu(RaidManager_tab, RaidManager_options1_table, QoL_callback)
         coroutine.yield()
     end
     C_Timer.After(0.1, function()

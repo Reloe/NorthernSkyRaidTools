@@ -374,9 +374,12 @@ local function BuildQoLOptions()
             icontexture = 134520,
             iconsize = {16, 16},
         },
-        {
-            type = "breakline",
-        },
+    }
+end
+
+-- Raid Manager tab: raid group tools, the setup manager and the break timer.
+local function BuildRaidManagerOptions()
+    return {
         {
             type = "label",
             get = function() return "Raid Group Tools" end,
@@ -653,5 +656,6 @@ NSI.UI = NSI.UI or {}
 NSI.UI.Options = NSI.UI.Options or {}
 NSI.UI.Options.QoL = {
     BuildOptions = BuildQoLOptions,
+    BuildRaidManagerOptions = BuildRaidManagerOptions,
     BuildCallback = BuildQoLCallback,
 }
