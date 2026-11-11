@@ -122,6 +122,7 @@ function Window.Create(opts)
     title:SetTextColor(unpack(STYLE.text_soft))
     title:SetPoint("CENTER", titleBar, "CENTER")
     title:SetText(opts.title or "")
+    STYLE.TrackAccentText(title)   -- follows the accent colour
 
     local icons = opts.titleIcons
     local iconLeft = MakeTitleIcon(titleBar, icons and icons.left)
@@ -254,7 +255,7 @@ function Window.Create(opts)
     local banner = footer:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(banner, "small")
     banner:SetTextColor(1, 0.75, 0.25, 1)
-    banner:SetPoint("RIGHT", footer, "RIGHT", -10, 0)
+    banner:SetPoint("RIGHT", footer, "RIGHT", -26, 0)   -- clear of the resize grip
     banner:Hide()
     window.CombatBanner = banner
     local combatWatcher = CreateFrame("Frame", nil, window)
@@ -273,6 +274,84 @@ function Window.Create(opts)
         RefreshBanner()
     end)
     window:HookScript("OnHide", function() combatWatcher:UnregisterAllEvents() end)
+
+    -- ---- resizing ---------------------------------------------------------
+    -- A grip in the bottom right corner. The window never gets smaller than the size the
+    -- screens were designed for (minWidth / minHeight, default the creation size) nor
+    -- larger than the screen. Tab frames are anchored to the window's corners, so they
+    -- follow the drag live; the heavier relayout (menu columns...) runs once on release
+    -- through the OnResizeDone callbacks. The size is saved in config.width / config.height.
+    local minW = opts.minWidth or opts.width
+    local minH = opts.minHeight or opts.height
+    local sizeConfig
+    local resizeCallbacks = {}
+    window:SetResizable(true)
+
+    local function SizeBounds()
+        local ratio = UIParent:GetEffectiveScale() / window:GetEffectiveScale()
+        local maxW = math.max(minW, math.floor(UIParent:GetWidth() * ratio) - 20)
+        local maxH = math.max(minH, math.floor(UIParent:GetHeight() * ratio) - 20)
+        return maxW, maxH
+    end
+
+    local function ClampSize(width, height)
+        local maxW, maxH = SizeBounds()
+        return math.max(minW, math.min(maxW, width)), math.max(minH, math.min(maxH, height))
+    end
+
+    -- Registers fn(width, height), called after the user lets go of the grip and after a
+    -- saved size is applied.
+    function window:OnResizeDone(fn) resizeCallbacks[#resizeCallbacks + 1] = fn end
+
+    local function Finish()
+        local width, height = ClampSize(window:GetWidth(), window:GetHeight())
+        window:SetSize(width, height)
+        if sizeConfig then
+            sizeConfig.width, sizeConfig.height = math.floor(width + 0.5), math.floor(height + 0.5)
+        end
+        for _, fn in ipairs(resizeCallbacks) do fn(width, height) end
+    end
+
+    -- Applies the saved size (config.width / config.height) and keeps writing back to it.
+    function window:BindSize(config)
+        sizeConfig = config
+        local width, height = tonumber(config.width), tonumber(config.height)
+        if width and height then
+            width, height = ClampSize(width, height)
+            window:SetSize(width, height)
+        end
+    end
+
+    local grip = CreateFrame("Button", nil, window)
+    grip:SetSize(16, 16)
+    grip:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -1, 1)
+    grip:SetFrameLevel(window:GetFrameLevel() + 50)
+    grip:SetNormalTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]])
+    grip:SetPushedTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down]])
+    grip:SetHighlightTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight]])
+    grip:GetNormalTexture():SetVertexColor(1, 1, 1, 0.7)
+    STYLE.PaintAccent(grip:GetHighlightTexture(), "SetVertexColor", 1)
+    grip:SetScript("OnMouseDown", function(_, button)
+        if button ~= "LeftButton" then return end
+        local maxW, maxH = SizeBounds()
+        window:SetResizeBounds(minW, minH, maxW, maxH)
+        window._sizing = true
+        window:StartSizing("BOTTOMRIGHT")
+    end)
+    grip:SetScript("OnMouseUp", function()
+        if not window._sizing then return end
+        window._sizing = false
+        window:StopMovingOrSizing()
+        Finish()
+    end)
+    window:HookScript("OnHide", function()
+        if window._sizing then
+            window._sizing = false
+            window:StopMovingOrSizing()
+            Finish()
+        end
+    end)
+    window.resizeGrip = grip
 
     -- ---- pixel space ----------------------------------------------------
     if opts.userScale ~= nil then

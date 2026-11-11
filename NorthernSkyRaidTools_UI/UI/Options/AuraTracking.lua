@@ -193,16 +193,16 @@ local function EntryIcon(settingsKey, settings)
 end
 
 local function ShowAuraTrackingExportPopup(text, label)
-    NSI.UI.Components.CreateTextBoxDialog("AuraTrackingExport", "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r", { readOnly = true }):Open(text or "", label)
+    NSI.UI.Components.CreateTextBoxDialog("AuraTrackingExport", NSI.UI.Style.AccentCode() .. NSI:Loc("Export Aura Tracking") .. "|r", { readOnly = true }):Open(text or "", label)
 end
 
 local function ShowAuraTrackingImportPopup(onImport)
-    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraTrackingImport", "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraTrackingImport", NSI.UI.Style.AccentCode() .. NSI:Loc("Import Aura Tracking") .. "|r",
         { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
     dialog:Open("", NSI:Loc("Paste an Aura Tracking export string below and click Import."), function(text, d)
         local success, imported = NSI:ImportAuraTrackingString(text)
         if success then
-            print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Aura Tracking display(s)."), imported or 0))
+            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(NSI:Loc("Imported %d Aura Tracking display(s)."), imported or 0))
             if onImport then onImport() end
             return true
         end
@@ -311,7 +311,8 @@ local function BuildAuraTrackingUI(screen)
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
-    title:SetText(NSI:Loc("|cFF00FFFFAura|r Tracking"))
+    title:SetText(NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFAura|r Tracking")))
+    NSI.UI.Style.TrackAccentText(title)
 
     -- list filter: narrows the entries you can select from
     local searchEntry = NSI.UI.Components.CreateSearchBox(screen, leftWidth - pad * 2, 22, "NSUIAuraTrackSearch", function(text)
@@ -362,8 +363,9 @@ local function BuildAuraTrackingUI(screen)
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackListScroll", screen, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(listScroll)
-    listScroll:SetSize(listW, scrollHeight)
+    listScroll:SetWidth(listW)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
+    listScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 78)   -- grows with the window
     ReskinScrollbar(listScroll)
 
     local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
@@ -431,11 +433,11 @@ local function BuildAuraTrackingUI(screen)
         row.arrow = row:CreateTexture(nil, "OVERLAY")
         row.arrow:SetSize(12, 12)
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.arrow, "SetVertexColor", 1)
 
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "label")
-        row.name:SetTextColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.name, "SetTextColor", 1)
         row.name:SetPoint("LEFT", row, "LEFT", 20, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -34, 0)
         row.name:SetJustifyH("LEFT")
@@ -585,7 +587,7 @@ local function BuildAuraTrackingUI(screen)
             { type = "button", label = NSI:Loc("Disable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, false) end },
             { type = "button", label = NSI:Loc(groupPreviewLocked and "Unlock Group Preview" or "Lock Group Preview"), fnc = function() SetGroupPreviewLocked(groupName, not groupPreviewLocked) end },
             { type = "button", label = NSI:Loc("Export Group"), fnc = function()
-                ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
+                ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI.UI.Style.Tint(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r")), groupName))
             end },
         }
         if groupName ~= NSI.AuraTrackingMatrixGroup and canDuplicateGroup then
@@ -634,7 +636,7 @@ local function BuildAuraTrackingUI(screen)
         items[#items + 1] = { type = "button", label = s.pinned and NSI:Loc("Unpin") or NSI:Loc("Pin to Top"),
             fnc = function() NSI:SetAuraTrackingPinned(sk, not s.pinned) end }
         items[#items + 1] = { type = "button", label = NSI:Loc("Export"), fnc = function()
-            ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingEntry(sk), string.format(NSI:Loc("Exporting Aura Tracking display: |cFF00FFFF%s|r"), s.Name or NSI:Loc("Unnamed")))
+            ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingEntry(sk), string.format(NSI.UI.Style.Tint(NSI:Loc("Exporting Aura Tracking display: |cFF00FFFF%s|r")), s.Name or NSI:Loc("Unnamed")))
         end }
 
         if item.builtin then
@@ -678,7 +680,7 @@ local function BuildAuraTrackingUI(screen)
                 local sec = section
                 copySub[#copySub + 1] = { type = "button", label = NSI:Loc(sec), fnc = function()
                     NSI:CopyAuraTrackingSection(sk, sec)
-                    print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Copied %s settings from '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
+                    print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(NSI:Loc("Copied %s settings from '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
                 end }
             end
         end
@@ -693,7 +695,7 @@ local function BuildAuraTrackingUI(screen)
                     -- Jump to the pasted-into entry so the result is visible even
                     -- when it wasn't the one already open in the right panel.
                     SelectEntry(sk)
-                    print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Pasted %s settings onto '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
+                    print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(NSI:Loc("Pasted %s settings onto '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
                 end }
             end
         end
@@ -967,7 +969,7 @@ local function BuildAuraTrackingUI(screen)
             v = strtrim(tostring(v or ""))
             if v == "" then v = "UIParent" end
             if not NSI:IsValidAuraTrackingAnchorFrame(v) then
-                print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
+                print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. NSI:Loc("Anchor frame not found."))
                 anchorEntry:SetValue(s.CustomAnchorFrame or "UIParent")
                 return
             end
@@ -986,7 +988,7 @@ local function BuildAuraTrackingUI(screen)
         function(widget, value)
             if not selectedKey then return end
             if not NSI:SetAuraTrackingAttachment(selectedKey, value) then
-                print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Invalid Aura Tracking attachment."))
+                print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. NSI:Loc("Invalid Aura Tracking attachment."))
                 attachEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).AttachTo or "")
                 return
             end
@@ -1669,11 +1671,10 @@ local function BuildAuraTrackingUI(screen)
         if not scrollObj then
             scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
             tabScroll[activeTab] = scrollObj
-            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scrollObj.scrollChild, scrollObj.scrollChild:GetWidth())
-        else
-            scrollObj:SetSize(tabScrollW, tabContentH - topPad)
+            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scrollObj.scrollChild, scrollObj.scrollChild:GetWidth(), true)
         end
         scrollObj.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -topPad)
+        scrollObj.frame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -(rightW - tabScrollW), 0)
         scrollObj.frame:Show()
         local totalH = tabHost[activeTab]:Apply(defs, isVisible)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
@@ -1685,17 +1686,54 @@ local function BuildAuraTrackingUI(screen)
     -- Load tab (hand-rolled, EncounterAlerts-style collapsible sections)
     -- ========================================================================
     local loadF = tabFrames["Load"]
-    local NAMES_SEC_H = 180
-    local namesListH = 112
-    local loadScrollH = tabContentH - NAMES_SEC_H - 4
-    local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackLoadScroll", loadF, "UIPanelScrollFrameTemplate")
+    -- Same look as the Encounter Alerts Load tab: a "load conditions" card filling the tab
+    -- and a "Character Names" card at the bottom, each list in a bordered scroll box.
+    local Components = NSI.UI.Components
+    local CARD_PAD, CARD_GAP = Components.CardPad, Components.CardGap
+    local namesListH = 90
+    local namesContentH = 22 + 8 + namesListH
+
+    local namesCard = Components.CreateSectionCard(loadF, rightW, true)
+    namesCard.title:SetText(NSI:Loc("Character Names (no server name)"))
+    namesCard.content:SetHeight(namesContentH)
+    namesCard:SetHeight(namesCard.headerH + CARD_PAD * 2 + namesContentH)
+    namesCard:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
+    namesCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, 0)
+    namesCard.content:SetPoint("TOPRIGHT", namesCard, "TOPRIGHT", -CARD_PAD, -(namesCard.headerH + CARD_PAD))
+    local NAMES_SEC_H = namesCard:GetHeight() + CARD_GAP
+
+    local loadCard = Components.CreateSectionCard(loadF, rightW, true)
+    loadCard.title:SetText(NSI:Loc("Roles, Classes & Specs"))
+    loadCard:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    loadCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, NAMES_SEC_H)
+    loadCard.content:SetPoint("BOTTOMRIGHT", loadCard, "BOTTOMRIGHT", -CARD_PAD, CARD_PAD)
+
+    -- keep a list's scrollbar inside its box and draw a border, so it is clear the wheel
+    -- scrolls the list and not the window
+    local function StyleListBox(scrollFrame)
+        local bar = _G[scrollFrame:GetName() .. "ScrollBar"]
+        if bar then
+            bar:ClearAllPoints()
+            bar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+            bar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+        end
+        local borderFrame = CreateFrame("Frame", nil, scrollFrame)
+        borderFrame:SetAllPoints(scrollFrame)
+        borderFrame:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
+        borderFrame:EnableMouse(false)
+        NSI.UI.Style.PaintAccent(NSI.UI.Pixel.Border(borderFrame, { NSI.UI.Style.Accent(0.55) }), "SetBorderColor", 0.55)
+    end
+
+    local innerW = rightW - CARD_PAD * 2
+    local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackLoadScroll", loadCard.content, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(loadScroll)
-    loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
-    loadScroll:SetSize(tabScrollW, loadScrollH)
+    loadScroll:SetPoint("TOPLEFT", loadCard.content, "TOPLEFT", 0, 0)
+    loadScroll:SetPoint("BOTTOMRIGHT", loadCard.content, "BOTTOMRIGHT", 0, 0)
     loadScroll:EnableMouseWheel(true)
     ReskinScrollbar(loadScroll)
+    StyleListBox(loadScroll)
     local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
-    loadChild:SetSize(tabScrollW - 18, 1)
+    loadChild:SetSize(innerW - 18, 1)
     loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     loadChild:SetBackdropColor(unpack(STYLE.surface_inset))
     loadScroll:SetScrollChild(loadChild)
@@ -1707,7 +1745,8 @@ local function BuildAuraTrackingUI(screen)
     lockedEncounterLabel:Hide()
 
     local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true, Difficulties = true }
-    local loadRowW = tabScrollW - 22
+    local loadRowW = innerW - 22
+    local namesRowW = innerW - 18   -- names list rows / child (the list has no inner indent)
     local hdrPool, chkPool = {}, {}
 
     local function MakeLoadHeader()
@@ -1739,7 +1778,7 @@ local function BuildAuraTrackingUI(screen)
         hoverBg:EnableMouse(false)
         local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
         hoverTex:SetAllPoints()
-        hoverTex:SetColorTexture(Accent(0.13))
+        NSI.UI.Style.PaintAccent(hoverTex, "SetColorTexture", 0.13)
         hoverBg:SetAlpha(0)
         row.hoverBg = hoverBg
         row.box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
@@ -1751,7 +1790,7 @@ local function BuildAuraTrackingUI(screen)
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
         row.fill:SetPoint("BOTTOMRIGHT", row.box, "BOTTOMRIGHT", -2, 2)
-        row.fill:SetColorTexture(Accent(0.85))
+        NSI.UI.Style.PaintAccent(row.fill, "SetColorTexture", 0.85)
         row.fill:Hide()
         local lblFrame = CreateFrame("Frame", nil, row)
         row.labelFrame = lblFrame
@@ -1794,32 +1833,28 @@ local function BuildAuraTrackingUI(screen)
         return y + 20
     end
 
-    local namesLabel = loadF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(namesLabel, "tiny", "")
-    namesLabel:SetTextColor(unpack(STYLE.text_muted))
-    namesLabel:SetText(NSI:Loc("Character Names (no server name)"))
-    namesLabel:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 14)
-
-    local nameInput = CreateTextEntry(loadF, nil, nil, nil, loadRowW - 70, 20, nil, nil, nil, "NSUIAuraTrackNameInput")
-    nameInput:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 40)
+    local nameInput = CreateTextEntry(namesCard.content, nil, nil, nil, 180, 22, nil, nil, nil, "NSUIAuraTrackNameInput")
+    nameInput:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, 0)
 
     local AddLoadName
-    local nameAddBtn = CreateLocalizedSubButton(loadF, "Add", function()
+    local nameAddBtn = CreateLocalizedSubButton(namesCard.content, "Add", function()
         if AddLoadName then
             AddLoadName()
         end
     end, 54, "NSUIAuraTrackNameAdd")
     nameAddBtn:SetPoint("LEFT", nameInput.frame, "RIGHT", 6, 0)
 
-    local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackNamesScroll", loadF, "UIPanelScrollFrameTemplate")
+    local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackNamesScroll", namesCard.content, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(namesScroll)
-    namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
-    namesScroll:SetSize(loadRowW, namesListH)
+    namesScroll:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, -30)
+    namesScroll:SetPoint("TOPRIGHT", namesCard.content, "TOPRIGHT", 0, -30)
+    namesScroll:SetHeight(namesListH)
     namesScroll:EnableMouseWheel(true)
     ReskinScrollbar(namesScroll)
+    StyleListBox(namesScroll)
 
     local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
-    namesChild:SetSize(loadRowW - 18, 1)
+    namesChild:SetSize(namesRowW, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     namesChild:SetBackdropColor(unpack(STYLE.surface_inset))
     namesScroll:SetScrollChild(namesChild)
@@ -1827,7 +1862,7 @@ local function BuildAuraTrackingUI(screen)
     local nameRowPool = {}
     local function MakeNameRow()
         local row = CreateFrame("Frame", nil, namesChild)
-        row:SetSize(loadRowW - 18, 20)
+        row:SetSize(namesRowW, 20)
         row.bg = row:CreateTexture(nil, "BACKGROUND")
         row.bg:SetAllPoints()
         row.label = row:CreateFontString(nil, "OVERLAY")
@@ -1876,7 +1911,7 @@ local function BuildAuraTrackingUI(screen)
             local row = nameRowPool[i]
             row:ClearAllPoints()
             row:SetPoint("TOPLEFT", namesChild, "TOPLEFT", 0, -((i - 1) * 20))
-            row:SetWidth(loadRowW - 18)
+            row:SetWidth(namesRowW)
             row.bg:SetColorTexture(i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.5 or 0)
             row.label:SetText(name)
             local rowName = name
@@ -2138,7 +2173,7 @@ local function BuildAuraTrackingUI(screen)
                 v = strtrim(tostring(v or ""))
                 if v == "" then v = "UIParent" end
                 if not NSI:IsValidAuraTrackingAnchorFrame(v) then
-                    print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
+                    print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. NSI:Loc("Anchor frame not found."))
                     RebuildStatsWidgets()   -- put the previous, valid value back
                     return
                 end
@@ -2206,9 +2241,8 @@ local function BuildAuraTrackingUI(screen)
         if not statsScrollObj then
             statsScrollObj = CreateScrollBox(statsPanel, tabScrollW, scrollH)
             statsScrollObj.frame:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -STATS_HEADER_HEIGHT)
-            statsHost = NSI.UI.Components.CreateCardHost(statsScrollObj.scrollChild, statsScrollObj.scrollChild:GetWidth())
-        else
-            statsScrollObj:SetSize(tabScrollW, scrollH)
+            statsScrollObj.frame:SetPoint("BOTTOMRIGHT", statsPanel, "BOTTOMRIGHT", -(rightW - tabScrollW), 0)
+            statsHost = NSI.UI.Components.CreateCardHost(statsScrollObj.scrollChild, statsScrollObj.scrollChild:GetWidth(), true)
         end
         local totalH = statsHost:Apply(defs)
         statsScrollObj.scrollChild:SetHeight(math.max(totalH, 1))
@@ -2317,6 +2351,25 @@ local function BuildAuraTrackingUI(screen)
         anchorEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).CustomAnchorFrame or "UIParent")
         RebuildWidgetTab()
     end
+
+    -- Window resize: Load tab rows follow the new width, cards re-flow for the new size.
+    NSI.UI.Components.RegisterRelayout(screen, function()
+        local w = loadScroll:GetWidth()
+        if w and w > 100 then
+            loadRowW = w - 22
+            loadChild:SetWidth(w - 18)
+            namesRowW = w - 18
+            namesChild:SetWidth(namesRowW)
+            for _, h in ipairs(hdrPool) do h:SetWidth(loadRowW) end
+            for _, r in ipairs(chkPool) do r:SetWidth(loadRowW) end
+            for _, r in ipairs(nameRowPool) do r:SetWidth(namesRowW) end
+        end
+        if isStatsSelected then
+            if statsPanel and statsPanel:IsShown() then RebuildStatsWidgets() end
+        elseif selectedKey and rightPanel:IsShown() then
+            RebuildCurrentTab()
+        end
+    end)
 
     -- Header search: expose the selected display's Display/Trigger definitions (see Search.lua).
     screen.SearchPanels = function()

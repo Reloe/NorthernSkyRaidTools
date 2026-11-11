@@ -74,7 +74,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
-    title:SetText(NSI:Loc("|cFF00FFFFEncounter|r Alerts"))
+    title:SetText(NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFEncounter|r Alerts")))
+    NSI.UI.Style.TrackAccentText(title)
 
     -- ── Filter dropdown ─────────────────────────────────────────────────────
     local function BuildFilterOptions()
@@ -165,8 +166,10 @@ local function BuildEncounterAlertsUI(parentFrame)
     local listScroll = CreateFrame("ScrollFrame", "NSUIEncAlertListScroll", screen,
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(listScroll)
-    listScroll:SetSize(listW, scrollHeight)
+    listScroll:SetWidth(listW)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
+    -- bottom edge sits above the Create / Import / Export rows, so it follows the window
+    listScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, tab_content_height + scrollTop - scrollHeight - 0)
     ReskinScrollbar(listScroll)
 
     local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
@@ -227,7 +230,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.ungroupBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
         row.ungroupBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
-        row.ungroupBtn:GetNormalTexture():SetVertexColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.ungroupBtn:GetNormalTexture(), "SetVertexColor", 1)
         row.ungroupBtn:GetHighlightTexture():SetVertexColor(0.7, 1, 1, 1)
         row.ungroupBtn:Hide()
 
@@ -252,7 +255,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         arrow:SetSize(12, 12)
         arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
         arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
-        arrow:SetVertexColor(Accent(1))
+        NSI.UI.Style.PaintAccent(arrow, "SetVertexColor", 1)
         row.collapseArrow = arrow
 
         local bossIcon = row:CreateTexture(nil, "ARTWORK")
@@ -264,7 +267,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         local nameLabel = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(nameLabel, "label")
-        nameLabel:SetTextColor(Accent(1))
+        NSI.UI.Style.PaintAccent(nameLabel, "SetTextColor", 1)
         nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)  -- repositioned dynamically
         nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
         nameLabel:SetJustifyH("LEFT")
@@ -582,7 +585,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row.collapseArrow:SetTexture(entry._collapsed and
                     [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]] or
                     [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]])
-                row.collapseArrow:SetVertexColor(Accent(1))
+                NSI.UI.Style.PaintAccent(row.collapseArrow, "SetVertexColor", 1)
                 row.nameLabel:SetText(gname)
                 row.countLabel:SetText("(" .. entry._count .. ")")
 
@@ -1097,7 +1100,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local importSelectedBossBtn = CreateLocalizedButton(addOptFrame, "Import Selected Boss Alerts", function()
         if not filterEncID or filterEncID == 0 then
-            print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Select a boss first."))
+            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. NSI:Loc("Select a boss first."))
             return
         end
         NSI:ImportReloeReminders(filterEncID, true)
@@ -1606,7 +1609,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- Separator below tabs
     tabSep = rightPanel:CreateTexture(nil, "ARTWORK")
-    tabSep:SetColorTexture(Accent(0.20))
+    NSI.UI.Style.PaintAccent(tabSep, "SetColorTexture", 0.20)
     tabSep:SetHeight(1)
     tabSep:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  0, tabRowY - 20)
     tabSep:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY - 20)
@@ -1683,6 +1686,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     card:SetHeight(card.headerH + pad * 2 + card.contentH)
                     card:ClearAllPoints()
                     card:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+                    card:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, -y)
                     card:Show()
                     y = y + card:GetHeight() + gap
                 end
@@ -1699,6 +1703,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 card.title:Hide()
             end
             card.contentH = contentH
+            card.content:SetPoint("TOPRIGHT", card, "TOPRIGHT", -pad, -(card.headerH + pad))
             self.cards[#self.cards + 1] = card
             self:Layout()
             return card.content, card
@@ -1717,7 +1722,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         borderFrame:SetAllPoints(scrollFrame)
         borderFrame:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
         borderFrame:EnableMouse(false)
-        NSI.UI.Pixel.Border(borderFrame, { Accent(0.55) })
+        NSI.UI.Style.PaintAccent(NSI.UI.Pixel.Border(borderFrame, { NSI.UI.Style.Accent(0.55) }), "SetBorderColor", 0.55)
     end
 
     -- ================================================================
@@ -2307,6 +2312,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         card.content:SetHeight(contentH)
         card:SetHeight(card.headerH + Components.CardPad * 2 + contentH)
         card:SetPoint("TOPLEFT", trigChild, "TOPLEFT", 0, -trigStackH)
+        card:SetPoint("TOPRIGHT", trigChild, "TOPRIGHT", 0, -trigStackH)
+        card.content:SetPoint("TOPRIGHT", card, "TOPRIGHT", -Components.CardPad, -(card.headerH + Components.CardPad))
         trigStackH = trigStackH + card:GetHeight() + Components.CardGap
         trigChild:SetHeight(trigStackH - Components.CardGap)
         return card.content
@@ -2469,7 +2476,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     timesBorderFrame:SetAllPoints(timesScroll)
     timesBorderFrame:SetFrameLevel(timesScroll:GetFrameLevel() + 5)
     timesBorderFrame:EnableMouse(false)
-    NSI.UI.Pixel.Border(timesBorderFrame, { Accent(0.55) })
+    NSI.UI.Style.PaintAccent(NSI.UI.Pixel.Border(timesBorderFrame, { NSI.UI.Style.Accent(0.55) }), "SetBorderColor", 0.55)
     local timesBg = timesScroll:CreateTexture(nil, "BACKGROUND")
     timesBg:SetAllPoints(timesScroll)
     timesBg:SetColorTexture(unpack(STYLE.surface_inset))
@@ -2957,6 +2964,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     namesCard.content:SetHeight(namesContentH)
     namesCard:SetHeight(namesCard.headerH + CARD_PAD * 2 + namesContentH)
     namesCard:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
+    namesCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, 0)
+    namesCard.content:SetPoint("TOPRIGHT", namesCard, "TOPRIGHT", -CARD_PAD, -(namesCard.headerH + CARD_PAD))
     local NAMES_SEC_H = namesCard:GetHeight() + CARD_GAP   -- reserved at the bottom
 
     -- ── Main scroll (classes + specs), fills loadF above the names section ───
@@ -2964,6 +2973,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     local rolesCard = Components.CreateSectionCard(loadF, rightW, true)
     SetLocalizedText(rolesCard.title, "Roles, Classes & Specs")
     rolesCard:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    rolesCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, NAMES_SEC_H)   -- fills the space above the names card
+    rolesCard.content:SetPoint("BOTTOMRIGHT", rolesCard, "BOTTOMRIGHT", -CARD_PAD, CARD_PAD)
     local loadScrollH = tab_content_height - 20 - 68 - NAMES_SEC_H - rolesCard.headerH - CARD_PAD * 2
     rolesCard.content:SetHeight(loadScrollH)
     rolesCard:SetHeight(rolesCard.headerH + CARD_PAD * 2 + loadScrollH)
@@ -2971,7 +2982,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(loadScroll)
     loadScroll:SetPoint("TOPLEFT", rolesCard.content, "TOPLEFT", 0, 0)
-    loadScroll:SetSize(loadListW, loadScrollH)
+    loadScroll:SetPoint("BOTTOMRIGHT", rolesCard.content, "BOTTOMRIGHT", 0, 0)
     loadScroll:EnableMouseWheel(true)
     ReskinScrollbar(loadScroll)
     StyleListBox(loadScroll)
@@ -3031,7 +3042,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         hoverBg:EnableMouse(false)
         local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
         hoverTex:SetAllPoints()
-        hoverTex:SetColorTexture(Accent(0.13))
+        NSI.UI.Style.PaintAccent(hoverTex, "SetColorTexture", 0.13)
         hoverBg:SetAlpha(0)
         row.hoverBg = hoverBg
 
@@ -3053,7 +3064,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local checkFill = checkBox:CreateTexture(nil, "ARTWORK")
         checkFill:SetPoint("TOPLEFT", checkBox, "TOPLEFT", 2, -2)
         checkFill:SetPoint("BOTTOMRIGHT", checkBox, "BOTTOMRIGHT", -2, 2)
-        checkFill:SetColorTexture(Accent(0.85))
+        NSI.UI.Style.PaintAccent(checkFill, "SetColorTexture", 0.85)
         checkFill:Hide()
         row.checkFill = checkFill
 
@@ -3153,8 +3164,9 @@ local function BuildEncounterAlertsUI(parentFrame)
     local namesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertNamesScroll", namesCard.content,
         "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(namesScroll)
-    namesScroll:SetSize(loadListW, namesListH)
+    namesScroll:SetHeight(namesListH)
     namesScroll:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, -30)
+    namesScroll:SetPoint("TOPRIGHT", namesCard.content, "TOPRIGHT", 0, -30)
     namesScroll:EnableMouseWheel(true)
     ReskinScrollbar(namesScroll)
     StyleListBox(namesScroll)
@@ -3343,6 +3355,20 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
     loadF.Rebuild = RebuildLoadTab
 
+    -- Window resize: the Load tab's rows follow the scroll box's new width.
+    NSI.UI.Components.RegisterRelayout(loadF, function()
+        local w = loadScroll:GetWidth()
+        if not w or w < 100 then return end
+        loadListW = w
+        loadScrollChild:SetWidth(w - 18)
+        namesChild:SetWidth(w - 18)
+        classSecHdr:SetWidth(w - 18); specSecHdr:SetWidth(w - 18); rolesSecHdr:SetWidth(w - 18)
+        for _, set in ipairs({ roleRowFrames, classRowFrames, specRowFrames }) do
+            for _, r in ipairs(set) do r:SetWidth(w - 18) end
+        end
+        for _, r in ipairs(nameRows) do r:SetWidth(w - 18) end
+    end)
+
     -- Lock overlay for Load tab (reloeCreated alerts use built-in role field)
     loadF.lockOverlay = MakeLockOverlay(loadF,
         "Class / spec filters do not apply\nto addon-created alerts.")
@@ -3435,6 +3461,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         if optScroll then return end
         optScroll = NSI.UI.Components.CreateScrollBox(optF, rightW - 11, optF:GetHeight())
         optScroll.frame:SetPoint("TOPLEFT", optF, "TOPLEFT", 0, 0)
+        optScroll.frame:SetPoint("BOTTOMRIGHT", optF, "BOTTOMRIGHT", -11, 0)
         local scrollChild = optScroll.scrollChild
         optContentWidth = scrollChild:GetWidth()
         optReloeHost = NSI.UI.Components.CreateCardHost(scrollChild, optContentWidth)
@@ -3645,6 +3672,9 @@ local function BuildEncounterAlertsUI(parentFrame)
         optScroll:UpdateScrollBar()
     end
     searchOptions = function() return optEntry, ReloeOptionDefinitions, optReloeHost, optScroll end
+    NSI.UI.Components.RegisterRelayout(optF, function()
+        if optScroll then optScroll:UpdateScrollBar() end
+    end)
     end -- OPTIONS TAB
 
     -- ================================================================

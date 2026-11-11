@@ -27,11 +27,11 @@ function NSI:PromptReloeReminderImport(onImport)
 end
 
 local function ShowExportPopup(str, label)
-    NSI.UI.Components.CreateTextBoxDialog("AlertsExport", "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r", { readOnly = true }):Open(str or "", label)
+    NSI.UI.Components.CreateTextBoxDialog("AlertsExport", NSI.UI.Style.AccentCode() .. NSI:Loc("Export Alerts") .. "|r", { readOnly = true }):Open(str or "", label)
 end
 
 local function ShowImportPopup()
-    local dialog = NSI.UI.Components.CreateTextBoxDialog("AlertsImport", "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AlertsImport", NSI.UI.Style.AccentCode() .. NSI:Loc("Import Alerts") .. "|r",
         { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
     dialog:Open("", NSI:Loc("Paste an alerts export string below and click Import."), function(text, d)
         local count, overwriteCount = NSAPI:ImportAlertsString(text)
@@ -39,7 +39,7 @@ local function ShowImportPopup()
             d:SetStatus(NSI:Loc("Invalid import string. Please check and try again."), true)
             return false
         end
-        print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
+        print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
         if overwriteCount and overwriteCount > 0 then
             print("|cFFFFFF00NSRT:|r " .. string.format(NSI:Loc("Overwritten %d alert(s)."), overwriteCount))
         end

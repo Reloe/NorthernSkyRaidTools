@@ -21,7 +21,7 @@ local function CreateLabel(parent, text, size, flags)
 end
 
 local function CreateProfilePopup(width, height, name, title)
-    local popup = DF:CreateSimplePanel(UIParent, width, height, "|cFF00FFFF" .. title .. "|r", name, { UseScaleBar = false })
+    local popup = DF:CreateSimplePanel(UIParent, width, height, NSI.UI.Style.AccentCode() .. title .. "|r", name, { UseScaleBar = false })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     popup:SetFrameLevel(100)
     return popup
@@ -53,7 +53,7 @@ function NSI:ConfirmApplyProfileToAllCharacters(name)
             pendingApplyProfileName = nil
             applyProfileToAllPopup:Hide()
             if NSI:SetMainProfile(profileName, true) then
-                print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), profileName))
+                print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), profileName))
                 local generalTab = NSUI.MenuFrame:GetTabFrameByName("General")
                 generalTab:RefreshOptions()
             end
@@ -94,8 +94,8 @@ local function BuildExportStringUI()
 
     popup:HookScript("OnShow", function()
         local title = popup.IncludeSharedData and T("Export Profile + Shared Data") or T("Export Profile")
-        popup:SetTitle("|cFF00FFFF" .. title .. "|r")
-        local label = format(T("Exporting profile: |cFF00FFFF%s|r"), NSRT.CurrentProfile or "default")
+        popup:SetTitle(NSI.UI.Style.AccentCode() .. title .. "|r")
+        local label = format(NSI.UI.Style.Tint(T("Exporting profile: |cFF00FFFF%s|r")), NSRT.CurrentProfile or "default")
         if popup.IncludeSharedData then
             label = label .. "\n" .. T("Includes Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included.")
         end
@@ -210,7 +210,7 @@ local function BuildImportStringUI()
             pendingSharedImport = { string = importString, overwrite = overwrite, profileName = profileName }
             sharedImportPopup:Show()
         elseif importedName then
-            print("|cFF00FFFFNSRT:|r " .. format(T("Imported profile '|cFFFFFFFF%s|r'."), importedName))
+            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(T("Imported profile '|cFFFFFFFF%s|r'."), importedName))
             popup:Hide()
             NSUI.MenuFrame:SelectTabByName("General")
             NSI:ConfirmApplyProfileToAllCharacters(importedName)
@@ -246,7 +246,7 @@ local function BuildImportStringUI()
     popup:HookScript("OnShow", function()
         local pendingImport = popup.pendingAPIImport
         popup.pendingAPIImport = nil
-        popup:SetTitle("|cFF00FFFF" .. T("Import Profile") .. "|r")
+        popup:SetTitle(NSI.UI.Style.AccentCode() .. T("Import Profile") .. "|r")
         statusLabel:SetText(T("Paste a profile string below and click Import."))
         popup.test_string_text_box:SetText("")
         popup.test_string_text_box:SetFocus()
@@ -290,7 +290,7 @@ local function BuildGroupExportUI()
     popup.done_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
 
     popup:HookScript("OnShow", function()
-        popup:SetTitle("|cFF00FFFF" .. T("Export Group Composition") .. "|r")
+        popup:SetTitle(NSI.UI.Style.AccentCode() .. T("Export Group Composition") .. "|r")
         if not NSI.GetGroupExportString then return end
         local exportString = NSI:GetGroupExportString()
         popup.text_box:SetText(exportString or "")

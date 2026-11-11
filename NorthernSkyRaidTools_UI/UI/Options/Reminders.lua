@@ -387,7 +387,7 @@ local function BuildReminderOptions()
             func = function(self)
                 if NSI.IsInPreview then return end
                 if NSI:IsUsingTLAlerts() or NSI:IsUsingTLReminders() then
-                    print("|cFF00FFFFNSRT:|r " .. NSI:Loc("You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."))
+                    print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. NSI:Loc("You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."))
                 end
                 NSI:TogglePreviewMode()
             end,

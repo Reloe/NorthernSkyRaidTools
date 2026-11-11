@@ -26,17 +26,17 @@ local function GetSelectedBoss()
 end
 
 local function ShowPaceComparisonExportPopup(text, label)
-    C.CreateTextBoxDialog("PaceExport", "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r", { readOnly = true })
+    C.CreateTextBoxDialog("PaceExport", NSI.UI.Style.AccentCode() .. NSI:Loc("Export Pace Comparison") .. "|r", { readOnly = true })
         :Open(text or "", label)
 end
 
 local function ShowPaceComparisonImportPopup(onImport)
-    local dialog = C.CreateTextBoxDialog("PaceImport", "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
+    local dialog = C.CreateTextBoxDialog("PaceImport", NSI.UI.Style.AccentCode() .. NSI:Loc("Import Pace Comparison") .. "|r",
         { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
     dialog:Open("", NSI:Loc("Paste a Pace Comparison export below and click Import."), function(text, d)
         local success, bossCount, thresholdCount = NSI:ImportPaceComparisonString(text)
         if success then
-            print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Pace Comparison boss(es) with %d threshold(s)."), bossCount, thresholdCount))
+            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(NSI:Loc("Imported %d Pace Comparison boss(es) with %d threshold(s)."), bossCount, thresholdCount))
             if onImport then onImport() end
             return true
         end
@@ -84,7 +84,8 @@ local function BuildPaceComparisonEditorUI(parent)
     screen.selectedBoss = GetSelectedBoss()
 
     local leftWidth = 220
-    local title = CreateEditorLabel(screen, "|cFF00FFFFPace|r-Comparison", 14)
+    local title = CreateEditorLabel(screen, NSI.UI.Style.Tint("|cFF00FFFFPace|r-Comparison"), 14)
+    NSI.UI.Style.TrackAccentText(title)
     title:SetTextColor(unpack(STYLE.text_color))
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
@@ -135,7 +136,7 @@ local function BuildPaceComparisonEditorUI(parent)
         row.enabled.fill = row.enabled:CreateTexture(nil, "ARTWORK")
         row.enabled.fill:SetPoint("TOPLEFT", row.enabled, "TOPLEFT", 2, -2)
         row.enabled.fill:SetPoint("BOTTOMRIGHT", row.enabled, "BOTTOMRIGHT", -2, 2)
-        row.enabled.fill:SetColorTexture(Accent(0.85))
+        NSI.UI.Style.PaintAccent(row.enabled.fill, "SetColorTexture", 0.85)
         return row
     end
 
@@ -148,12 +149,12 @@ local function BuildPaceComparisonEditorUI(parent)
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.arrow, "SetVertexColor", 1)
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "small", "")
         row.name:SetPoint("LEFT", row.arrow, "RIGHT", 4, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.name:SetTextColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.name, "SetTextColor", 1)
         row.name:SetJustifyH("LEFT")
         return row
     end
@@ -478,12 +479,12 @@ function NSI:TogglePaceComparisonSettingsWindow(frame)
         edgeSize = 1,
     })
     window:SetBackdropColor(unpack(STYLE.surface_panel))
-    window:SetBackdropBorderColor(Accent(0.9))
+    NSI.UI.Style.PaintAccent(window, "SetBackdropBorderColor", 0.9)
     window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -10)
 
     local title = window:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, "tiny", "")
-    title:SetTextColor(Accent(0.85))
+    NSI.UI.Style.PaintAccent(title, "SetTextColor", 0.85)
     title:SetText(NSI:Loc("Pace Comparison Display"))
     title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
 

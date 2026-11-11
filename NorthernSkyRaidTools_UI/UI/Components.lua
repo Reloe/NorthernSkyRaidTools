@@ -84,10 +84,50 @@ function STYLE.PaintAccent(obj, method, alpha)
     return obj
 end
 
+-- Text carrying the default cyan escape ("|cFF00FFFF...|r", e.g. a translated title) with the
+-- current accent swapped in. TrackAccentText does the same for a font string and keeps it
+-- following later accent changes.
+local DEFAULT_CODE = "|cFF00FFFF"
+function STYLE.Tint(text)
+    if type(text) ~= "string" then return text end
+    return (text:gsub("|[cC][fF][fF]00[fF][fF][fF][fF]", function() return STYLE.AccentCode() end))
+end
+
+local accentTexts = setmetatable({}, { __mode = "k" })   -- font string -> escape currently in its text
+function STYLE.TrackAccentText(fs)
+    if not fs or not fs.GetText then return fs end
+    local text = fs:GetText()
+    if text and text ~= "" then fs:SetText(STYLE.Tint(text)) end
+    accentTexts[fs] = STYLE.AccentCode()
+    return fs
+end
+
+-- Stop re-tinting obj:method (it was painted something other than the accent, e.g. greyed out).
+function STYLE.UnpaintAccent(obj, method)
+    local methods = accentPainted[obj]
+    if methods then methods[method] = nil end
+end
+
+-- State-driven colouring (checked / selected / disabled) cannot be a plain registration, so
+-- the owner hands over the function that repaints it from its current state.
+local accentRefreshers = setmetatable({}, { __mode = "k" })
+function STYLE.OnAccentRefresh(owner, fn)
+    accentRefreshers[owner] = fn
+end
+
 -- A type-scale name ("small") or a number -> a size in px. nil stays nil.
 function STYLE.FontSize(size)
     if type(size) == "string" then return STYLE.type[size] or STYLE.type.small end
     return size
+end
+
+STYLE.DEFAULT_ACCENT = { 0, 1, 1 }
+
+-- "|cFFrrggbb" colour escape for the current accent (chat/title text).
+function STYLE.AccentCode()
+    local a = STYLE.accent
+    local function hex(v) return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
+    return string.format("|cFF%02X%02X%02X", hex(a[1]), hex(a[2]), hex(a[3]))
 end
 
 function STYLE.OnAccentChanged(fn)
@@ -102,6 +142,18 @@ function STYLE.SetAccent(r, g, b)
     end
     for obj, methods in pairs(accentPainted) do
         for method, alpha in pairs(methods) do obj[method](obj, r, g, b, alpha or 1) end
+    end
+    for _, fn in pairs(accentRefreshers) do fn() end
+    local newCode = STYLE.AccentCode()
+    for fs, oldCode in pairs(accentTexts) do
+        if oldCode ~= newCode then
+            local text = fs:GetText()
+            if text and text ~= "" then
+                local escaped = oldCode:gsub("|", "%%|")
+                fs:SetText((text:gsub(escaped, (newCode:gsub("%%", "%%%%")))))
+            end
+            accentTexts[fs] = newCode
+        end
     end
     for _, fn in ipairs(accentListeners) do fn(r, g, b) end
 end
@@ -230,7 +282,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     hoverBg:EnableMouse(false)
     local hoverTex = hoverBg:CreateTexture(nil, "background")
     hoverTex:SetAllPoints()
-    hoverTex:SetColorTexture(unpack(STYLE.hover_color))
+    STYLE.PaintAccent(hoverTex, "SetColorTexture", 0.13)
     hoverBg:SetAlpha(0)
 
     -- ---- selected background (fades in when tab is active) ----
@@ -240,7 +292,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     selectedBg:EnableMouse(false)
     local selectedTex = selectedBg:CreateTexture(nil, "background")
     selectedTex:SetAllPoints()
-    selectedTex:SetColorTexture(unpack(STYLE.selected_color))
+    STYLE.PaintAccent(selectedTex, "SetColorTexture", 0.20)
     selectedBg:SetAlpha(0)
 
     -- ---- label ------------------------------------------------
@@ -478,7 +530,7 @@ local function MakeHoverBg(parent, level)
     f:EnableMouse(false)
     local t = f:CreateTexture(nil, "BACKGROUND")
     t:SetAllPoints()
-    t:SetColorTexture(unpack(STYLE.hover_color))
+    STYLE.PaintAccent(t, "SetColorTexture", 0.13)
     f:SetAlpha(0)
     return f
 end
@@ -603,6 +655,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
         end
     end
     Refresh()
+    STYLE.OnAccentRefresh(btn, Refresh)
 
     local cb = { fn = setValue }
     btn:SetScript("OnClick", function()
@@ -1544,6 +1597,12 @@ local function CreateSlider(parent, label, getValue, setValue,
         UpdateVisual(v)
         initialized = true
     end
+    STYLE.OnAccentRefresh(container, function()
+        if obj._disabled then return end
+        valueBorder:SetBackdropBorderColor(Accent(0.45))
+        if thumb then thumb:SetVertexColor(Accent(1)) end
+    end)
+
     function obj:GetValue()    return slider:GetValue()       end
     function obj:SetPoint(...) self.frame:SetPoint(...)       end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
@@ -1561,7 +1620,7 @@ local function CreateSlider(parent, label, getValue, setValue,
         valText:SetTextColor(unpack(STYLE.text_color))
         valueBorder:SetBackdropBorderColor(Accent(0.45))
         thumb:SetVertexColor(Accent(1))
-        fillTex:SetColorTexture(Accent(0.45))
+        PaintAccent(fillTex, "SetColorTexture", 0.45)
     end
 
     function obj:Disable()
@@ -1576,6 +1635,7 @@ local function CreateSlider(parent, label, getValue, setValue,
         valText:SetTextColor(unpack(STYLE.text_disabled))
         valueBorder:SetBackdropBorderColor(unpack(STYLE.text_disabled))
         thumb:SetVertexColor(unpack(STYLE.text_disabled))
+        STYLE.UnpaintAccent(fillTex, "SetColorTexture")
         fillTex:SetColorTexture(unpack(STYLE.text_disabled))
     end
 
@@ -1786,7 +1846,7 @@ local function CreateLabel(parent, text, width, height, name, highlighted, textC
 
     local lbl = MakeFontString(container, highlighted and "body" or "small")
     if highlighted then
-        lbl:SetTextColor(Accent(1))
+        STYLE.PaintAccent(lbl, "SetTextColor", 1)
     elseif textColor then
         lbl:SetTextColor(unpack(textColor))
     else
@@ -1902,7 +1962,7 @@ local function StyleArrowButton(btn, iconFile)
     hoverBg:EnableMouse(false)
     local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
     hoverTex:SetAllPoints()
-    hoverTex:SetColorTexture(unpack(STYLE.hover_color))
+    STYLE.PaintAccent(hoverTex, "SetColorTexture", 0.13)
     hoverBg:SetAlpha(0)
 
     -- Chevron icon centred inside the box
@@ -1941,7 +2001,7 @@ local function ReskinScrollbar(scrollFrame)
     if bar.GetThumbTexture then
         local thumb = bar:GetThumbTexture()
         if thumb then
-            thumb:SetColorTexture(Accent(0.45))
+            STYLE.PaintAccent(thumb, "SetColorTexture", 0.45)
             thumb:SetWidth(6)
         end
     end
@@ -2011,6 +2071,10 @@ local function CreateScrollBox(parent, width, height)
     child:SetWidth(width - SB_W - 2)
     child:SetHeight(1)
     scrollFrame:SetScrollChild(child)
+    -- the child is always as wide as the box minus its scrollbar, also after a resize
+    scrollFrame:HookScript("OnSizeChanged", function(_, w)
+        if w and w > SB_W + 2 then child:SetWidth(w - SB_W - 2) end
+    end)
     local scrollBar = _G[boxName .. "ScrollBar"]
     if scrollBar then
         scrollBar:ClearAllPoints()
@@ -2721,8 +2785,13 @@ end
 local CardHost = {}
 CardHost.__index = CardHost
 
-local function CreateCardHost(parent, width)
-    return setmetatable({ parent = parent, width = width, sets = {} }, CardHost)
+-- fluid = true: the cards follow the parent's width in steps of CARD_FLUID_STEP px above
+-- the width given (their design width). A layout is built once per step and cached, so
+-- resizing the window builds a handful of layouts at most, never one per pixel.
+local CARD_FLUID_STEP = 48
+
+local function CreateCardHost(parent, width, fluid)
+    return setmetatable({ parent = parent, width = width, fluid = fluid, sets = {} }, CardHost)
 end
 
 function CardHost:Hide()
@@ -2734,6 +2803,10 @@ end
 
 function CardHost:Apply(defs, isVisible)
     local width    = self.width or self.parent:GetWidth()
+    if self.fluid and self.width then
+        local extra = (self.parent:GetWidth() or self.width) - self.width
+        if extra > 0 then width = self.width + math.floor(extra / CARD_FLUID_STEP) * CARD_FLUID_STEP end
+    end
     local contentW = width - MENU_CARD_PAD * 2
     for index, def in ipairs(defs) do def._cardIndex = index end
 
@@ -2785,9 +2858,12 @@ end
 -- Details Framework menus. Columns share one width, chosen so that as many fit side by
 -- side as the page allows (between MENU_MIN_COL and MENU_MAX_COL); extra columns wrap
 -- onto a new row below.
+local menuRegistry = setmetatable({}, { __mode = "k" })   -- parent frame -> menu, for relayout
+
 local function BuildMenu(parent, options, onChange)
     local scroll = CreateScrollBox(parent, parent:GetWidth() - MENU_PAD, parent:GetHeight())
     scroll.frame:SetPoint("TOPLEFT", parent, "TOPLEFT", MENU_PAD, 0)
+    scroll.frame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)   -- follows the tab when the window is resized
     local child = scroll.scrollChild
 
     -- Split the raw entries at breaklines.
@@ -2828,7 +2904,18 @@ local function BuildMenu(parent, options, onChange)
 
     local menu = { scroll = scroll, stacks = stacks }
 
+    -- Cards keep the width they were built with (colW). A wider window fits more
+    -- columns, centred; a taller one only gives the scroll box more room.
+    local function ColumnsThatFit()
+        local availNow = child:GetWidth() - MENU_PAD * 2
+        return math.max(1, math.min(#groups, math.floor((availNow + MENU_COL_GAP + 1) / (colW + MENU_COL_GAP)))), availNow
+    end
+
     function menu:Refresh()
+        local availNow
+        perRow, availNow = ColumnsThatFit()
+        local centre = math.max(0, math.floor((availNow - (perRow * colW + (perRow - 1) * MENU_COL_GAP)) / 2))
+        self.dirty = false
         local heights = {}
         for c = 1, perRow do heights[c] = 0 end
         for _, sections in ipairs(stacks) do
@@ -2836,7 +2923,7 @@ local function BuildMenu(parent, options, onChange)
             for c = 2, perRow do
                 if heights[c] < heights[column] then column = c end
             end
-            local x = MENU_PAD + (column - 1) * (colW + MENU_COL_GAP)
+            local x = MENU_PAD + centre + (column - 1) * (colW + MENU_COL_GAP)
             local y = heights[column]
             for _, section in ipairs(sections) do
                 local card = section.card
@@ -2858,8 +2945,35 @@ local function BuildMenu(parent, options, onChange)
 
     parent.RefreshOptions = function() menu:Refresh() end
     parent.menu = menu   -- the global search indexes stacks -> sections -> defs from here
+    menuRegistry[parent] = menu
+    -- a menu on a hidden tab re-flows when the tab is shown next
+    parent:HookScript("OnShow", function() if menu.dirty then menu:Refresh() end end)
     menu:Refresh()
     return menu
+end
+
+-- Re-flows every BuildMenu page after the window was resized: the visible one now, the
+-- others when their tab is next shown.
+local relayouts = setmetatable({}, { __mode = "k" })   -- tab frame -> { fn, dirty }
+
+-- Screens that lay themselves out (master/detail tabs) register fn(): it runs after a
+-- window resize while their tab is visible, otherwise the next time it is shown.
+local function RegisterRelayout(frame, fn)
+    local entry = { fn = fn }
+    relayouts[frame] = entry
+    frame:HookScript("OnShow", function()
+        if entry.dirty then entry.dirty = false; entry.fn() end
+    end)
+end
+
+local function RelayoutMenus()
+    for parent, menu in pairs(menuRegistry) do
+        menu.dirty = true
+        if parent:IsVisible() then menu:Refresh() end
+    end
+    for frame, entry in pairs(relayouts) do
+        if frame:IsVisible() then entry.dirty = false; entry.fn() else entry.dirty = true end
+    end
 end
 
 -- ============================================================
@@ -3535,19 +3649,19 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
         hoverBg:EnableMouse(false)
         local ht = hoverBg:CreateTexture(nil, "BACKGROUND")
         ht:SetAllPoints()
-        ht:SetColorTexture(unpack(STYLE.hover_color))
+        STYLE.PaintAccent(ht, "SetColorTexture", 0.13)
         hoverBg:SetAlpha(0)
         row.hoverBg = hoverBg
 
         local sepTex = row:CreateTexture(nil, "ARTWORK")
-        sepTex:SetColorTexture(Accent(0.15))
+        STYLE.PaintAccent(sepTex, "SetColorTexture", 0.15)
         sepTex:SetHeight(1)
         row.sepTex = sepTex
 
         -- Second stub, used only by labelled separators: sepTex runs from the
         -- left edge to the text, this one from the text to the right edge.
         local sepTex2 = row:CreateTexture(nil, "ARTWORK")
-        sepTex2:SetColorTexture(Accent(0.15))
+        STYLE.PaintAccent(sepTex2, "SetColorTexture", 0.15)
         sepTex2:SetHeight(1)
         row.sepTex2 = sepTex2
 
@@ -4201,6 +4315,8 @@ NSI.UI.Components = {
     CreateCheckButton   = CreateCheckButton,
     CreateTextEntry     = CreateTextEntry,
     CreateSearchBox     = CreateSearchBox,
+    RelayoutMenus       = RelayoutMenus,
+    RegisterRelayout    = RegisterRelayout,
     StyleBareIconButton = StyleBareIconButton,
     CreateDropdown      = CreateDropdown,
     CreateSlider        = CreateSlider,

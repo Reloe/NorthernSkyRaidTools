@@ -38,7 +38,7 @@ local function Create(ctx)
 
         if not conditionEditPopup then
             conditionEditPopup = DF:CreateSimplePanel(Core.NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Custom Condition") .. "|r",
+                NSI.UI.Style.AccentCode() .. NSI:Loc("Custom Condition") .. "|r",
                 "NSUIEncAlertConditionEditor", { DontRightClickClose = true })
             conditionEditPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
             conditionEditPopup:SetFrameLevel(100)
@@ -188,7 +188,7 @@ end]]
 
         if not encounterHookEditPopup then
             encounterHookEditPopup = DF:CreateSimplePanel(Core.NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Encounter Hook Editor") .. "|r",
+                NSI.UI.Style.AccentCode() .. NSI:Loc("Encounter Hook Editor") .. "|r",
                 "NSUIEncAlertHookEditor", { DontRightClickClose = true })
             encounterHookEditPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
             encounterHookEditPopup:SetFrameLevel(100)
@@ -266,7 +266,7 @@ end]]
     local function OpenCustomPreviewEditor(alert)
         if not customPreviewPopup then
             customPreviewPopup = DF:CreateSimplePanel(Core.NSUI, 820, 520,
-                "|cFF00FFFF" .. NSI:Loc("Custom Preview Code") .. "|r",
+                NSI.UI.Style.AccentCode() .. NSI:Loc("Custom Preview Code") .. "|r",
                 "NSUIEncAlertCustomPreviewEditor", { DontRightClickClose = true })
             customPreviewPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
             customPreviewPopup:SetFrameLevel(100)
@@ -337,7 +337,7 @@ end]]
     local function OpenCustomOptionEditor(alert, existingDefinition)
         if not customOptionEditorPopup then
             customOptionEditorPopup = DF:CreateSimplePanel(Core.NSUI, 720, 430,
-                "|cFF00FFFF" .. NSI:Loc("Custom Alert Option") .. "|r",
+                NSI.UI.Style.AccentCode() .. NSI:Loc("Custom Alert Option") .. "|r",
                 "NSUIEncAlertCustomOptionEditor", { DontRightClickClose = true })
             customOptionEditorPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
             customOptionEditorPopup:SetFrameLevel(100)

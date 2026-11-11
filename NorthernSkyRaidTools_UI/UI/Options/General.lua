@@ -58,6 +58,29 @@ local function BuildGeneralOptions()
             values = BuildLanguageValues,
         },
         {
+            type = "color",
+            name = "Accent Color",
+            desc = "The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick.",
+            get = function()
+                local r, g, b = NSI.UI.Style.Accent(1)
+                return r, g, b, 1
+            end,
+            set = function(_, r, g, b)
+                NSRT.Settings.AccentColor = { r, g, b }
+                NSI.UI.Style.SetAccent(r, g, b)
+            end,
+        },
+        {
+            type = "button",
+            name = "Reset Accent Color",
+            desc = "Go back to the default cyan accent.",
+            func = function()
+                local d = NSI.UI.Style.DEFAULT_ACCENT
+                NSRT.Settings.AccentColor = nil
+                NSI.UI.Style.SetAccent(d[1], d[2], d[3])
+            end,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Disable Minimap Button",
@@ -220,7 +243,7 @@ local function BuildGeneralOptions()
             type = "breakline",
         },
         { type = "label", get = function() return "Profile Management" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
-        { type = "label", id = "current_profile_label", get = function() return format(NSI:Loc("Current Profile: |cFF00FFFF%s|r"), NSRT.CurrentProfile or "default") end },
+        { type = "label", id = "current_profile_label", get = function() return format(NSI.UI.Style.Tint(NSI:Loc("Current Profile: |cFF00FFFF%s|r")), NSRT.CurrentProfile or "default") end },
 
         {
             type = "textentry",
@@ -233,7 +256,7 @@ local function BuildGeneralOptions()
                     local name = self:GetText()
                     if name and name ~= "" then
                         NSI:CreateProfile(name)
-                        print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Created and switched to profile '|cFFFFFFFF%s|r'."), name))
+                        print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(NSI:Loc("Created and switched to profile '|cFFFFFFFF%s|r'."), name))
                     end
                 end,
             },
@@ -251,7 +274,7 @@ local function BuildGeneralOptions()
                         value = name,
                         onclick = function()
                             NSI:LoadProfile(name)
-                            print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Loaded profile '|cFFFFFFFF%s|r'."), name))
+                            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(NSI:Loc("Loaded profile '|cFFFFFFFF%s|r'."), name))
                         end,
                     })
                 end
@@ -273,7 +296,7 @@ local function BuildGeneralOptions()
                             value = name,
                             onclick = function()
                                 NSI:CopyFromProfile(name)
-                                print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Copied profile '|cFFFFFFFF%s|r' into '|cFFFFFFFF%s|r'."), name, NSRT.CurrentProfile))
+                                print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(NSI:Loc("Copied profile '|cFFFFFFFF%s|r' into '|cFFFFFFFF%s|r'."), name, NSRT.CurrentProfile))
                             end,
                         })
                     end
@@ -295,7 +318,7 @@ local function BuildGeneralOptions()
                         value = name,
                         onclick = function()
                             NSI:ResetProfile(name)
-                            print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Reset profile '|cFFFFFFFF%s|r'."), name))
+                            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(NSI:Loc("Reset profile '|cFFFFFFFF%s|r'."), name))
                         end,
                     })
                 end
@@ -317,7 +340,7 @@ local function BuildGeneralOptions()
                             value = name,
                             onclick = function()
                                 NSI:DeleteProfile(name)
-                                print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Deleted profile '|cFFFFFFFF%s|r'."), name))
+                                print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. format(NSI:Loc("Deleted profile '|cFFFFFFFF%s|r'."), name))
                             end,
                         })
                     end

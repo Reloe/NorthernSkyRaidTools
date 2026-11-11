@@ -261,7 +261,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local activeKey = personal and "ActivePersonalReminder" or "ActiveReminder"
     local storeKey = personal and "PersonalReminders" or "Reminders"
     local screenName = personal and "NSUIPersonalReminderScreen" or "NSUISharedReminderScreen"
-    local titleText = personal and NSI:Loc("|cFF00FFFFPersonal|r Reminders") or NSI:Loc("|cFF00FFFFShared|r Reminders")
+    local titleText = personal and NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFPersonal|r Reminders")) or NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFShared|r Reminders"))
 
     -- Main container: use the provided tab frame, or create a standalone floating frame
     local screen
@@ -305,7 +305,7 @@ local function BuildReminderScreen(personal, parentFrame)
     if not personal then
         -- Forward-declare so the callback closure can reference recvBtn
         local recvBtn
-        recvBtn = CreateButton(screen, "|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r", function()
+        recvBtn = CreateButton(screen, NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r", function()
             if screen.RefreshReceivedNote then screen.RefreshReceivedNote(true) end
         end, leftWidth - pad * 2, 22)
         recvBtn:SetLocaleKey("Received:", function()
@@ -313,11 +313,11 @@ local function BuildReminderScreen(personal, parentFrame)
             if content and content ~= "" and content ~= " " then
                 local name = NSRT.ActiveReminder
                 if name and name ~= "" then
-                    return "|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. name .. "|r"
+                    return NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. name .. "|r"
                 end
-                return "|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. NSI:Loc("Active Note") .. "|r"
+                return NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. NSI:Loc("Active Note") .. "|r"
             end
-            return "|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r"
+            return NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r"
         end)
         recvBtn:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 46)
         recvBtn.labelFrame:ClearAllPoints()
@@ -358,9 +358,9 @@ local function BuildReminderScreen(personal, parentFrame)
             if hasNote then
                 local name = NSRT.ActiveReminder
                 if name and name ~= "" then
-                    recvBtn:SetText("|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. name .. "|r")
+                    recvBtn:SetText(NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. name .. "|r")
                 else
-                    recvBtn:SetText("|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. NSI:Loc("Active Note") .. "|r")
+                    recvBtn:SetText(NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFFFFFFFF" .. NSI:Loc("Active Note") .. "|r")
                 end
                 -- Green border always when a note is loaded; fill only when viewing
                 recvBtn.frame:SetBackdropBorderColor(0, 1, 0, 1)
@@ -368,7 +368,7 @@ local function BuildReminderScreen(personal, parentFrame)
                     recvBtn.frame:SetBackdropColor(0.06, 0.06, 0.06, 0.8)
                 end
             else
-                recvBtn:SetText("|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r")
+                recvBtn:SetText(NSI.UI.Style.AccentCode() .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r")
                 screen.viewingReceivedNote = false
                 recvBtn.frame:SetBackdropColor(0.06, 0.06, 0.06, 0.8)
                 recvBtn.frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -888,9 +888,9 @@ local function BuildReminderScreen(personal, parentFrame)
                 local elapsed = GetTime() - NSI.ReminderReceivedTime
                 local txt
                 if elapsed < 60 then
-                    txt = string.format(NSI:Loc("|cFF00FFFFReceived|r %ds ago"), math.floor(elapsed))
+                    txt = string.format(NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFReceived|r %ds ago")), math.floor(elapsed))
                 else
-                    txt = string.format(NSI:Loc("|cFF00FFFFReceived|r %dm ago"), math.floor(elapsed / 60))
+                    txt = string.format(NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFReceived|r %dm ago")), math.floor(elapsed / 60))
                 end
                 recvTimeLabel:SetText(txt)
                 recvTimeLabel:Show()
@@ -1299,9 +1299,10 @@ local function BuildReminderScreen(personal, parentFrame)
     end
 
     local scrollbox = DF:CreateScrollBox(screen, "$parentReminderScrollBox", refresh, {},
-        leftWidth - (pad * 2), scrollHeight, scrollLines, lineHeight, createLineFunc)
+        leftWidth - (pad * 2), scrollHeight, scrollLines, lineHeight, createLineFunc, true)   -- true: line count follows the height
     screen.scrollbox = scrollbox
     scrollbox:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, listTop)
+    scrollbox:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, 40)   -- above the Create Note button
     scrollbox.MasterRefresh = MasterRefresh
     DF:ReskinSlider(scrollbox)
     scrollbox.__background:SetVertexColor(63/255, 63/255, 63/255)

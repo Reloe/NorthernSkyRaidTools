@@ -128,6 +128,9 @@ function NSUI:Init()
     NSRT.NSUI.scale = tonumber(NSRT.NSUI.scale) or 1
     NSUI:CreateScaleControl(NSRT.NSUI)
     NSUI:SetScale(NSRT.NSUI.scale)
+    -- Resizable window: restore the saved size; menus re-flow when the grip is released.
+    NSUI:BindSize(NSRT.NSUI)
+    NSUI:OnResizeDone(function() NSI.UI.Components.RelayoutMenus() end)
 
     -- Forward declaration – buttons below need to call SelectTab before it is defined
     local SelectTab
@@ -170,13 +173,14 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local sidebarBg = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUISidebar", NSUI)
     sidebarBg:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 2, -header_height)
-    sidebarBg:SetSize(158, content_height)
+    sidebarBg:SetPoint("BOTTOMLEFT", NSUI, "BOTTOMLEFT", 2, footer_height)
+    sidebarBg:SetWidth(158)
     sidebarBg:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     sidebarBg:SetBackdropColor(0, 0, 0, 0.18)
 
     -- Thin cyan vertical separator between sidebar and content area
     local sidebarSep = NSUI:CreateTexture(nil, "artwork")
-    sidebarSep:SetColorTexture(Accent(0.25))
+    NSI.UI.Style.PaintAccent(sidebarSep, "SetColorTexture", 0.25)
     sidebarSep:SetWidth(1)
     sidebarSep:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 160, -header_height)
     sidebarSep:SetPoint("BOTTOMLEFT", NSUI, "BOTTOMLEFT", 160, footer_height + 2)
@@ -195,7 +199,7 @@ function NSUI:Init()
             -- Content frame – occupies the right portion below the shared header, hidden by default
             local contentFrame = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUI_TabFrame_" .. tab.name, NSUI)
             contentFrame:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 162, tab_content_y)
-            contentFrame:SetSize(content_width, tab_content_height)
+            contentFrame:SetPoint("BOTTOMRIGHT", NSUI, "BOTTOMRIGHT", -2, footer_height)
             contentFrame:Hide()
             contentFrame:EnableMouse(false)
 
@@ -216,19 +220,19 @@ function NSUI:Init()
 
                     local header = row:CreateFontString(nil, "OVERLAY")
                     NSI:SetUIFont(header, "tiny", "")
-                    header:SetTextColor(Accent(0.9))
+                    NSI.UI.Style.PaintAccent(header, "SetTextColor", 0.9)
                     header:SetPoint("CENTER", row, "CENTER", 0, 0)
                     header._titleKey = group.title
                     header:SetText(GetLocalizedText(group.title))
                     groupHeaders[#groupHeaders + 1] = header
 
                     local leftLine = row:CreateTexture(nil, "ARTWORK")
-                    leftLine:SetColorTexture(Accent(0.30))
+                    NSI.UI.Style.PaintAccent(leftLine, "SetColorTexture", 0.30)
                     leftLine:SetHeight(1)
                     leftLine:SetPoint("LEFT", row, "LEFT", 3, 0)
                     leftLine:SetPoint("RIGHT", header, "LEFT", -6, 0)
                     local rightLine = row:CreateTexture(nil, "ARTWORK")
-                    rightLine:SetColorTexture(Accent(0.30))
+                    NSI.UI.Style.PaintAccent(rightLine, "SetColorTexture", 0.30)
                     rightLine:SetHeight(1)
                     rightLine:SetPoint("LEFT", header, "RIGHT", 6, 0)
                     rightLine:SetPoint("RIGHT", row, "RIGHT", -3, 0)
@@ -274,7 +278,7 @@ function NSUI:Init()
         -- Content frame (same geometry as every other tab)
         local notesFrame = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUI_TabFrame_" .. nt.name, NSUI)
         notesFrame:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 162, tab_content_y)
-        notesFrame:SetSize(content_width, tab_content_height)
+        notesFrame:SetPoint("BOTTOMRIGHT", NSUI, "BOTTOMRIGHT", -2, footer_height)
         notesFrame:Hide()
         notesFrame:EnableMouse(false)
 
@@ -520,6 +524,34 @@ function NSUI:Init()
     coroutine.yield()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     coroutine.yield()
+    -- Accent colour changed: everything registered with PaintAccent has already re-tinted;
+    -- what is painted from state (selected list rows, rebuilt menus) is rebuilt here, once the
+    -- colour picker has been still for a moment.
+    do
+        local pending = false
+        local function Call(obj, key, ...)
+            local fn = obj and obj[key]
+            if type(fn) == "function" then pcall(fn, ...) end
+        end
+        NSI.UI.Style.OnAccentChanged(function()
+            if pending then return end
+            pending = true
+            C_Timer.After(0.15, function()
+                pending = false
+                NSI.UI.Components.RelayoutMenus()
+                Call(NSUI.encounters_frame, "RebuildList")
+                Call(NSUI.aurasounds_frame, "RefreshCategoryList")
+                for _, frame in ipairs({ NSUI.aurasounds_frame, NSUI.reminders_frame,
+                                         NSUI.personal_reminders_frame, NSUI.pacecomparison_frame }) do
+                    local box = frame and frame.scrollbox
+                    if box then Call(box, "MasterRefresh", box) end
+                end
+                local at = NSUI.auratracking_frame
+                Call(at, "RebuildList")
+                Call(NSUI.auraglows_frame, "RebuildList")
+            end)
+        end)
+    end
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
     if NSI.GetGroupExportString then

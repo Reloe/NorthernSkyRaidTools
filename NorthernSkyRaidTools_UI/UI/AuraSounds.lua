@@ -264,16 +264,16 @@ local function PrepareAuraSoundData(screen)
 end
 
 local function ShowAuraSoundsExportPopup(text, label)
-    NSI.UI.Components.CreateTextBoxDialog("AuraSoundsExport", "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r", { readOnly = true }):Open(text or "", label)
+    NSI.UI.Components.CreateTextBoxDialog("AuraSoundsExport", NSI.UI.Style.AccentCode() .. T("Export Aura Sounds") .. "|r", { readOnly = true }):Open(text or "", label)
 end
 
 local function ShowAuraSoundsImportPopup(onImport)
-    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraSoundsImport", "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraSoundsImport", NSI.UI.Style.AccentCode() .. T("Import Aura Sounds") .. "|r",
         { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
     dialog:Open("", T("Paste an Aura Sounds export string below and click Import."), function(text, d)
         local success, count = NSI:ImportAuraSoundString(text)
         if success then
-            print("|cFF00FFFFNSRT:|r " .. string.format(T("Imported %d Aura Sound(s)."), count or 0))
+            print(NSI.UI.Style.AccentCode() .. "NSRT:|r " .. string.format(T("Imported %d Aura Sound(s)."), count or 0))
             if onImport then onImport() end
             return true
         end
@@ -368,8 +368,9 @@ local function BuildAuraSoundsUI(parent)
     rightPanel:SetPoint("TOPLEFT", screen, "TOPLEFT", leftWidth + 36, -8)
     rightPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -10, 8)
 
-    local title = CreateLabel(screen, T("|cFF00FFFFAura|r Sounds"), 14)
+    local title = CreateLabel(screen, NSI.UI.Style.Tint(T("|cFF00FFFFAura|r Sounds")), 14)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
+    NSI.UI.Style.TrackAccentText(title.label or title.fontString or title)
 
     -- list filter: narrows the categories you can select from
     local categorySearchText = ""
@@ -444,12 +445,12 @@ local function BuildAuraSoundsUI(parent)
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.arrow, "SetVertexColor", 1)
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "small", "")
         row.name:SetPoint("LEFT", row.arrow, "RIGHT", 4, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.name:SetTextColor(Accent(1))
+        NSI.UI.Style.PaintAccent(row.name, "SetTextColor", 1)
         row.name:SetJustifyH("LEFT")
         return row
     end
@@ -701,7 +702,7 @@ local function BuildAuraSoundsUI(parent)
         titleFS:SetPoint("RIGHT", popup, "RIGHT", -24, 0)
 
         local titleSep = popup:CreateTexture(nil, "ARTWORK")
-        titleSep:SetColorTexture(Accent(0.20))
+        NSI.UI.Style.PaintAccent(titleSep, "SetColorTexture", 0.20)
         titleSep:SetHeight(1)
         titleSep:SetPoint("TOPLEFT", popup, "TOPLEFT", 1, -TITLE_H)
         titleSep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -TITLE_H)
@@ -946,7 +947,7 @@ local function BuildAuraSoundsUI(parent)
         local header = CreateLabel(columnHeaders, T(text), 10)
         header:SetPoint("LEFT", columnHeaders, "LEFT", x, 0)
         header:SetWidth(width)
-        header:SetTextColor(Accent(1))
+        NSI.UI.Style.PaintAccent(header, "SetTextColor", 1)
         return header
     end
     AddColumnHeader("Spell Name", 28, 175)
@@ -963,6 +964,7 @@ local function BuildAuraSoundsUI(parent)
     local scrollbox = NSI.UI.Components.CreateScrollBox(rightPanel, 760, 340)
     screen.scrollbox = scrollbox
     scrollbox:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -76)
+    scrollbox:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", 0, 108)   -- the add row sits under it
 
     local RefreshAuraScrollbox
 
@@ -1131,7 +1133,9 @@ local function BuildAuraSoundsUI(parent)
         end
         for i, entry in ipairs(data) do
             local row = auraRows[i]
+            row:ClearAllPoints()
             row:SetPoint("TOPLEFT", scrollbox.scrollChild, "TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
+            row:SetPoint("TOPRIGHT", scrollbox.scrollChild, "TOPRIGHT", 0, -(i - 1) * ROW_HEIGHT)
             row:SetBackdropColor(unpack(i % 2 == 0 and STYLE.row_stripe_light or STYLE.row_stripe_dark))
             UpdateAuraRow(row, entry)
             row:Show()
@@ -1143,6 +1147,7 @@ local function BuildAuraSoundsUI(parent)
         scrollbox:UpdateScrollBar()
     end
     scrollbox.MasterRefresh = function(self) RefreshAuraScrollbox() end
+    NSI.UI.Components.RegisterRelayout(screen, function() RefreshAuraScrollbox() end)
 
     -- Header search: jump to a spell of the selected category (name or spell ID)
     screen.headerSearch = NSI.UI.ScopedSearch.Create(screen, "NSUIAuraSoundsSettingsSearch", {

@@ -87,12 +87,12 @@ function NSI:ToggleBreakTimerSettingsWindow(frame)
         edgeSize = 1,
     })
     window:SetBackdropColor(unpack(STYLE.surface_panel))
-    window:SetBackdropBorderColor(Accent(0.9))
+    NSI.UI.Style.PaintAccent(window, "SetBackdropBorderColor", 0.9)
     window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -11)
 
     local title = window:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, "tiny", "")
-    title:SetTextColor(Accent(0.85))
+    NSI.UI.Style.PaintAccent(title, "SetTextColor", 0.85)
     title:SetText(NSI:Loc("Break Timer"))
     title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
 

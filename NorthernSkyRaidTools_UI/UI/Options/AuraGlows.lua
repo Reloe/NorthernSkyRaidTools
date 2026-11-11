@@ -19,11 +19,11 @@ local ChevronDown = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-
 local ChevronUp = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]]
 
 local function ShowAuraGlowExportPopup(text)
-    NSI.UI.Components.CreateTextBoxDialog("AuraGlowExport", "|cFF00FFFF" .. NSI:Loc("Export Aura Glows") .. "|r", { readOnly = true }):Open(text or "")
+    NSI.UI.Components.CreateTextBoxDialog("AuraGlowExport", NSI.UI.Style.AccentCode() .. NSI:Loc("Export Aura Glows") .. "|r", { readOnly = true }):Open(text or "")
 end
 
 local function ShowAuraGlowImportPopup(onImport)
-    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraGlowImport", "|cFF00FFFF" .. NSI:Loc("Import Aura Glows") .. "|r",
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraGlowImport", NSI.UI.Style.AccentCode() .. NSI:Loc("Import Aura Glows") .. "|r",
         { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
     dialog:Open("", NSI:Loc("Paste an Aura Glow export string below and click Import."), function(text, d)
         if NSI:ImportAuraGlowString(text) then
@@ -125,7 +125,8 @@ local function BuildAuraGlowsUI(screen)
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, "title")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -10)
-    title:SetText(NSI:Loc("|cFF00FFFFAura|r Glows"))
+    title:SetText(NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFAura|r Glows")))
+    NSI.UI.Style.TrackAccentText(title)
 
     local useBuiltinsCheckbox = CreateCheckButton(screen, NSI:Loc("Enable All Built-in Aura Glows"), function()
         return NSRT.AuraGlows.UseBuiltinAuraGlows
@@ -166,7 +167,7 @@ local function BuildAuraGlowsUI(screen)
 
     local rightPanel = CreateFrame("Frame", nil, screen)
     rightPanel:SetPoint("TOPLEFT", screen, "TOPLEFT", rightX, -10)
-    rightPanel:SetSize(rightWidth, tabContentHeight - 10)
+    rightPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -pad, 0)   -- follows the window
 
     local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightWidth - 180, 22, nil, nil, nil, "NSUIAuraGlowName")
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
@@ -187,7 +188,7 @@ local function BuildAuraGlowsUI(screen)
     for index, name in ipairs({"Display", "Trigger", "Load"}) do
         local frame = CreateFrame("Frame", nil, rightPanel)
         frame:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -52)
-        frame:SetSize(rightWidth, tabContentH)
+        frame:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", 0, 0)
         tabFrames[name] = frame
         local tabName = name
         tabButtons[name] = CreateLocalizedSubButton(rightPanel, name, function()
@@ -329,10 +330,10 @@ local function BuildAuraGlowsUI(screen)
                     header.arrow = header:CreateTexture(nil, "OVERLAY")
                     header.arrow:SetSize(12, 12)
                     header.arrow:SetPoint("LEFT", header, "LEFT", 4, 0)
-                    header.arrow:SetVertexColor(Accent(1))
+                    NSI.UI.Style.PaintAccent(header.arrow, "SetVertexColor", 1)
                     header.label = header:CreateFontString(nil, "OVERLAY")
                     NSI:SetUIFont(header.label, "small")
-                    header.label:SetTextColor(Accent(1))
+                    NSI.UI.Style.PaintAccent(header.label, "SetTextColor", 1)
                     header.label:SetPoint("LEFT", header, "LEFT", 20, 0)
                     header.count = header:CreateFontString(nil, "OVERLAY")
                     NSI:SetUIFont(header.count, "small", "")
@@ -657,23 +658,61 @@ local function BuildAuraGlowsUI(screen)
     end
 
     local loadF = tabFrames["Load"]
-    local namesSectionHeight = 180
-    local namesListHeight = 112
-    local loadScrollHeight = tabContentH - namesSectionHeight - 4
-    local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowLoadScroll", loadF, "UIPanelScrollFrameTemplate")
+    -- Same look as the Encounter Alerts Load tab: a "load conditions" card filling the tab
+    -- and a "Character Names" card at the bottom, each list in a bordered scroll box.
+    local Components = NSI.UI.Components
+    local CARD_PAD, CARD_GAP = Components.CardPad, Components.CardGap
+    local namesListHeight = 90
+    local namesContentH = 22 + 8 + namesListHeight
+
+    local namesCard = Components.CreateSectionCard(loadF, rightWidth, true)
+    namesCard.title:SetText(NSI:Loc("Character Names (no server name)"))
+    namesCard.content:SetHeight(namesContentH)
+    namesCard:SetHeight(namesCard.headerH + CARD_PAD * 2 + namesContentH)
+    namesCard:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
+    namesCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, 0)
+    namesCard.content:SetPoint("TOPRIGHT", namesCard, "TOPRIGHT", -CARD_PAD, -(namesCard.headerH + CARD_PAD))
+    local namesSectionHeight = namesCard:GetHeight() + CARD_GAP
+
+    local loadCard = Components.CreateSectionCard(loadF, rightWidth, true)
+    loadCard.title:SetText(NSI:Loc("Roles, Classes & Specs"))
+    loadCard:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    loadCard:SetPoint("BOTTOMRIGHT", loadF, "BOTTOMRIGHT", 0, namesSectionHeight)
+    loadCard.content:SetPoint("BOTTOMRIGHT", loadCard, "BOTTOMRIGHT", -CARD_PAD, CARD_PAD)
+
+    -- keep a list's scrollbar inside its box and draw a border, so it is clear the wheel
+    -- scrolls the list and not the window
+    local function StyleListBox(scrollFrame)
+        local bar = _G[scrollFrame:GetName() .. "ScrollBar"]
+        if bar then
+            bar:ClearAllPoints()
+            bar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+            bar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+        end
+        local borderFrame = CreateFrame("Frame", nil, scrollFrame)
+        borderFrame:SetAllPoints(scrollFrame)
+        borderFrame:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
+        borderFrame:EnableMouse(false)
+        NSI.UI.Style.PaintAccent(NSI.UI.Pixel.Border(borderFrame, { NSI.UI.Style.Accent(0.55) }), "SetBorderColor", 0.55)
+    end
+
+    local innerW = rightWidth - CARD_PAD * 2
+    local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowLoadScroll", loadCard.content, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(loadScroll)
-    loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
-    loadScroll:SetSize(tabScrollW, loadScrollHeight)
+    loadScroll:SetPoint("TOPLEFT", loadCard.content, "TOPLEFT", 0, 0)
+    loadScroll:SetPoint("BOTTOMRIGHT", loadCard.content, "BOTTOMRIGHT", 0, 0)
     loadScroll:EnableMouseWheel(true)
     ReskinScrollbar(loadScroll)
+    StyleListBox(loadScroll)
     local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
-    loadChild:SetSize(tabScrollW - 18, 1)
+    loadChild:SetSize(innerW - 18, 1)
     loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     loadChild:SetBackdropColor(unpack(STYLE.surface_inset))
     loadScroll:SetScrollChild(loadChild)
 
     local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true, Difficulties = true }
-    local loadRowWidth = tabScrollW - 22
+    local loadRowWidth = innerW - 22
+    local namesRowW = innerW - 18   -- names list rows / child (the list has no inner indent)
     local headerPool, checkPool = {}, {}
 
     local function MakeLoadHeader()
@@ -705,7 +744,7 @@ local function BuildAuraGlowsUI(screen)
         hoverBackground:EnableMouse(false)
         local hoverTexture = hoverBackground:CreateTexture(nil, "BACKGROUND")
         hoverTexture:SetAllPoints()
-        hoverTexture:SetColorTexture(Accent(0.13))
+        NSI.UI.Style.PaintAccent(hoverTexture, "SetColorTexture", 0.13)
         hoverBackground:SetAlpha(0)
         row.hoverBackground = hoverBackground
         row.box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
@@ -717,7 +756,7 @@ local function BuildAuraGlowsUI(screen)
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
         row.fill:SetPoint("BOTTOMRIGHT", row.box, "BOTTOMRIGHT", -2, 2)
-        row.fill:SetColorTexture(Accent(0.85))
+        NSI.UI.Style.PaintAccent(row.fill, "SetColorTexture", 0.85)
         row.fill:Hide()
         local labelFrame = CreateFrame("Frame", nil, row)
         row.labelFrame = labelFrame
@@ -759,32 +798,28 @@ local function BuildAuraGlowsUI(screen)
         return y + 20
     end
 
-    local namesLabel = loadF:CreateFontString(nil, "OVERLAY")
-    NSI:SetUIFont(namesLabel, "tiny", "")
-    namesLabel:SetTextColor(unpack(STYLE.text_muted))
-    namesLabel:SetText(NSI:Loc("Character Names (no server name)"))
-    namesLabel:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, namesSectionHeight - 14)
-
-    local nameInput = CreateTextEntry(loadF, nil, nil, nil, loadRowWidth - 70, 20, nil, nil, nil, "NSUIAuraGlowNameInput")
-    nameInput:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, namesSectionHeight - 40)
+    local nameInput = CreateTextEntry(namesCard.content, nil, nil, nil, 180, 22, nil, nil, nil, "NSUIAuraGlowNameInput")
+    nameInput:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, 0)
 
     local AddLoadName
-    local nameAddButton = CreateLocalizedSubButton(loadF, "Add", function()
+    local nameAddButton = CreateLocalizedSubButton(namesCard.content, "Add", function()
         if AddLoadName then
             AddLoadName()
         end
     end, 54, "NSUIAuraGlowNameAdd")
     nameAddButton:SetPoint("LEFT", nameInput.frame, "RIGHT", 6, 0)
 
-    local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowNamesScroll", loadF, "UIPanelScrollFrameTemplate")
+    local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowNamesScroll", namesCard.content, "UIPanelScrollFrameTemplate")
     NSI.UI.Components.EnableSmoothScroll(namesScroll)
-    namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
-    namesScroll:SetSize(loadRowWidth, namesListHeight)
+    namesScroll:SetPoint("TOPLEFT", namesCard.content, "TOPLEFT", 0, -30)
+    namesScroll:SetPoint("TOPRIGHT", namesCard.content, "TOPRIGHT", 0, -30)
+    namesScroll:SetHeight(namesListHeight)
     namesScroll:EnableMouseWheel(true)
     ReskinScrollbar(namesScroll)
+    StyleListBox(namesScroll)
 
     local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
-    namesChild:SetSize(loadRowWidth - 18, 1)
+    namesChild:SetSize(namesRowW, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     namesChild:SetBackdropColor(unpack(STYLE.surface_inset))
     namesScroll:SetScrollChild(namesChild)
@@ -792,7 +827,7 @@ local function BuildAuraGlowsUI(screen)
     local nameRowPool = {}
     local function MakeNameRow()
         local row = CreateFrame("Frame", nil, namesChild)
-        row:SetSize(loadRowWidth - 18, 20)
+        row:SetSize(namesRowW, 20)
         row.bg = row:CreateTexture(nil, "BACKGROUND")
         row.bg:SetAllPoints()
         row.label = row:CreateFontString(nil, "OVERLAY")
@@ -836,7 +871,7 @@ local function BuildAuraGlowsUI(screen)
             local row = nameRowPool[i]
             row:ClearAllPoints()
             row:SetPoint("TOPLEFT", namesChild, "TOPLEFT", 0, -((i - 1) * 20))
-            row:SetWidth(loadRowWidth - 18)
+            row:SetWidth(namesRowW)
             row.bg:SetColorTexture(i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.5 or 0)
             row.label:SetText(name)
             local rowName = name
@@ -1056,9 +1091,10 @@ local function BuildAuraGlowsUI(screen)
         if not scroll then
             scroll = CreateScrollBox(tabFrames[activeTab], rightWidth - 16, tabFrames[activeTab]:GetHeight())
             scroll:SetPoint("TOPLEFT", tabFrames[activeTab], "TOPLEFT", 0, 0)
+            scroll:SetPoint("BOTTOMRIGHT", tabFrames[activeTab], "BOTTOMRIGHT", -16, 0)
             tabScroll[activeTab] = scroll
             -- Built once per tab; every later RebuildTab re-binds the cached widgets in place.
-            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scroll.scrollChild, rightWidth - 34)
+            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scroll.scrollChild, rightWidth - 34, true)
         end
         local height = tabHost[activeTab]:Apply(defs)
         scroll.scrollChild:SetHeight(math.max(1, height))
@@ -1098,6 +1134,18 @@ local function BuildAuraGlowsUI(screen)
         return tabHost[id], tabScroll[id]
     end
 
+    -- Window resize: the Load tab's rows and the cards re-flow to the new width.
+    NSI.UI.Components.RegisterRelayout(screen, function()
+        loadRowWidth = loadScroll:GetWidth() - 22
+        loadChild:SetWidth(loadScroll:GetWidth() - 18)
+        namesRowW = loadScroll:GetWidth() - 18
+        namesChild:SetWidth(namesRowW)
+        for _, button in ipairs(headerPool) do button:SetWidth(loadRowWidth) end
+        for _, row in ipairs(checkPool) do row:SetWidth(loadRowWidth) end
+        for _, row in ipairs(nameRowPool) do row:SetWidth(namesRowW) end
+        if rightPanel:IsShown() then RebuildTab() end
+    end)
+
     -- Header search: settings of the selected glow
     NSI.UI.ScopedSearch.Create(screen, "NSUIAuraGlowSettingsSearch", {
         collect = NSI.UI.ScopedSearch.PanelCollector(screen),
@@ -1105,6 +1153,7 @@ local function BuildAuraGlowsUI(screen)
 
     RebuildList()
     if selectedKey and NSI:GetAuraGlowSettings(selectedKey) then RebuildTab() else rightPanel:Hide() end
+    screen.RebuildList = function() RebuildList() end
     return screen
 end
 

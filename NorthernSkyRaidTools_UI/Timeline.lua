@@ -913,7 +913,7 @@ function NSI:CreateTimelineWindow()
     local window_height = 550
 
     local timelineWindow = NSI.UI.Pixel.CreateSimplePanel(UIParent, window_width, window_height,
-        T("|cFF00FFFFNorthern Sky|r Timeline"), "NSUITimelineWindow", {
+        NSI.UI.Style.Tint(T("|cFF00FFFFNorthern Sky|r Timeline")), "NSUITimelineWindow", {
         DontRightClickClose = true,
         UseStatusBar = false,
             UseScaleBar = true,
@@ -2709,7 +2709,7 @@ function NSI:UpdateTimelineTitle()
     local window = self.TimelineWindow
     if not window then return end
 
-    local title = T("|cFF00FFFFNorthern Sky|r Timeline")
+    local title = NSI.UI.Style.Tint(T("|cFF00FFFFNorthern Sky|r Timeline"))
 
     local encID = window.currentEncounterID
     if encID then
@@ -2717,9 +2717,9 @@ function NSI:UpdateTimelineTitle()
         local difficulty = window.currentDifficulty
 
         if difficulty then
-            title = string.format(T("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)"), T(bossName), T(difficulty))
+            title = string.format(NSI.UI.Style.Tint(T("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)")), T(bossName), T(difficulty))
         else
-            title = string.format(T("|cFF00FFFFNorthern Sky|r Timeline - %s"), T(bossName))
+            title = string.format(NSI.UI.Style.Tint(T("|cFF00FFFFNorthern Sky|r Timeline - %s")), T(bossName))
         end
     end
 
@@ -3183,7 +3183,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
 
         -- Thin cyan separator below the title
         local sep = popup:CreateTexture(nil, "ARTWORK")
-        sep:SetColorTexture(Accent(0.20))
+        NSI.UI.Style.PaintAccent(sep, "SetColorTexture", 0.20)
         sep:SetHeight(1)
         sep:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -28)
         sep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -28)
@@ -3331,7 +3331,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     popup._block  = block
 
     -- Title
-    popup.titleFS:SetText(isEdit and T("|cFF00FFFFEdit Reminder|r") or T("|cFF00FFFFAdd Reminder|r"))
+    popup.titleFS:SetText(isEdit and NSI.UI.Style.Tint(T("|cFF00FFFFEdit Reminder|r")) or NSI.UI.Style.Tint(T("|cFF00FFFFAdd Reminder|r")))
 
     -- Time info
     local encID    = window.currentEncounterID
@@ -3551,7 +3551,7 @@ function NSI:ShowSpellbookPicker(targetPopup)
         picker:EnableMouse(true)
         picker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1})
         picker:SetBackdropColor(unpack(STYLE.surface_panel))
-        picker:SetBackdropBorderColor(Accent(0.7))
+        NSI.UI.Style.PaintAccent(picker, "SetBackdropBorderColor", 0.7)
 
         -- Title bar / drag handle
         local titleBar = CreateFrame("Frame", nil, picker)
@@ -3562,7 +3562,7 @@ function NSI:ShowSpellbookPicker(targetPopup)
         titleBar:SetScript("OnMouseDown", function(_, b) if b == "LeftButton" then picker:StartMoving() end end)
         titleBar:SetScript("OnMouseUp", function() picker:StopMovingOrSizing() end)
         local titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetText(T("|cFF00FFFFPick Spell|r"))
+        titleFS:SetText(NSI.UI.Style.Tint(T("|cFF00FFFFPick Spell|r")))
         titleFS:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
         local xBtn = CreateFrame("Button", nil, picker)
         xBtn:SetSize(16, 16)
@@ -3722,7 +3722,7 @@ function NSI:ShowRenameNoteDialog(window, oldName)
         popup:SetFrameStrata("TOOLTIP")
 
         local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetText(T("|cFF00FFFFRename Note|r"))
+        titleFS:SetText(NSI.UI.Style.Tint(T("|cFF00FFFFRename Note|r")))
         titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
 
         local nameEntry = C.CreateTextEntry(popup, nil,

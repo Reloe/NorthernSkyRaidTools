@@ -665,7 +665,7 @@ local function Build()
     guideH = root:CreateTexture(nil, "OVERLAY")
     for _, g in ipairs({ guideV, guideH }) do
         PP.NoSnap(g)
-        g:SetColorTexture(Accent(0.9))
+        NSI.UI.Style.PaintAccent(g, "SetColorTexture", 0.9)
         g:Hide()
     end
     keys = CreateFrame("Frame", nil, root)
@@ -678,7 +678,7 @@ local function Build()
     -- only while a session is open.
     root:SetScript("OnEvent", function(_, event)
         if event == "PLAYER_REGEN_DISABLED" then
-            print("|cff00ffffNSRT|r " .. Loc("Layout editing was cancelled because combat started."))
+            print(NSI.UI.Style.AccentCode() .. "NSRT|r " .. Loc("Layout editing was cancelled because combat started."))
             EditMode.Close(false)
         elseif grid and grid:IsShown() then          -- UI scale / resolution changed
             C_Timer.After(0, LayoutGrid)
@@ -694,7 +694,7 @@ function EditMode.IsActive() return active end
 function EditMode.Open()
     if active then return end
     if InCombatLockdown() then
-        print("|cff00ffffNSRT|r " .. Loc("The layout cannot be edited in combat."))
+        print(NSI.UI.Style.AccentCode() .. "NSRT|r " .. Loc("The layout cannot be edited in combat."))
         return
     end
     if not root then Build() end
