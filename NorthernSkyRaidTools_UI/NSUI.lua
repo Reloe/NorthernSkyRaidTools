@@ -301,6 +301,7 @@ function NSUI:Init()
                 NOTES_HEADER_BTN_Y
             )
             hdrBtn._textKey = nt.textKey
+            NSI.UI.Components.StyleAccentButton(hdrBtn)   -- accent background so the notes stand out
 
             tabSystem.AllButtonsByName[nt.name] = hdrBtn
             table.insert(tabSystem.AllButtons, hdrBtn)

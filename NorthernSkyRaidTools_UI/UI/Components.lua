@@ -4281,6 +4281,55 @@ local function StyleBareIconButton(buttonObj, iconSize)
 end
 
 -- ============================================================
+--  StyleAccentButton(buttonObj)
+--  A call-to-action button: the accent colour as its background, with dark or light text
+--  and icon, whichever reads better on that accent. Hover and selected brighten it.
+--  Follows accent changes.
+-- ============================================================
+local function StyleAccentButton(buttonObj)
+    local btn = buttonObj.frame
+    PaintAccent(btn, "SetBackdropColor", 0.9)
+    -- hover / selected become a light wash instead of an accent tint (it would not show)
+    -- hover: the plain grey of the other buttons covers the accent; selected: a light wash
+    for _, region in ipairs({ buttonObj.hoverBg:GetRegions() }) do
+        STYLE.UnpaintAccent(region, "SetColorTexture")
+        local g = STYLE.bg_color
+        region:SetColorTexture(g[1], g[2], g[3], 1)   -- opaque, so no accent shows through
+        region:SetAlpha(1)
+    end
+    for _, region in ipairs({ buttonObj.selectedBg:GetRegions() }) do
+        STYLE.UnpaintAccent(region, "SetColorTexture")
+        region:SetColorTexture(1, 1, 1, 0.30)
+    end
+    local function Contrast()
+        local r, g, b = Accent(1)
+        local luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        if luminance > 0.5 then return 0.05, 0.05, 0.05 end
+        return 1, 1, 1
+    end
+    local function Apply()
+        local r, g, b = Contrast()
+        buttonObj.label:SetTextColor(r, g, b, 1)
+        if btn.icon then btn.icon:SetVertexColor(r, g, b, 1) end
+    end
+    -- on the grey hover the label goes back to the normal light text
+    local function ApplyHover()
+        buttonObj.label:SetTextColor(unpack(STYLE.text_color))
+        if btn.icon then btn.icon:SetVertexColor(unpack(STYLE.text_color)) end
+    end
+    btn:HookScript("OnEnter", function(self) if self:IsEnabled() then ApplyHover() end end)
+    btn:HookScript("OnLeave", Apply)
+    local enable = buttonObj.Enable
+    buttonObj.Enable = function(self)
+        enable(self)
+        if btn:IsMouseOver() then ApplyHover() else Apply() end
+    end
+    Apply()
+    STYLE.OnAccentRefresh(btn, function() if btn:IsMouseOver() then ApplyHover() else Apply() end end)
+    return buttonObj
+end
+
+-- ============================================================
 --  CreateSearchBox(parent, width, height, name, onChange, placeholder)
 --  A text entry with a search icon hint. onChange(text) runs on every edit. The caller
 --  places it. Returns the entry (entry.editBox is the edit box, entry.Clear() empties it).
@@ -4318,6 +4367,7 @@ NSI.UI.Components = {
     RelayoutMenus       = RelayoutMenus,
     RegisterRelayout    = RegisterRelayout,
     StyleBareIconButton = StyleBareIconButton,
+    StyleAccentButton   = StyleAccentButton,
     CreateDropdown      = CreateDropdown,
     CreateSlider        = CreateSlider,
     CreateColorPicker   = CreateColorPicker,
