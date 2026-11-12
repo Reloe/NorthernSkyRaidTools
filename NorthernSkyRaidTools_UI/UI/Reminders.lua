@@ -261,7 +261,10 @@ local function BuildReminderScreen(personal, parentFrame)
     local activeKey = personal and "ActivePersonalReminder" or "ActiveReminder"
     local storeKey = personal and "PersonalReminders" or "Reminders"
     local screenName = personal and "NSUIPersonalReminderScreen" or "NSUISharedReminderScreen"
-    local titleText = personal and NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFPersonal|r Reminders")) or NSI.UI.Style.Tint(NSI:Loc("|cFF00FFFFShared|r Reminders"))
+    local function MakeTitleText()
+        return NSI.UI.Style.Tint(NSI:Loc(personal and "|cFF00FFFFPersonal|r Reminders" or "|cFF00FFFFShared|r Reminders"))
+    end
+    local titleText = MakeTitleText()
 
     -- Main container: use the provided tab frame, or create a standalone floating frame
     local screen
@@ -994,6 +997,10 @@ local function BuildReminderScreen(personal, parentFrame)
         end
         screen.scrollbox:Refresh()
     end
+    NSI.UI.Style.OnAccentRefresh(screen, function()
+        titleText = MakeTitleText()
+        ApplyBossFilter()
+    end)
 
     local function BuildBossFilterOptions()
         local options = {

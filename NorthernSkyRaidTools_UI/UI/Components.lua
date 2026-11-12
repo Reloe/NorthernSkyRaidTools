@@ -406,7 +406,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
             self.labelFrame:Show()
             local buttonWidth = self.frame:GetWidth()
             local contentW = self._iconSize + self._iconGap + textWidth
-            local groupLeft = math.max(self._padH, math.floor((buttonWidth - contentW) / 2))
+            local groupLeft = self._iconLeft or math.max(self._padH, math.floor((buttonWidth - contentW) / 2))
             self.iconFrame:ClearAllPoints()
             self.iconFrame:SetPoint("LEFT", self.frame, "LEFT", groupLeft, 0)
             self.labelFrame:ClearAllPoints()

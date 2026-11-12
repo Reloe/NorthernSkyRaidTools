@@ -3908,6 +3908,19 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
     end)
 
+    -- Addon-wide search (Search.lua): index the selected alert's boss-specific options.
+    -- Display/Trigger/Sound/Load are hand-placed widgets and stay with the scoped search below.
+    screen.SearchPanels = function()
+        local optEntry, ReloeOptionDefinitions = searchOptions()
+        if not (optEntry and optEntry.extraOptions) then return nil end
+        return { { id = "Options", title = "Options", defs = ReloeOptionDefinitions(optEntry.extraOptions) } }
+    end
+    screen.SearchReveal = function(id)
+        SelectInnerTab("Options")
+        local _, _, host, scroll = searchOptions()
+        return host, scroll
+    end
+
     -- Header search: settings of the selected alert (all five inner tabs, plus the
     -- boss-specific options Reloe defines in extraOptions).
     do

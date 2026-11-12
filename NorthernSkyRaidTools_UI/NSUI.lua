@@ -69,35 +69,35 @@ local BuildRaidManagerOptions      = NSI.UI.Options.QoL and NSI.UI.Options.QoL.B
 local TABS_GROUPS                  = {
     {
         title = "Core",
-        { name = "General",    textKey = "General" },
-        { name = "ReadyCheck", textKey = "Ready Check", retailOnly = true },
-        { name = "Reminders",        textKey = "Reminders", retailOnly = true },
-        { name = "Reminders-Note",   textKey = "Note-Display", retailOnly = true },
+        { name = "General",    textKey = "General", icon = "settings" },
+        { name = "ReadyCheck", textKey = "Ready Check", retailOnly = true, icon = "check" },
+        { name = "Reminders",        textKey = "Reminders", retailOnly = true, icon = "bell" },
+        { name = "Reminders-Note",   textKey = "Note-Display", retailOnly = true, icon = "notebook-pen" },
     },
     {
         title = "Combat",
-        { name = "EncounterAlerts",  textKey = "Encounter Alerts", retailOnly = true },
-        { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true },
-        { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
+        { name = "EncounterAlerts",  textKey = "Encounter Alerts", retailOnly = true, icon = "swords" },
+        { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true, icon = "chart-column" },
+        { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true, icon = "ban" },
     },
     {
         title = "Auras",
-        { name = "AuraSounds", textKey = "Aura Sounds" },
-        { name = "AuraTracking", textKey = "Aura Tracking" },
-        { name = "AuraGlows", textKey = "Aura Glows" },
+        { name = "AuraSounds", textKey = "Aura Sounds", icon = "volume-2" },
+        { name = "AuraTracking", textKey = "Aura Tracking", icon = "crosshair" },
+        { name = "AuraGlows", textKey = "Aura Glows", icon = "sparkles" },
     },
     {
         title = "Tools",
         { name = "Assignments", textKey = "Assignments", retailOnly = true },
-        { name = "Nicknames", textKey = "Nicknames" },
-        { name = "Versions",  textKey = "Version Check" },
+        { name = "Nicknames", textKey = "Nicknames", icon = "book-user" },
+        { name = "Versions",  textKey = "Version Check", icon = "refresh-cw" },
     },
 }
 if BuildQoLOptions then
-    table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
+    table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life", icon = "star" })
 end
 if BuildRaidManagerOptions then
-    table.insert(TABS_GROUPS[4], 2, { name = "RaidManager", textKey = "Raid Manager" })
+    table.insert(TABS_GROUPS[4], 2, { name = "RaidManager", textKey = "Raid Manager", icon = "shield" })
 end
 
 -- Sidebar visual constants
@@ -105,6 +105,7 @@ local SIDEBAR_BTN_WIDTH            = 148
 local SIDEBAR_BTN_HEIGHT           = 26
 local SIDEBAR_BTN_GAP              = 0  -- px between consecutive buttons
 local SIDEBAR_GROUP_GAP            = 14 -- extra px between groups
+local TAB_ICON_PATH                = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\]]
 local SIDEBAR_HEADER_H             = 18 -- section title row above each group
 
 -- Derived from Core: tab frames start below the shared header strip
@@ -157,7 +158,7 @@ function NSUI:Init()
     function tabSystem:RefreshTabLabels()
         if self.GroupHeaders then
             for _, header in ipairs(self.GroupHeaders) do
-                header:SetText(GetLocalizedText(header._titleKey))
+                header:SetText(string.upper(GetLocalizedText(header._titleKey)))
             end
         end
         for _, btn in ipairs(self.AllButtons) do
@@ -223,7 +224,7 @@ function NSUI:Init()
                     NSI.UI.Style.PaintAccent(header, "SetTextColor", 0.9)
                     header:SetPoint("CENTER", row, "CENTER", 0, 0)
                     header._titleKey = group.title
-                    header:SetText(GetLocalizedText(group.title))
+                    header:SetText(string.upper(GetLocalizedText(group.title)))
                     groupHeaders[#groupHeaders + 1] = header
 
                     local leftLine = row:CreateTexture(nil, "ARTWORK")
@@ -246,8 +247,23 @@ function NSUI:Init()
                     GetLocalizedText(tab.textKey),
                     function() SelectTab(tab.name) end,
                     SIDEBAR_BTN_WIDTH, SIDEBAR_BTN_HEIGHT,
-                    "NSUITabBtn_" .. tab.name
+                    "NSUITabBtn_" .. tab.name,
+                    tab.icon and (TAB_ICON_PATH .. tab.icon .. ".png") or nil
                 )
+                if btn.iconFrame then
+                    -- icons share one left column, labels follow them left-aligned
+                    btn.iconFrame:ClearAllPoints()
+                    btn.iconFrame:SetSize(14, 14)
+                    btn._iconSize = 14
+                    btn.frame.icon:SetTexCoord(0, 1, 0, 1)   -- the default crop clips these line icons
+                    btn._iconLeft = 10   -- keeps the left column when the label is re-set
+                    btn.iconFrame:SetPoint("LEFT", btn.frame, "LEFT", 10, 0)
+                    btn.labelFrame:ClearAllPoints()
+                    btn.labelFrame:SetPoint("LEFT", btn.iconFrame, "RIGHT", btn._iconGap, 0)
+                    btn.labelFrame:SetPoint("RIGHT", btn.frame, "RIGHT", -btn._padH, 0)
+                    btn.labelFrame:SetHeight(SIDEBAR_BTN_HEIGHT)
+                    btn.label:SetJustifyH("LEFT")
+                end
                 btn:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 5, btnY)
                 btn._textKey = tab.textKey
 

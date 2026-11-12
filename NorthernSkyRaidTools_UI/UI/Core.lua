@@ -7,7 +7,7 @@ local LDBIcon = LibStub("LibDBIcon-1.0")
 
 -- Window dimensions
 local window_width  = 1200
-local window_height = 640
+local window_height = 700
 
 -- Window shell: header (title bar + header buttons) and footer (version / author / Discord)
 local header_height = 36

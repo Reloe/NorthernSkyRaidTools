@@ -59,6 +59,8 @@ local function BuildNotesTabUI(parent, notesTable)
         end
     end
 
+    STYLE.OnAccentChanged(function() refreshHighlights() end)
+
     local function selectNote(idx)
         selectedIdx = idx
         local note = notesTable[idx]
@@ -260,6 +262,7 @@ local function BuildNotesTabUI(parent, notesTable)
         if w > 0 then self:SetWidth(w) end
     end)
     edScroll:SetScrollChild(textBox)
+    NSI.UI.Components.EnableSmoothScroll(edScroll)
     edScroll:SetScript("OnSizeChanged", function(self, w)
         if w > 0 then textBox:SetWidth(w) end
     end)

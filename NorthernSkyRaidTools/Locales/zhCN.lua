@@ -3,6 +3,18 @@ local addonId = ...
 local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "zhCN")
 local L = languageTable
 
+-- UI polish: search placeholder, sidebar groups, accent colour
+L["Search module..."] = "搜索模块..."
+L["Core"] = "核心"
+L["Combat"] = "战斗"
+L["Auras"] = "光环"
+L["Tools"] = "工具"
+L["Raid Manager"] = "团队管理"
+L["Accent Color"] = "强调色"
+L["Reset Accent Color"] = "重置强调色"
+L["Roles, Classes & Specs"] = "职责、职业和专精"
+L["The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."] = "用于整个插件界面的高亮、边框、悬停和选中颜色。选色时整个界面会实时更新。"
+
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
 -- ============================================================================

@@ -283,6 +283,10 @@ local function PaintMover(m)
     m.border:SetBorderColor(Accent((m == selected) and 1 or 0.6))
 end
 
+STYLE.OnAccentChanged(function()
+    for _, m in pairs(movers) do PaintMover(m) end
+end)
+
 local function Select(m)
     local old = selected
     selected = m

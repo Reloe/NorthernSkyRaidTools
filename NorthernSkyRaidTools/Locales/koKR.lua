@@ -3,6 +3,18 @@ local addonId = ...
 local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "koKR")
 local L = languageTable
 
+-- UI polish: search placeholder, sidebar groups, accent colour
+L["Search module..."] = "모듈 검색..."
+L["Core"] = "핵심"
+L["Combat"] = "전투"
+L["Auras"] = "오라"
+L["Tools"] = "도구"
+L["Raid Manager"] = "공격대 관리자"
+L["Accent Color"] = "강조 색상"
+L["Reset Accent Color"] = "강조 색상 초기화"
+L["Roles, Classes & Specs"] = "역할, 직업 및 전문화"
+L["The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."] = "강조, 테두리, 마우스오버 및 선택에 애드온 전체에서 사용되는 색상입니다. 선택하는 즉시 전체 인터페이스가 갱신됩니다."
+
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
 -- ============================================================================

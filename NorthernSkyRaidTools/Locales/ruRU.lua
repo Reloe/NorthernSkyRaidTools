@@ -3,6 +3,18 @@ local addonId = ...
 local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "ruRU")
 local L = languageTable
 
+-- UI polish: search placeholder, sidebar groups, accent colour
+L["Search module..."] = "Поиск по модулю..."
+L["Core"] = "Основное"
+L["Combat"] = "Бой"
+L["Auras"] = "Ауры"
+L["Tools"] = "Инструменты"
+L["Raid Manager"] = "Рейд-менеджер"
+L["Accent Color"] = "Цвет акцента"
+L["Reset Accent Color"] = "Сбросить цвет акцента"
+L["Roles, Classes & Specs"] = "Роли, классы и специализации"
+L["The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."] = "Цвет, используемый во всём интерфейсе аддона для выделения, рамок, наведения и выбора. Интерфейс обновляется по мере выбора."
+
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
 -- ============================================================================

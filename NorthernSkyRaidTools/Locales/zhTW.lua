@@ -2,6 +2,18 @@ local addonId = ...
 local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "zhTW")
 local L = languageTable
 
+-- UI polish: search placeholder, sidebar groups, accent colour
+L["Search module..."] = "搜尋模組..."
+L["Core"] = "核心"
+L["Combat"] = "戰鬥"
+L["Auras"] = "光環"
+L["Tools"] = "工具"
+L["Raid Manager"] = "團隊管理"
+L["Accent Color"] = "強調色"
+L["Reset Accent Color"] = "重置強調色"
+L["Roles, Classes & Specs"] = "職責、職業與專精"
+L["The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."] = "用於整個插件介面的高亮、邊框、懸停與選取顏色。選色時整個介面會即時更新。"
+
 if not L then return end
 
 -- ============================================================================

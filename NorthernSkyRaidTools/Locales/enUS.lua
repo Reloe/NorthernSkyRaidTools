@@ -3,6 +3,18 @@ local L = DetailsFramework.Language.RegisterLanguage(addonId, "enUS")
 
 if not L then return end
 
+-- UI polish: search placeholder, sidebar groups, accent colour
+L["Search module..."] = "Search module..."
+L["Core"] = "Core"
+L["Combat"] = "Combat"
+L["Auras"] = "Auras"
+L["Tools"] = "Tools"
+L["Raid Manager"] = "Raid Manager"
+L["Accent Color"] = "Accent Color"
+L["Reset Accent Color"] = "Reset Accent Color"
+L["Roles, Classes & Specs"] = "Roles, Classes & Specs"
+L["The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."] = "The colour used across the addon's interface for highlights, borders, hover and selection. The whole interface updates as you pick."
+
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
 -- ============================================================================
