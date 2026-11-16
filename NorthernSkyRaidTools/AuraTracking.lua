@@ -980,56 +980,49 @@ local function GetAuraTrackingDurationFormatter(settings)
         return cache.formatter
     end
 
-    local formatter = C_StringUtil.CreateNumericRuleFormatter()
+    local breakpoints = {
+        {
+            threshold = 3600,
+            rounding = Enum.NumericRuleFormatRounding.Down,
+            format = NSI:Loc("%dh"),
+            components = {
+                {
+                    div = 3600,
+                    step = 1,
+                    rounding = Enum.NumericRuleFormatRounding.Down,
+                },
+            },
+        },
+        {
+            threshold = 60,
+            rounding = Enum.NumericRuleFormatRounding.Down,
+            format = "%dm",
+            components = {
+                {
+                    div = 60,
+                    step = 1,
+                    rounding = Enum.NumericRuleFormatRounding.Down,
+                },
+            },
+        },
+        {
+            threshold = decimalThreshold,
+            step = 1,
+            rounding = Enum.NumericRuleFormatRounding.Up,
+            format = "%d",
+        },
+    }
     if decimalEnabled then
-        formatter:SetBreakpoints({
-            {
-                threshold = 60,
-                rounding = Enum.NumericRuleFormatRounding.Down,
-                format = "%dm",
-                components = {
-                    {
-                        div = 60,
-                        step = 1,
-                        rounding = Enum.NumericRuleFormatRounding.Down,
-                    },
-                },
-            },
-            {
-                threshold = decimalThreshold,
-                step = 1,
-                rounding = Enum.NumericRuleFormatRounding.Up,
-                format = "%d",
-            },
-            {
-                threshold = 0,
-                step = 0.1,
-                rounding = Enum.NumericRuleFormatRounding.Up,
-                format = "%.1f",
-            },
-        })
-    else
-        formatter:SetBreakpoints({
-            {
-                threshold = 60,
-                rounding = Enum.NumericRuleFormatRounding.Down,
-                format = "%dm",
-                components = {
-                    {
-                        div = 60,
-                        step = 1,
-                        rounding = Enum.NumericRuleFormatRounding.Down,
-                    },
-                },
-            },
-            {
-                threshold = 0,
-                step = 1,
-                rounding = Enum.NumericRuleFormatRounding.Up,
-                format = "%d",
-            },
-        })
+        breakpoints[#breakpoints + 1] = {
+            threshold = 0,
+            step = 0.1,
+            rounding = Enum.NumericRuleFormatRounding.Up,
+            format = "%.1f",
+        }
     end
+
+    local formatter = C_StringUtil.CreateNumericRuleFormatter()
+    formatter:SetBreakpoints(breakpoints)
     AuraTrackingDurationFormatterCache[settings] = {
         decimalEnabled = decimalEnabled,
         decimalThreshold = decimalThreshold,
@@ -1068,6 +1061,9 @@ end
 
 local function FormatAuraTrackingDuration(seconds, settings)
     seconds = tonumber(seconds) or 0
+    if seconds >= 3600 then
+        return string.format(NSI:Loc("%dh"), math.floor(seconds / 3600))
+    end
     if settings.ShowDecimalSeconds and seconds < math.max(tonumber(settings.DecimalThreshold) or 3, 0.1) then
         return string.format("%.1f", seconds)
     end
