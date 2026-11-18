@@ -355,6 +355,37 @@ function Items.ItemLevel(link)
     return ilvl
 end
 
+-- ---- socket and tertiary stats ------------------------------------------------------------------------
+-- Pure: the extras a stats table (C_Item.GetItemStats) shows, in display order: "Socket", "Speed", "Avoidance",
+-- "Leech" (English keys; Items.ExtrasText localises them). Empty list when there are none or stats is nil.
+local TERTIARIES = {
+    { "ITEM_MOD_CR_SPEED_SHORT", "Speed" },
+    { "ITEM_MOD_CR_AVOIDANCE_SHORT", "Avoidance" },
+    { "ITEM_MOD_CR_LIFESTEAL_SHORT", "Leech" },
+}
+function Items.ExtrasOf(stats)
+    local out = {}
+    if type(stats) ~= "table" then return out end
+    for key in pairs(stats) do
+        if type(key) == "string" and key:find("^EMPTY_SOCKET_") then out[1] = "Socket" break end
+    end
+    for _, t in ipairs(TERTIARIES) do
+        if stats[t[1]] then out[#out + 1] = t[2] end
+    end
+    return out
+end
+
+-- "+ Socket, Speed" in green for an item (link or item string), nil when it has none or its data is not loaded yet.
+function Items.ExtrasText(item)
+    if not (item and C_Item and C_Item.GetItemStats) then return nil end
+    local ok, stats = pcall(C_Item.GetItemStats, item)
+    if not ok then return nil end
+    local list = Items.ExtrasOf(stats)
+    if #list == 0 then return nil end
+    for i, name in ipairs(list) do list[i] = LC.Loc(name) end
+    return "|cff33ff66+ " .. table.concat(list, ", ") .. "|r"
+end
+
 -- Display link for an item string: the real hyperlink when item data is cached.
 function Items.ToLink(itemString)
     if not itemString then return nil end

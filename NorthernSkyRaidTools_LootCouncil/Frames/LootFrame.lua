@@ -296,12 +296,18 @@ function LootFrame.Refresh()
     end
     local me = LC.Roster.MyKey()
     -- Items still needing an answer come first; answered ones go into the collapsible section below.
+    -- An item answered Pass for you automatically (you cannot use it) is listed under "Already voted" so you can still
+    -- change the answer, unless the setting is off.
+    local showAuto = LC.DB.Settings().showAutoPassed ~= false
     local pending, voted = {}, {}
     for _, id in ipairs(state.order) do
         local drop = state.drops[id]
-        if drop.state == "open" and not drop.allPassed and not autoPassed[id] then
+        if drop.state == "open" and not drop.allPassed then
             local mine = state.responses[id] and state.responses[id][me]
-            if mine then voted[#voted + 1] = id else pending[#pending + 1] = id end
+            if autoPassed[id] then
+                if mine and showAuto then voted[#voted + 1] = id end
+            elseif mine then voted[#voted + 1] = id
+            else pending[#pending + 1] = id end
         end
     end
     local unanswered = #pending
@@ -342,7 +348,7 @@ function LootFrame.Refresh()
         local _, _, _, equipLoc = C_Item.GetItemInfoInstant(drop.itemID)
         local ilvl = link and LC.Items.ItemLevel(link)
         local slot = equipLoc and equipLoc ~= "" and _G[equipLoc] or ""
-        row.detail:SetText(table.concat({ ilvl and (LC.Loc("ilvl") .. " " .. ilvl) or "", slot }, "   "))
+        row.detail:SetText(table.concat({ ilvl and (LC.Loc("ilvl") .. " " .. ilvl) or "", slot, LC.Items.ExtrasText(link or drop.item) or "" }, "   "))
         local gear = LC.Preview and LC.Preview_.GearFor(me, equipLoc) or LC.Items.EquippedForEquipLoc(equipLoc)
         for e = 1, 2 do
             local g = gear[e]

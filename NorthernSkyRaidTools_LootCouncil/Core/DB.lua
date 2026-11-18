@@ -34,6 +34,7 @@ DB.defaults = {
             autoPass = true,         -- auto-pass Blizzard rolls (your own setting, not the leader's)
             autoPassGuildOnly = true,-- ...but only in groups that are mostly your guild
             autoPassUnusable = true, -- answer Pass for items your class cannot use: armor, weapon type or main stat, class-locked (your own setting)
+            showAutoPassed = true,   -- items answered Pass for you (cannot use) stay listed under "Already voted", so you can change them
             scale = 1,
             lootFramePos = nil,
             timerWarn = { 60, 30, 10 },  -- minutes

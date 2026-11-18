@@ -229,7 +229,7 @@ local function RefreshHeader(state)
     local diff = LC.Items.RaidDifficulties[d.difficulty] and d.difficulty or LC.Items.DifficultyFromLink(d.item)
     local short = diff and LC.Items.DifficultyShort[diff]
     local diffText = short and ("|c" .. (DIFF_HEX[short] or "ffffffff") .. LC.Items.DifficultyName[diff] .. "|r") or ""
-    info.detail:SetText(table.concat({ diffText, ilvl and ("iLvl: " .. ilvl) or "", slot, itemSub or "" }, "   "))
+    info.detail:SetText(table.concat({ diffText, ilvl and ("iLvl: " .. ilvl) or "", slot, itemSub or "", LC.Items.ExtrasText(link or d.item) or "" }, "   "))
     local a = state.awards[selectedDrop]
     local responded, total = 0, 0
     for _ in pairs(state.responses[selectedDrop] or {}) do responded = responded + 1 end

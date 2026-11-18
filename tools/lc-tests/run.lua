@@ -197,6 +197,15 @@ do
     eq(H.SlotsOverlap(nil, { [1] = true }), false, "unknown slot")
 end
 
+-- Socket and tertiary stats
+do
+    local I = LC.Items
+    eq(#I.ExtrasOf(nil), 0, "no stats, no extras"); eq(#I.ExtrasOf({ ITEM_MOD_CRIT_RATING_SHORT = 1 }), 0, "secondary stats are not extras")
+    local e = I.ExtrasOf({ EMPTY_SOCKET_PRIME = 1, ITEM_MOD_CR_LIFESTEAL_SHORT = 5, ITEM_MOD_CR_SPEED_SHORT = 9 })
+    eq(table.concat(e, ","), "Socket,Speed,Leech", "socket first, then tertiaries in a fixed order")
+    eq(table.concat(I.ExtrasOf({ ITEM_MOD_CR_AVOIDANCE_SHORT = 3 }), ","), "Avoidance", "avoidance alone")
+end
+
 -- Tier tokens are judged by the armor type they stand for (Season.tokenArmor)
 do
     local I = LC.Items

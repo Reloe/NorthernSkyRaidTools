@@ -78,17 +78,28 @@ local function CouncilStatusText()
 end
 
 -- The tab is built once, so keep the status line current while the tab is open.
+local function RefreshStatus()
+    local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
+    local frame = menu and menu.CurrentName and menu.AllFramesByName and menu.AllFramesByName[menu.CurrentName]
+    if not (frame and frame.widget_list and frame:IsVisible()) then return end
+    for _, w in ipairs(frame.widget_list) do
+        if w._get == CouncilStatusText then w:SetText(CouncilStatusText()) end
+    end
+end
+
 local statusTicker
 local function KeepStatusFresh()
     if statusTicker then return end
-    statusTicker = C_Timer.NewTicker(0.5, function()
-        local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
-        local frame = menu and menu.CurrentName and menu.AllFramesByName and menu.AllFramesByName[menu.CurrentName]
-        if not (frame and frame.widget_list and frame:IsVisible()) then return end
-        for _, w in ipairs(frame.widget_list) do
-            if w._get == CouncilStatusText then w:SetText(CouncilStatusText()) end
-        end
-    end)
+    statusTicker = C_Timer.NewTicker(0.5, RefreshStatus)
+end
+
+-- "Use for this raid" / "Stop for this raid": say so when the module is off instead of doing nothing, then
+-- bring the status line up to date at once.
+local function SetForRaid(yes)
+    local lc = Live()
+    if not lc then NeedModule() return end
+    lc.State.SetForThisRaid(yes)
+    RefreshStatus()
 end
 
 local function BuildOptions()
@@ -146,11 +157,11 @@ local function BuildOptions()
     })
     add({
         type = "button", name = "Use for this raid", desc = "Turn the loot council on for the group you are leading.",
-        func = function() local lc = Live(); if lc then lc.State.SetForThisRaid(true) end end,
+        func = function() SetForRaid(true) end,
     })
     add({
         type = "button", name = "Stop for this raid", desc = "Stand everyone down for the group you are leading.",
-        func = function() local lc = Live(); if lc then lc.State.SetForThisRaid(false) end end,
+        func = function() SetForRaid(false) end,
     })
     add({ type = "break" })
 
@@ -258,6 +269,17 @@ local function BuildOptions()
         desc = "Answers Pass for you on armor your class cannot wear (for example plate on a cloth wearer), so you are not asked. Weapons and accessories are never auto-passed.",
         get = function() local s = Settings(); return s and s.autoPassUnusable or false end,
         set = function(_, _, value) local s = Settings(); if s then s.autoPassUnusable = value end end,
+    })
+    add({
+        type = "toggle", boxfirst = true, name = "Show auto-passed items under Already voted",
+        desc = "Items that were passed for you because your class cannot use them stay in the response window's Already voted list, so you can still change the answer. Turn off to hide them.",
+        get = function() local s = Settings(); return not s or s.showAutoPassed ~= false end,
+        set = function(_, _, value)
+            local s = Settings()
+            if s then s.showAutoPassed = value end
+            local lc = Live()
+            if lc and lc.Frames.LootFrame then lc.Frames.LootFrame.Refresh() end
+        end,
     })
     add({ type = "break" })
 

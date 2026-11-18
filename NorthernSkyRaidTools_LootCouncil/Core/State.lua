@@ -61,12 +61,32 @@ function State.Answer(yes)
 end
 
 -- /ns lc loot and the options tab: change the answer for this raid.
+-- Always says what happened, so a click is never silent.
 function State.SetForThisRaid(yes)
-    if not LC.Roster.IsLeader(LC.Roster.MyKey()) then
+    if LC.dead then return false end
+    if LC.Preview then
+        LC.Print(LC.Loc("A preview is running. Stop it first."))
+        return false
+    end
+    if not (IsInRaid() and not LC.Compat.IsLFRGroup()) then
+        LC.Print(LC.Loc("You need to be in a raid group to turn the loot council on or off for it."))
+        return false
+    end
+    LC.Roster.Refresh()                                   -- the leader may have changed since the last refresh
+    local me = LC.Roster.MyKey()
+    if not LC.Roster.IsLeader(me) then
         LC.Print(LC.Loc("Only the raid leader can turn the loot council on or off for a raid."))
         return false
     end
     State.Answer(yes)
+    if not yes then
+        LC.Print(LC.Loc("Loot council is off for this raid."))
+    elseif name == "armed" then
+        LC.Print(LC.Loc("Loot council is on for this raid."))
+    else
+        LC.Print(string.format(LC.Loc("Loot council could not start. The raid leader is %s and you are %s."),
+            tostring(LC.Roster.Leader()), tostring(me)))
+    end
     return true
 end
 
