@@ -2,7 +2,8 @@
 --  Core/Items.lua - link decoding, difficulty mapping, trade keys, eligibility
 --
 --  Owns: item-link decode, ItemContext -> DifficultyID, trade keys, slot lookup, class
---  armor eligibility and the equipped-gear snapshot. Decode, keys and mapping are pure
+--  eligibility (armor type, weapon type and main stat, "Classes:" lines; tables in Data/ItemRules.lua)
+--  and the equipped-gear snapshot. Decode, keys, mapping and the eligibility rules are pure
 --  (specs in tools/lc-tests). Identity is never a link string (PRD 5.4 rule 4): awards are
 --  matched by Drop ID, bag items by trade key.
 --
@@ -136,40 +137,202 @@ Items.EquipSlots = {
     INVTYPE_RANGED = { 16 }, INVTYPE_RANGEDRIGHT = { 16 },
 }
 
--- Armor class per class token (Enum.ItemArmorSubclass: 1 cloth, 2 leather, 3 mail, 4 plate).
-Items.ClassArmor = {
-    WARRIOR = 4, PALADIN = 4, DEATHKNIGHT = 4,
-    HUNTER = 3, SHAMAN = 3, EVOKER = 3,
-    ROGUE = 2, DRUID = 2, MONK = 2, DEMONHUNTER = 2,
-    PRIEST = 1, MAGE = 1, WARLOCK = 1,
-}
+-- ---- can this class use it? -------------------------------------------------------------------------
+-- Four independent rules, each answering true (usable), false (never usable by this class) or nil (not judged / cannot
+-- tell). The tables behind them live in Data/ItemRules.lua. A drop counts as unusable only when a rule says false, so a
+-- missing table, an unloaded item or an unknown subclass can keep a roll window open but never passes on a usable item.
+--   1. the "Classes: ..." line printed on the item (class-locked gear and tier tokens)   Items.AllowedClasses
+--   2. armor type (cloth / leather / mail / plate, and shields)                           Items.ArmorEligible
+--   3. weapon type (axe, dagger, staff, ...)                                              Items.WeaponEligible
+--   4. weapon main stat (an agility dagger is no use to a priest)                         Items.WeaponEligible
+--   5. trinkets (does any spec of the class use it? asked of the game, no data kept)       Items.TrinketUsable
 
 -- Slots that take any armor type.
 local ANY_ARMOR = { INVTYPE_CLOAK = true, INVTYPE_FINGER = true, INVTYPE_NECK = true, INVTYPE_TRINKET = true }
 
--- true / false / nil (unknown). Armor items only; weapons and unknowns return nil so the
--- council decides. classID 4 = armor.
+local MAIN_STATS = { "ITEM_MOD_STRENGTH_SHORT", "ITEM_MOD_AGILITY_SHORT", "ITEM_MOD_INTELLECT_SHORT" }
+
+local function Rules()
+    return LC.ItemRules or {}
+end
+
+local function KnownClass(classToken)
+    local stats = Rules().weaponMainStats
+    return stats ~= nil and stats[classToken] ~= nil
+end
+
+-- Armor items only (classID 4). Weapons and everything else return nil so the other rules decide.
 function Items.ArmorEligible(classToken, equipLoc, classID, subClassID)
     if classID ~= 4 then return nil end
     if ANY_ARMOR[equipLoc] then return true end
     if subClassID == 0 or subClassID == nil then return true end   -- generic armor (e.g. tokens)
-    local want = Items.ClassArmor[classToken]
-    if not want then return nil end
-    if subClassID == 6 then return nil end                          -- shield: spec dependent
-    return subClassID == want
+    local users = Rules().armorUsers and Rules().armorUsers[subClassID]
+    if not users or not KnownClass(classToken) then return nil end
+    return users[classToken] == true
 end
 
--- Can my class use this drop? Only the armor-type rule is checked (ArmorEligible); weapons, rings, cloaks,
--- tokens and unknown items count as usable, so this can wrongly keep a roll window open but never passes
--- on something you could have used.
-function Items.CanUse(itemID)
-    local _, _, _, equipLoc, _, classID, subClassID = C_Item.GetItemInfoInstant(itemID)
-    if not classID then return true end
+-- Does a weapon carry a main stat this class wants? stats is C_Item.GetItemStats' table (nil = not loaded).
+-- true = it has a stat the class wants, or no main stat at all; false = main stats, none of them wanted; nil = unknown.
+local function WantsMainStat(classToken, stats, itemID)
+    local wanted = Rules().weaponMainStats and Rules().weaponMainStats[classToken]
+    if not wanted or type(stats) ~= "table" then return nil end
+    local hasMain = false
+    for _, stat in ipairs(MAIN_STATS) do
+        if stats[stat] then hasMain = true break end
+    end
+    if not hasMain then return true end
+    for _, stat in ipairs(wanted) do
+        if stats[stat] then return true end
+    end
+    -- a few weapons can be converted to another main stat (Season.weaponStatOverrides: [itemID] = { stat, ... })
+    local extra = LC.Season and LC.Season.weaponStatOverrides and itemID and LC.Season.weaponStatOverrides[itemID]
+    for _, stat in ipairs(extra or {}) do
+        for _, w in ipairs(wanted) do
+            if stat == w then return true end
+        end
+    end
+    return false
+end
+
+-- Weapons only (classID 2). The weapon type decides first and needs no item data; the main stat is only looked at
+-- for a type the class can wield. Weapon types that are not listed (thrown, fishing pole, ...) are not judged.
+function Items.WeaponEligible(classToken, subClassID, stats, itemID)
+    local users = Rules().weaponUsers and Rules().weaponUsers[subClassID]
+    if not users or not KnownClass(classToken) then return nil end
+    if not users[classToken] then return false end
+    return WantsMainStat(classToken, stats, itemID)
+end
+
+-- Trinkets: asks the game whether any spec of the class can use it (the same loot rules the Encounter Journal
+-- shows), so nothing has to be listed each season. true / false / nil. nil whenever the answer is not trustworthy:
+-- the item data is not loaded yet (a request is sent, so a later pass can judge it), the call is missing, errors or
+-- returns a secret or non-boolean value. Works for any class token, not only the player's.
+function Items.TrinketUsable(classToken, item)
+    local classID = Rules().classIDs and Rules().classIDs[classToken]
+    if not (classID and item and C_Item and C_Item.DoesItemContainSpec) then return nil end
+    local itemID = tonumber(item) or Items.IDFromLink(item)
+    if C_Item.IsItemDataCachedByID and itemID and not C_Item.IsItemDataCachedByID(itemID) then
+        if C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemID) end
+        return nil
+    end
+    local ok, result = pcall(C_Item.DoesItemContainSpec, item, classID)
+    if not ok or type(result) ~= "boolean" then return nil end
+    if LC.Restrict and LC.Restrict.IsSecret(result) then return nil end
+    return result
+end
+
+-- Pure combination of the rules. facts = { itemID, equipLoc, classID, subClassID, stats, trinketUsable, allowed } where
+-- allowed is the set from the item's "Classes:" line (nil = no such line, or not readable) and trinketUsable is the
+-- answer of Items.TrinketUsable. Returns true / false / nil.
+function Items.Judge(classToken, facts)
+    local judged = false
+    if facts.allowed then
+        if not facts.allowed[classToken] then return false end
+        judged = true
+    end
+    local verdict
+    if facts.equipLoc == "INVTYPE_TRINKET" then
+        verdict = facts.trinketUsable
+    elseif facts.classID == 4 then
+        verdict = Items.ArmorEligible(classToken, facts.equipLoc, facts.classID, facts.subClassID)
+    elseif facts.classID == 2 then
+        verdict = Items.WeaponEligible(classToken, facts.subClassID, facts.stats, facts.itemID)
+    end
+    if verdict == false then return false end
+    if verdict == true or judged then return true end
+    return nil
+end
+
+-- ---- the "Classes:" line --------------------------------------------------------------------------------
+-- Pure: "Mage, Warlock" -> { MAGE = true, WARLOCK = true }, given classByName = { ["Mage"] = "MAGE", ... }. Returns
+-- nil when no name can be read, so an unreadable line never locks anybody out.
+function Items.ParseClassList(text, classByName)
+    if type(text) ~= "string" or not classByName then return nil end
+    local set, any = {}, false
+    for name in (text .. ", "):gmatch("(.-), ") do
+        name = name:match("^%s*(.-)%s*$")
+        local token = classByName[name]
+        if token then set[token] = true; any = true end
+    end
+    return any and set or nil
+end
+
+-- Pure: the list part of a tooltip line, or nil when the line is not the "Classes:" line. template is the client's
+-- ITEM_CLASSES_ALLOWED ("Classes: %s" in English), which is why this works in every language.
+function Items.MatchClassLine(text, template)
+    if type(text) ~= "string" or type(template) ~= "string" then return nil end
+    text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    local escaped = template:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")
+    local pattern = "^" .. escaped:gsub("%%%%s", "(.+)") .. "$"
+    return text:match(pattern)
+end
+
+local classByName
+local function ClassByName()
+    if classByName then return classByName end
+    classByName = {}
+    for _, names in ipairs({ _G.LOCALIZED_CLASS_NAMES_MALE or {}, _G.LOCALIZED_CLASS_NAMES_FEMALE or {} }) do
+        for token, name in pairs(names) do classByName[name] = token end
+    end
+    return classByName
+end
+
+local allowedCache = {}      -- [itemID] = set, or false when the item has no class line (only filled once the tooltip had text)
+
+-- The set of class tokens the item is restricted to, or nil when it has no restriction or the tooltip cannot be read
+-- yet. Read from the tooltip (the same line the game prints), so new class-locked items need no data from us.
+function Items.AllowedClasses(item)
+    local itemID = tonumber(item) or Items.IDFromLink(item)
+    if not itemID then return nil end
+    local cached = allowedCache[itemID]
+    if cached ~= nil then return cached or nil end
+    if not (C_TooltipInfo and C_TooltipInfo.GetHyperlink) then return nil end
+    local ok, info = pcall(C_TooltipInfo.GetHyperlink, "item:" .. itemID)
+    if not ok or type(info) ~= "table" or type(info.lines) ~= "table" or #info.lines == 0 then return nil end
+    local template = _G.ITEM_CLASSES_ALLOWED
+    local result = false
+    for _, line in ipairs(info.lines) do
+        local text = line.leftText
+        if type(text) == "string" and not (LC.Restrict and LC.Restrict.IsSecret(text)) then
+            local list = Items.MatchClassLine(text, template)
+            if list then
+                result = Items.ParseClassList(list, ClassByName()) or false
+                break
+            end
+        end
+    end
+    allowedCache[itemID] = result
+    return result or nil
+end
+
+-- ---- game-API side of the rules -------------------------------------------------------------------------
+-- Can this class use the drop? item is an item ID, a link or an item string. true / false / nil (cannot tell).
+function Items.UsableBy(classToken, item)
+    if not (classToken and item) then return nil end
+    local itemID, _, _, equipLoc, _, classID, subClassID = C_Item.GetItemInfoInstant(item)
+    if not itemID then return nil end
+    local stats
+    if classID == 2 and C_Item.GetItemStats then
+        local ok, got = pcall(C_Item.GetItemStats, type(item) == "number" and ("item:" .. item) or item)
+        stats = ok and type(got) == "table" and got or nil
+    end
+    local trinketUsable                       -- not "cond and x or nil": that would turn false into nil
+    if equipLoc == "INVTYPE_TRINKET" then trinketUsable = Items.TrinketUsable(classToken, item) end
+    return Items.Judge(classToken, {
+        itemID = itemID, equipLoc = equipLoc, classID = classID, subClassID = subClassID,
+        stats = stats, allowed = Items.AllowedClasses(item),
+        trinketUsable = trinketUsable,
+    })
+end
+
+-- Can my class use this drop? Anything the rules cannot tell counts as usable, so this can wrongly keep a roll window
+-- open but never passes on something you could have used.
+function Items.CanUse(item)
     local token = select(2, UnitClass("player"))
-    return Items.ArmorEligible(token, equipLoc, classID, subClassID) ~= false
+    return Items.UsableBy(token, item) ~= false
 end
 
--- ---- game-API side --------------------------------------------
+-- ---- item info ------------------------------------------------
 function Items.Info(link)
     if not (C_Item and C_Item.GetItemInfoInstant) then return nil end
     local itemID, _, _, equipLoc, icon, classID, subClassID = C_Item.GetItemInfoInstant(link)
@@ -239,6 +402,16 @@ Items.DifficultyShort = { [17] = "LFR", [14] = "N", [15] = "H", [16] = "M" }
 function Items.DifficultyLabel(item)
     local d = Items.Decode(item)
     local diff = d and Items.ContextToDifficulty[d.context]
+    if not diff and d then
+        -- not a raid drop (Catalyst, upgraded, crafted): read it from the bonus IDs, upgrade track first
+        local season = LC.Season or {}
+        for _, map in ipairs({ season.trackBonus or {}, season.difficultyTagBonus or {} }) do
+            for _, b in ipairs(d.bonusIDs) do
+                if map[b] then diff = map[b] break end
+            end
+            if diff then break end
+        end
+    end
     return diff and Items.DifficultyShort[diff] or nil
 end
 

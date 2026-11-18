@@ -490,11 +490,11 @@ function Session.Close()
     if Session.state and not LC.Ruleset.IsActive() then Session.Clear() end   -- nobody left to tell
 end
 
--- A test (/ns loot test) or the hidden preview is running: ending the session also ends it, like /ns loot stop.
+-- A test (/ns lc test) or the hidden preview is running: ending the session also ends it, like /ns lc stop.
 local function FakeRunning() return LC.Preview or (LC.Sim and LC.Sim.loopback) end
 
--- Loot master: ask first, then end the session for everyone, end the test if one is running (what /ns loot stop
--- does) and close the council window. Used by the council window button and /ns loot end.
+-- Loot master: ask first, then end the session for everyone, end the test if one is running (what /ns lc stop
+-- does) and close the council window. Used by the council window button and /ns lc end.
 local function ConfirmedEnd()
     local fake = FakeRunning()
     Session.Close()
@@ -505,7 +505,7 @@ end
 
 function Session.RequestClose()
     if not Session.IsOpen() then
-        -- a finished test session can still be running its fake group: ending it is the same as /ns loot stop
+        -- a finished test session can still be running its fake group: ending it is the same as /ns lc stop
         if FakeRunning() then LC.Sim.StopAny() return end
         LC.Print(LC.Loc("No session is open."))
         return

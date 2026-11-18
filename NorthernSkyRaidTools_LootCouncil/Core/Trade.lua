@@ -1,7 +1,7 @@
 -- ============================================================
 --  Core/Trade.lua - trade engine (T-1..T-8, port of bird per bird-loot-and-trade Appendix A)
 --
---  Two jobs: (1) the manual /ns loot trade queue and trade-string import (bird compatible),
+--  Two jobs: (1) the manual /ns lc trade queue and trade-string import (bird compatible),
 --  (2) trades driven by awards. The addon places items; the player clicks Accept (AcceptTrade
 --  needs a hardware event). Rules carried from the bird audit:
 --    - an item with a stated difficulty never matches a bag item of another difficulty;
@@ -89,7 +89,7 @@ function Trade.FindInBags(itemID, difficulty, wantItem, skip)
     return bb, bs, bleft, bscore, blink
 end
 
--- /ns loot bags: what each queued trade would pick from your bags, and why.
+-- /ns lc bags: what each queued trade would pick from your bags, and why.
 function Trade.Report()
     if #Trade.queue == 0 then LC.Print(LC.Loc("The trade queue is empty.")) return end
     local skip = {}

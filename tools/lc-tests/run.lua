@@ -13,7 +13,7 @@ local ROOT = "NorthernSkyRaidTools_LootCouncil/"
 local function load(path) local f = assert(loadfile(ROOT .. path)); f("NSLC", LC) end
 LC.Roster = { Key = function(n) return (n:find("-", 1, true)) and n or (n .. "-R") end, IsAssistant = function(k) return k == "Asst-R" end,
     GuildRank = function(k) return ({ ["Officer-R"] = 1, ["Raider-R"] = 4 })[k] end, MyKey = function() return "Lead-R" end }
-for _, p in ipairs({ "Core/DB.lua", "Core/Items.lua", "Core/Strings.lua", "Core/Session.lua", "Core/Queue.lua", "Core/Ruleset.lua", "Core/History.lua", "Core/BonusRoll.lua" }) do load(p) end
+for _, p in ipairs({ "Core/DB.lua", "Data/ItemRules.lua", "Core/Items.lua", "Core/Strings.lua", "Core/Session.lua", "Core/Queue.lua", "Core/Ruleset.lua", "Core/History.lua", "Core/BonusRoll.lua" }) do load(p) end
 
 local pass, fail = 0, 0
 local function eq(a, b, name)
@@ -70,6 +70,82 @@ eq(LC.Items.ArmorEligible("MAGE", "INVTYPE_CLOAK", 4, 1), true, "cloak is anyone
 eq(LC.Items.ArmorEligible("MAGE", "INVTYPE_FINGER", 4, 0), true, "ring is anyone's")
 eq(LC.Items.ArmorEligible("MAGE", "INVTYPE_WEAPON", 2, 7), nil, "weapons are not judged")
 eq(LC.Items.ArmorEligible("EVOKER", "INVTYPE_HAND", 4, 3), true, "evoker uses mail")
+eq(LC.Items.ArmorEligible("MAGE", "INVTYPE_SHIELD", 4, 6), false, "mage has no shield")
+eq(LC.Items.ArmorEligible("WARRIOR", "INVTYPE_SHIELD", 4, 6), true, "warrior carries a shield")
+eq(LC.Items.ArmorEligible("DEATHKNIGHT", "INVTYPE_SHIELD", 4, 6), false, "death knight has no shield")
+
+-- Weapon eligibility: weapon type first, then main stat (subclasses: 0 1h axe, 1 2h axe, 9 warglaive, 10 staff, 15 dagger, 16 thrown)
+local STR, AGI, INT = { ITEM_MOD_STRENGTH_SHORT = 1 }, { ITEM_MOD_AGILITY_SHORT = 1 }, { ITEM_MOD_INTELLECT_SHORT = 1 }
+eq(LC.Items.WeaponEligible("MAGE", 15, INT), true, "mage uses an int dagger")
+eq(LC.Items.WeaponEligible("MAGE", 1, INT), false, "mage cannot wield a 2h axe")
+eq(LC.Items.WeaponEligible("MAGE", 1, nil), false, "weapon type needs no item data")
+eq(LC.Items.WeaponEligible("WARRIOR", 9, STR), false, "warrior cannot wield a warglaive")
+eq(LC.Items.WeaponEligible("DEMONHUNTER", 9, AGI), true, "demon hunter uses an agi warglaive")
+eq(LC.Items.WeaponEligible("PRIEST", 15, AGI), false, "priest does not want an agi dagger")
+eq(LC.Items.WeaponEligible("PALADIN", 4, INT), true, "paladin takes int")
+eq(LC.Items.WeaponEligible("PALADIN", 4, STR), true, "paladin takes str")
+eq(LC.Items.WeaponEligible("PALADIN", 4, AGI), false, "paladin does not take agi")
+eq(LC.Items.WeaponEligible("ROGUE", 7, {}), true, "no main stat is never judged by stat")
+eq(LC.Items.WeaponEligible("WARRIOR", 10, nil), nil, "stats not loaded: cannot tell")
+eq(LC.Items.WeaponEligible("WARRIOR", 16, STR), nil, "unlisted weapon type is not judged")
+eq(LC.Items.WeaponEligible("NOTACLASS", 15, INT), nil, "unknown class is not judged")
+LC.Season = { weaponStatOverrides = { [99] = { "ITEM_MOD_INTELLECT_SHORT" } } }
+eq(LC.Items.WeaponEligible("PRIEST", 15, AGI, 99), true, "season override adds a main stat")
+eq(LC.Items.WeaponEligible("PRIEST", 15, AGI, 98), false, "override is per item")
+LC.Season = nil
+
+-- "Classes:" tooltip line
+local byName = { Mage = "MAGE", Warlock = "WARLOCK", Hunter = "HUNTER", ["Demon Hunter"] = "DEMONHUNTER" }
+eq(LC.Items.MatchClassLine("Classes: Mage, Warlock", "Classes: %s"), "Mage, Warlock", "class line list")
+eq(LC.Items.MatchClassLine("Requires Level 80", "Classes: %s"), nil, "other lines are not the class line")
+eq(LC.Items.MatchClassLine("|cffffffffClasses: Mage|r", "Classes: %s"), "Mage", "colour codes are ignored")
+eq(LC.Items.MatchClassLine("Klassen: Magier", "Klassen: %s"), "Magier", "template comes from the client")
+local set = LC.Items.ParseClassList("Demon Hunter, Mage", byName)
+eq(set.DEMONHUNTER, true, "demon hunter read"); eq(set.MAGE, true, "mage read"); eq(set.HUNTER, nil, "hunter is not demon hunter")
+eq(LC.Items.ParseClassList("Hunter", byName).DEMONHUNTER, nil, "hunter alone is not demon hunter")
+eq(LC.Items.ParseClassList("Nonsense", byName), nil, "unreadable line locks nobody out")
+
+-- The rules combined
+local lock = { MAGE = true }
+eq(LC.Items.Judge("MAGE", { classID = 15, allowed = lock }), true, "class-locked token: listed class")
+eq(LC.Items.Judge("WARRIOR", { classID = 15, allowed = lock }), false, "class-locked token: other class")
+eq(LC.Items.Judge("MAGE", { classID = 15 }), nil, "nothing to judge")
+eq(LC.Items.Judge("MAGE", { classID = 4, equipLoc = "INVTYPE_CHEST", subClassID = 4, allowed = lock }), false, "listed class still cannot wear plate")
+eq(LC.Items.Judge("MAGE", { classID = 4, equipLoc = "INVTYPE_CHEST", subClassID = 1 }), true, "cloth for a mage")
+eq(LC.Items.Judge("MAGE", { classID = 2, subClassID = 15, stats = AGI }), false, "mage and an agi dagger")
+eq(LC.Items.Judge("MAGE", { classID = 2, subClassID = 15, stats = INT }), true, "mage and an int dagger")
+
+-- Trinkets: asked of the game (C_Item.DoesItemContainSpec). Stubbed here; the real answers were checked in-game:
+-- a Priest-usable Intellect trinket is true for class 5 and false for class 1, an all-class trinket is true for both.
+local calls, loaded, requested = {}, true, {}
+local answer = function(item, classID)
+    local id = tonumber(item) or tonumber(tostring(item):match("item:(%d+)"))
+    return id == 270169 and classID == 5 or id == 270164
+end
+C_Item = {
+    DoesItemContainSpec = function(item, classID) calls[#calls + 1] = classID; return answer(item, classID) end,
+    IsItemDataCachedByID = function() return loaded end,
+    RequestLoadItemDataByID = function(id) requested[#requested + 1] = id end,
+}
+eq(LC.Items.TrinketUsable("PRIEST", 270169), true, "priest uses the int trinket")
+eq(LC.Items.TrinketUsable("WARRIOR", 270169), false, "warrior does not")
+eq(LC.Items.TrinketUsable("WARRIOR", 270164), true, "all-class trinket: warrior")
+eq(LC.Items.TrinketUsable("EVOKER", 270164), true, "all-class trinket: evoker")
+eq(calls[1], 5, "priest is class id 5"); eq(LC.Items.TrinketUsable("WARRIOR", "|cff1eff00|Hitem:270164::::::::80:::::|h[x]|h|r"), true, "link accepted")
+eq(LC.Items.TrinketUsable("NOTACLASS", 270169), nil, "unknown class is not judged")
+loaded = false
+eq(LC.Items.TrinketUsable("WARRIOR", 270169), nil, "item data not loaded: cannot tell"); eq(requested[1], 270169, "...and its data is requested")
+loaded = true
+answer = function() return nil end
+eq(LC.Items.TrinketUsable("WARRIOR", 270169), nil, "non-boolean answer is not trusted")
+answer = function() error("boom") end
+eq(LC.Items.TrinketUsable("WARRIOR", 270169), nil, "an erroring call is not trusted")
+C_Item.DoesItemContainSpec = nil
+eq(LC.Items.TrinketUsable("WARRIOR", 270169), nil, "missing call is not judged")
+C_Item = nil
+eq(LC.Items.Judge("WARRIOR", { classID = 4, equipLoc = "INVTYPE_TRINKET", subClassID = 0, trinketUsable = false }), false, "judge: unusable trinket")
+eq(LC.Items.Judge("MAGE", { classID = 4, equipLoc = "INVTYPE_TRINKET", subClassID = 0, trinketUsable = true }), true, "judge: usable trinket")
+eq(LC.Items.Judge("MAGE", { classID = 4, equipLoc = "INVTYPE_TRINKET", subClassID = 0 }), nil, "judge: unknown trinket is not judged")
 
 -- Session reducer
 local S = LC.Session

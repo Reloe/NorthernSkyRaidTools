@@ -6,9 +6,9 @@
 --    * Loaded: decided only by the AddOns menu. A module that is unticked there is never
 --      loaded, so it costs no memory and no CPU. The addon never changes that setting itself.
 --    * Active: a quick session-only pause (NSI.Modules:SetActive) used by the options tab and
---      /ns loot on|off. A paused module stays loaded but inert. It is not saved, so it is
+--      /ns lc on|off. A paused module stays loaded but inert. It is not saved, so it is
 --      active again on every login (and reload) when the addon is loaded.
---  Also owns: NSI:LoadKit() (the shared UI kit folder) and the /ns loot command.
+--  Also owns: NSI:LoadKit() (the shared UI kit folder) and the /ns lc loot command.
 -- ============================================================
 local _, NSI = ...
 NSI = _G.NorthernSkyRaidTools or NSI
@@ -89,7 +89,7 @@ f:SetScript("OnEvent", function(self)
     end
 end)
 
--- /ns loot [on|off|end|close|stop|status|test]
+-- /ns lc [on|off|start|test|end|stop|loot|roll|history|trade|status|bags]
 function Modules:HandleLootCommand(arg)
     arg = (arg or ""):lower()
     if arg == "on" then self:SetActive("LootCouncil", true) return end
@@ -101,21 +101,28 @@ function Modules:HandleLootCommand(arg)
     if not self:Load("LootCouncil") then return end
     local LC = NSI.LootCouncil
     if LC.dead then
-        print(NSI:Loc("|cFF00FFFFNSRT|r Loot Council is paused. Turn it on with |cFF00FFFF/ns loot on|r or the switch in the Loot Council options."))
+        print(NSI:Loc("|cFF00FFFFNSRT|r Loot Council is paused. Turn it on with |cFF00FFFF/ns lc on|r or the switch in the Loot Council options."))
         return
     end
     local preview = arg:match("^preview%s*(.*)$")      -- hidden: look at every window with fake data
     if preview then LC.Preview_.Run(preview) return end
-    if arg == "close" or arg == "end" then LC.Session.RequestClose()
+    if arg == "end" then
+        LC.Session.RequestClose()                       -- also stops a running test/preview (same as stop)
     elseif arg == "test" then LC.Sim.Run()
     elseif arg == "stop" then LC.Sim.StopAny()
     elseif arg == "status" then LC.Sim.Status()
     elseif arg == "bags" then LC.Trade.Report()
-    elseif arg == "setup" then
+    elseif arg == "start" then
         if LC.EnsureKit() then LC.Frames.SetupFrame.Open() end
-    elseif arg == "respond" then
+    elseif arg == "roll" then
         if LC.EnsureKit() then LC.Frames.LootFrame.Reopen() end
-    else
+    elseif arg == "history" then
+        if LC.EnsureUI() then LC.UI.HistoryFrame.Open() end
+    elseif arg == "trade" then
+        if LC.EnsureUI() then LC.UI.TradesFrame.Open() end
+    elseif arg == "" or arg == "loot" then              -- the loot council window
         if LC.UI.Open then LC.UI.Open() elseif LC.EnsureUI() and LC.UI.Open then LC.UI.Open() end
+    else
+        print(NSI:Loc("|cFF00FFFFNSRT|r Unknown loot council command. Type |cFF00FFFF/ns help|r for a list."))
     end
 end

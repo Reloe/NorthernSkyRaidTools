@@ -2,11 +2,11 @@
 --  Core/Queue.lua - items waiting for a session ("Award later")
 --
 --  When a boss dies the loot master sees the Session Setup window. Anything not started is kept
---  here (saved per character) and shows up again at the next kill or with /ns loot setup. An item
+--  here (saved per character) and shows up again at the next kill or with /ns lc start. An item
 --  leaves the queue when a session starts with it, when it is excluded at start, when it is
 --  cleared, or when it is older than Queue.TTL (3 hours from the kill).
 --
---  A transient override list (preview and /ns loot test) is used instead of the saved queue so fake
+--  A transient override list (preview and /ns lc test) is used instead of the saved queue so fake
 --  items never reach saved data. Prune is pure and covered by tools/lc-tests.
 -- ============================================================
 local ADDON, LC = ...

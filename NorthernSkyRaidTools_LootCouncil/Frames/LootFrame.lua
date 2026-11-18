@@ -106,7 +106,7 @@ function LootFrame.AutoPass()
     for _, id in ipairs(state.order) do
         local d = state.drops[id]
         local answered = state.responses[id] and state.responses[id][me]
-        if d.state == "open" and not autoPassed[id] and not answered and not LC.Items.CanUse(d.itemID) then
+        if d.state == "open" and not autoPassed[id] and not answered and not LC.Items.CanUse(d.item or d.itemID) then
             autoPassed[id] = true
             Send(id, pass.id, nil, true)           -- shown to the council as "Auto pass", not as a note
         end
@@ -276,7 +276,7 @@ end
 
 -- ---- refresh -----------------------------------------------------------
 -- Once everything is answered the window closes itself. It comes back by itself when new loot needs an answer,
--- and on purpose through the session window's Loot button or /ns loot respond (reopened = stay open).
+-- and on purpose through the session window's Loot button or /ns lc roll (reopened = stay open).
 local autoClosed, reopened = false, false
 
 function LootFrame.Refresh()

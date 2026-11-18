@@ -1,14 +1,14 @@
 -- ============================================================
---  Core/Preview.lua - hidden `/ns loot preview` for looking at every window with fake data
+--  Core/Preview.lua - hidden `/ns lc preview` for looking at every window with fake data
 --
 --  Owns: a throw-away session, ruleset, trade queue and history filled with placeholder players,
 --  so the UI can be styled and debugged alone. While LC.Preview is true nothing is sent, nothing is
 --  saved (no session, no history, no trades) and the group state machine is paused. Clicking around
 --  works locally: respond, vote, award, undo. `preview stop` puts everything back.
 --
---  /ns loot preview            raider window, session bar, trade prompt and the council window
---  /ns loot preview <what>     setup | council | loot | trades | history | responses | lead
---  /ns loot preview stop       leave preview mode
+--  /ns lc preview            raider window, session bar, trade prompt and the council window
+--  /ns lc preview <what>     setup | council | loot | trades | history | responses | lead
+--  /ns lc preview stop       leave preview mode
 -- ============================================================
 local ADDON, LC = ...
 local Preview = {}
@@ -18,7 +18,7 @@ local FRAMES = { "NSLCLootFrame", "NSLCSessionBar", "NSLCTradePrompt", "NSLCVoti
     "NSLCHistoryFrame", "NSLCResponseEditor", "NSLCSetupFrame", "NSLCLootChip", "NSLCNoteFlyout" }
 
 -- Real item ids so tooltips resolve.
-local DROPS = { 271092, 268239, 19019, 19364, 17182 }   -- 271092 is an item Arkin can roll on; 268239 is for testing the auto-pass
+local DROPS = { 271092, 268239, 19019, 19364, 17182, 271554 }   -- 271092 is an item Arkin can roll on; 268239 is for testing the auto-pass; 271554 is Enveloping Legwraps of the Cosmic Penitent (cloth legs)
 local GEAR = { 19350, 18816, 19379, 18808 }
 local PLAYERS = { "Aelarya", "Brightmantle", "Cindrel", "Dunmar", "Evelynn", "Faolan" }
 local NOTES = { Cindrel = "Tank swap, need for progress", Dunmar = "" }
@@ -48,7 +48,7 @@ function Preview.GearFor() return Gear(1) end
 
 local function Key(n) return n .. "-Preview" end
 
--- Placeholder queue for the Session Setup window (also used by /ns loot test): three items from a
+-- Placeholder queue for the Session Setup window (also used by /ns lc test): three items from a
 -- fresh kill and one saved from an earlier kill, so the "accumulated" look is visible.
 function Preview.FakeQueue(me)
     local now = GetServerTime()
@@ -194,7 +194,7 @@ function Preview.Run(arg)
         return
     end
     if LC.Sim.loopback then
-        LC.Print(LC.Loc("A test session is running. Use /ns loot stop first."))
+        LC.Print(LC.Loc("A test session is running. Use /ns lc stop first."))
         return
     end
     Start()
@@ -218,7 +218,7 @@ function Preview.Run(arg)
         LC.Frames.TradePrompt.Refresh()
         LC.Frames.SetupFrame.Open()
         LC.UI.VotingFrame.Open()
-        LC.Print(LC.Loc("Preview on. Also try: /ns loot preview setup | council | loot | trades | history | responses | lead | stop"))
+        LC.Print(LC.Loc("Preview on. Also try: /ns lc preview setup | council | loot | trades | history | responses | lead | stop"))
     end
 end
 

@@ -16,6 +16,7 @@ Core\Events.lua
 Core\Compat.lua
 Core\Restrict.lua
 Core\Roster.lua
+Data\ItemRules.lua
 Core\Items.lua
 Core\Strings.lua
 Core\Priority.lua

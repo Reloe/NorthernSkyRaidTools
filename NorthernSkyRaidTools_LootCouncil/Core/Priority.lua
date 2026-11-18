@@ -87,7 +87,7 @@ function Priority.ResolveForDrop(session, drop)
         eligible = function(key)
             local m = LC.Roster.Get(key)
             if not (m and info) then return nil end
-            return LC.Items.ArmorEligible(m.class, info.equipLoc, info.classID, info.subClassID)
+            return LC.Items.UsableBy(m.class, drop.item or drop.itemID)
         end,
     })
 end

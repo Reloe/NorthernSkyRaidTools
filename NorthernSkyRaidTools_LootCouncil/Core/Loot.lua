@@ -143,7 +143,7 @@ function Loot.Stage(drops)
         rescanTimers[#rescanTimers + 1] = C_Timer.NewTimer(delay, Loot.RescanQueue)
     end
     if LC.Session.IsOpen() then
-        LC.Print(string.format(LC.Loc("%d new items are waiting. Close the current session to start a new one (/ns loot setup)."), added))
+        LC.Print(string.format(LC.Loc("%d new items are waiting. Close the current session to start a new one (/ns lc start)."), added))
     else
         LC.Fire("NSRT_LC_SETUP")
     end

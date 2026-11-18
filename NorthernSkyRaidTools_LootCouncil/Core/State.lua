@@ -60,7 +60,7 @@ function State.Answer(yes)
     State.Refresh()
 end
 
--- /ns loot and the options tab: change the answer for this raid.
+-- /ns lc loot and the options tab: change the answer for this raid.
 function State.SetForThisRaid(yes)
     if not LC.Roster.IsLeader(LC.Roster.MyKey()) then
         LC.Print(LC.Loc("Only the raid leader can turn the loot council on or off for a raid."))

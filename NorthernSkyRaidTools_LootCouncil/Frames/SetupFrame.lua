@@ -4,7 +4,7 @@
 --  Lists everything waiting (this kill plus anything saved from earlier kills, up to 3 hours old).
 --  Each row has an include toggle (red = left out; left-out items are dropped when the session
 --  starts). Start opens one session with every included item. "Award later?" turns Start into
---  "Save for later": the window closes and the items stay queued for the next kill or /ns loot setup.
+--  "Save for later": the window closes and the items stay queued for the next kill or /ns lc start.
 --  Cancel just closes; nothing is lost. The window sizes itself to the list (up to MAX_ROWS entries, then the
 --  list scrolls) and cannot be resized. The + box under the list opens a picker of the tradable items in the
 --  loot master's bags that are not already in the list.
@@ -277,7 +277,7 @@ function Setup.Build()
     startBtn = C.CreateButton(actions, LC.Loc("Start"), function()
         if awardLater then
             Setup.Close()
-            LC.Print(string.format(LC.Loc("%d items saved for later. /ns loot setup opens this window again."), Waiting()))
+            LC.Print(string.format(LC.Loc("%d items saved for later. /ns lc start opens this window again."), Waiting()))
         elseif LC.Loot.StartSession() then
             LC.Frames.Shell.Hide(frame)
         end
@@ -285,7 +285,7 @@ function Setup.Build()
     startBtn:SetPoint("RIGHT", actions, "RIGHT", -118, 0)
     local cancel = C.CreateButton(actions, LC.Loc("Cancel"), function()
         Setup.Close()
-        if Waiting() > 0 then LC.Print(string.format(LC.Loc("%d items are still waiting. /ns loot setup opens this window again."), Waiting())) end
+        if Waiting() > 0 then LC.Print(string.format(LC.Loc("%d items are still waiting. /ns lc start opens this window again."), Waiting())) end
     end, 110, 24)
     cancel:SetPoint("RIGHT", actions, "RIGHT", 0, 0)
     frame:SetScript("OnShow", function() Setup.Refresh() end)
@@ -296,13 +296,13 @@ function Setup.Close()
     if frame then LC.Frames.Shell.Hide(frame) end
 end
 
--- Open on purpose (new kill, /ns loot setup, preview).
+-- Open on purpose (new kill, /ns lc start, preview).
 function Setup.Open(quiet)
     if LC.dead or not LC.EnsureKit() then return end
     Setup.Build()
     if not frame then return end
     if LC.Session.IsOpen() and not LC.Preview then
-        LC.Print(LC.Loc("A session is already open. End it first (/ns loot end)."))
+        LC.Print(LC.Loc("A session is already open. End it first (/ns lc end)."))
         return
     end
     if LC.Queue.Count() == 0 and not quiet then LC.Print(LC.Loc("No items are waiting.")) end

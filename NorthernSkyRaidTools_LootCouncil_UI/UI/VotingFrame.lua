@@ -225,7 +225,11 @@ local function RefreshHeader(state)
     local _, itemType, itemSub, equipLoc = C_Item.GetItemInfoInstant(d.itemID)
     local ilvl = link and LC.Items.ItemLevel(link)
     local slot = equipLoc and equipLoc ~= "" and _G[equipLoc] or ""
-    info.detail:SetText(table.concat({ ilvl and ("iLvl: " .. ilvl) or "", slot, itemSub or "" }, "   "))
+    -- difficulty first, in its colour, so the awarder sees at a glance which version of the item this is
+    local diff = LC.Items.RaidDifficulties[d.difficulty] and d.difficulty or LC.Items.DifficultyFromLink(d.item)
+    local short = diff and LC.Items.DifficultyShort[diff]
+    local diffText = short and ("|c" .. (DIFF_HEX[short] or "ffffffff") .. LC.Items.DifficultyName[diff] .. "|r") or ""
+    info.detail:SetText(table.concat({ diffText, ilvl and ("iLvl: " .. ilvl) or "", slot, itemSub or "" }, "   "))
     local a = state.awards[selectedDrop]
     local responded, total = 0, 0
     for _ in pairs(state.responses[selectedDrop] or {}) do responded = responded + 1 end
@@ -476,13 +480,13 @@ function VF.Build()
         { key = "vote", title = " ", width = 92, sortable = false,
           init = function(cell)
               cell.btn = C.CreateButton(cell, LC.Loc("Vote"), function()
-                  if cell.rowData and not cell.rowData.none then Vote(cell.rowData) end
+                  if cell.rowData then Vote(cell.rowData) end
               end, 64, 20)
               cell.btn:SetPoint("CENTER", cell, "CENTER", -6, 0)
           end,
           render = function(cell, d)
               cell.rowData = d
-              cell.btn.frame:SetShown(not d.none)
+              cell.btn.frame:SetShown(true)           -- council members can vote before a player has responded
               cell.btn:SetText(LC.Loc(d.myVote and "Voted" or "Vote"))
           end },
     }, { onContext = Menu, rowHeight = 34,
@@ -562,7 +566,7 @@ function VF.Build()
     idle:Hide()
 end
 
--- Open on purpose (the Council button, /ns loot).
+-- Open on purpose (the Council button, /ns lc loot).
 function VF.Open()
     VF.Build()
     if not frame then return end
