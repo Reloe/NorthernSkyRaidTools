@@ -1,0 +1,41 @@
+## Interface: 120105
+## Title: Northern Sky Raid Tools - Loot Council
+## Notes: Loot council for raid groups. Turn it on or off in the AddOns list.
+## Author: Northern Sky
+## Version: @project-version@
+## Dependencies: NorthernSkyRaidTools
+## OptionalDeps: WowUtils
+## LoadOnDemand: 1
+## DefaultState: disabled
+## SavedVariables: NSRTLootCouncilDB
+## AllowLoadGameType: standard
+
+Core\Init.lua
+Core\DB.lua
+Core\Events.lua
+Core\Compat.lua
+Core\Restrict.lua
+Core\Roster.lua
+Core\Items.lua
+Core\Strings.lua
+Core\Priority.lua
+Data\Season.lua
+Core\Ruleset.lua
+Core\Comms.lua
+Core\Session.lua
+Core\Queue.lua
+Core\Loot.lua
+Core\Awards.lua
+Core\Trade.lua
+Core\History.lua
+Core\BonusRoll.lua
+Core\Sims.lua
+Core\Sim.lua
+Core\State.lua
+Core\Preview.lua
+Frames\LeadPrompt.lua
+Frames\Shell.lua
+Frames\SetupFrame.lua
+Frames\LootFrame.lua
+Frames\SessionBar.lua
+Frames\TradePrompt.lua

@@ -1,0 +1,18 @@
+## Interface: 120105, 16001
+## AllowLoadGameType: standard, camelot
+## Title: |cFF00FFFFNorthern Sky Raid Tools - Kit|r
+## Notes: Shared UI kit (pixel helpers, design tokens, components, window shell) used by the options UI and optional modules.
+## Version: @project-version@
+## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
+## Author: Reloe, Rav
+## LoadOnDemand: 1
+## Dependencies: NorthernSkyRaidTools
+## Category: Dungeons & Raids
+
+Pixel.lua
+Tooltip.lua
+Fonts.lua
+Components.lua
+Window.lua
+KitExtras.lua
+DataTable.lua

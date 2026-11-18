@@ -54,6 +54,8 @@ local BuildInterruptDisplayCallback= NSI.UI.Options.InterruptDisplay.BuildCallba
 local BuildReadyCheckOptions       = NSI.UI.Options.ReadyCheck.BuildOptions
 local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
+local BuildLootCouncilOptions      = NSI.UI.Options.LootCouncil and NSI.UI.Options.LootCouncil.BuildOptions
+local BuildLootCouncilCallback     = NSI.UI.Options.LootCouncil and NSI.UI.Options.LootCouncil.BuildCallback
 local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
 local BuildAuraGlowsUI             = NSI.UI.Options.AuraGlows.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
@@ -98,6 +100,9 @@ if BuildQoLOptions then
 end
 if BuildRaidManagerOptions then
     table.insert(TABS_GROUPS[4], 2, { name = "RaidManager", textKey = "Raid Manager", icon = "shield" })
+end
+if BuildLootCouncilOptions then
+    table.insert(TABS_GROUPS[4], { name = "LootCouncil", textKey = "Loot Council", retailOnly = true, icon = "users-round" })
 end
 
 -- Sidebar visual constants
@@ -437,6 +442,7 @@ function NSUI:Init()
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = BuildQoLOptions and tabSystem:GetTabFrameByName("QoL")
     local RaidManager_tab         = BuildRaidManagerOptions and tabSystem:GetTabFrameByName("RaidManager")
+    local LootCouncil_tab         = BuildLootCouncilOptions and tabSystem:GetTabFrameByName("LootCouncil")
 
     -- --------------------------------------------------------
     -- Build options tables
@@ -451,6 +457,7 @@ function NSUI:Init()
     local RaidBuffMenu                   = NSI.RaidBuffCheck and BuildRaidBuffMenu()
     local QoL_options1_table             = BuildQoLOptions and BuildQoLOptions()
     local RaidManager_options1_table     = BuildRaidManagerOptions and BuildRaidManagerOptions()
+    local LootCouncil_options1_table     = BuildLootCouncilOptions and BuildLootCouncilOptions()
     local option_tables = {
         general_options1_table,
         nicknames_options1_table,
@@ -463,6 +470,7 @@ function NSUI:Init()
     if RaidBuffMenu then option_tables[#option_tables + 1] = RaidBuffMenu end
     if QoL_options1_table then option_tables[#option_tables + 1] = QoL_options1_table end
     if RaidManager_options1_table then option_tables[#option_tables + 1] = RaidManager_options1_table end
+    if LootCouncil_options1_table then option_tables[#option_tables + 1] = LootCouncil_options1_table end
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
     end
@@ -514,6 +522,10 @@ function NSUI:Init()
     end
     if RaidManager_options1_table then
         BuildMenu(RaidManager_tab, RaidManager_options1_table, QoL_callback)
+        coroutine.yield()
+    end
+    if LootCouncil_options1_table then
+        BuildMenu(LootCouncil_tab, LootCouncil_options1_table, BuildLootCouncilCallback())
         coroutine.yield()
     end
     C_Timer.After(0.1, function()

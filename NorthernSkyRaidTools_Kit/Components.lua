@@ -4340,6 +4340,10 @@ local function CreateSearchBox(parent, width, height, name, onChange, placeholde
     local hint = eb:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. (placeholder or NSI:Loc("Search...")))
     hint:SetPoint("LEFT", eb, "LEFT", 2, 0)
+    hint:SetPoint("RIGHT", eb, "RIGHT", -4, 0)      -- a long placeholder is cut with "..." instead of running out of the box
+    hint:SetJustifyH("LEFT")
+    hint:SetWordWrap(false)
+    hint:SetMaxLines(1)
     hint:SetTextColor(unpack(STYLE.text_hint))
     NSI:SetUIFont(hint, "body", "")
     local function UpdateHint() hint:SetShown(eb:GetText() == "" and not eb:HasFocus()) end

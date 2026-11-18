@@ -58,6 +58,7 @@ QoLDisplay.lua [AllowLoadGameType standard]
 PlayerStatsDisplay.lua
 BreakTimer.lua
 Profiles.lua
+Modules.lua
 InterruptDisplay.lua
 
 # Encounter Alerts

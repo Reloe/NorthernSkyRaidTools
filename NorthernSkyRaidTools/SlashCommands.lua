@@ -84,6 +84,8 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "resetlogs" then
         NSRTTimelineData = {}
         print(NSI:Loc("|cFF00FFFFNSRT|r Timeline logs have been reset."))
+    elseif msg == "loot" or msg == "lc" or msg:match("^loot%s") or msg:match("^lc%s") then
+        NSI.Modules:HandleLootCommand(msg:match("^%a+%s*(.*)$"))
     elseif msg == "help" then
         print(NSI:Loc("|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n"))
         print(NSI:Loc("  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development"))
@@ -102,6 +104,7 @@ SlashCmdList["NSUI"] = function(msg)
         print(NSI:Loc("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"))
         print(NSI:Loc("  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"))
         print(NSI:Loc("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"))
+        print(NSI:Loc("  |cFF00FFFF/ns loot|r - Open the loot council (|cFF00FFFF/ns loot on|r, |cFF00FFFF/ns loot off|r, |cFF00FFFF/ns loot setup|r, |cFF00FFFF/ns loot respond|r, |cFF00FFFF/ns loot end|r, |cFF00FFFF/ns loot status|r, |cFF00FFFF/ns loot test|r, |cFF00FFFF/ns loot stop|r)"))
     elseif msg == "" then
         if LoadUI(true) then NSI.NSUI:ToggleOptions() end
     elseif msg then

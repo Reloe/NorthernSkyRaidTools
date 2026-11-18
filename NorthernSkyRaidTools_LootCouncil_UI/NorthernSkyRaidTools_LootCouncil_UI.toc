@@ -1,0 +1,18 @@
+## Interface: 120105
+## Title: Northern Sky Raid Tools - Loot Council UI
+## Notes: Council windows for the loot council. Loaded on demand by the Loot Council module.
+## Author: Northern Sky
+## Version: @project-version@
+## Dependencies: NorthernSkyRaidTools_LootCouncil, NorthernSkyRaidTools_Kit
+## OptionalDeps: NorthernSkyRaidTools_UI
+## LoadOnDemand: 1
+## AllowLoadGameType: standard
+
+UI\PlayerHistory.lua
+UI\VotingFrame.lua
+UI\TradesFrame.lua
+UI\HistoryFrame.lua
+UI\PriorityEditor.lua
+UI\ResponseEditor.lua
+UI\EditModeElements.lua
+UI\Ready.lua

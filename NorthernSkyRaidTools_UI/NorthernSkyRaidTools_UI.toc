@@ -5,15 +5,11 @@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe, Rav
 ## LoadOnDemand: 1
-## Dependencies: NorthernSkyRaidTools
+## Dependencies: NorthernSkyRaidTools, NorthernSkyRaidTools_Kit
 ## Category: Dungeons & Raids
 
 UI\Bootstrap.lua [Bootstrap]
-UI\Pixel.lua
-UI\Tooltip.lua
 UI\Core.lua
-UI\Components.lua
-UI\Window.lua
 UI\MainWindow.lua
 UI\BossData.lua
 UI\SoundData.lua
@@ -35,6 +31,7 @@ UI\Options\Reminders.lua
 UI\Options\Assignments.lua
 UI\Options\InterruptDisplay.lua
 UI\Options\ReadyCheck.lua
+UI\Options\LootCouncil.lua
 UI\Options\AuraTracking.lua
 UI\Options\AuraGlows.lua
 UI\Options\PaceComparison.lua
