@@ -1,14 +1,16 @@
 ## Interface: 120105
-## Title: Northern Sky Raid Tools - Loot Council
+## Title: |cFF00FFFFNorthern Sky Raid Tools - Loot Council|r
 ## Notes: Loot council for raid groups. Turn it on or off in the AddOns list.
-## Author: Northern Sky
+## Author: Reloe, Rav
 ## Version: @project-version@
+## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Dependencies: NorthernSkyRaidTools
 ## OptionalDeps: WowUtils
 ## LoadOnDemand: 1
 ## DefaultState: disabled
 ## SavedVariables: NSRTLootCouncilDB
 ## AllowLoadGameType: standard
+## Category: Dungeons & Raids
 
 Core\Init.lua
 Core\DB.lua

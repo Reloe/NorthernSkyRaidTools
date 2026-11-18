@@ -41,13 +41,22 @@ function Loot.SafeToPass()
     return true
 end
 
+-- Blizzard rolls are never auto-passed for the raid leader / loot master, whatever the auto-pass settings
+-- say: the leader is the one who has to collect the items. Auto-pass applies only to the other participants'
+-- Blizzard rolls (the safety check above) and to the council responses in LootFrame.AutoPass.
+local function IAmLeaderOrML(me)
+    if LC.Ruleset.IsML(me) or LC.Roster.IsLeader(me) then return true end
+    return UnitIsGroupLeader and UnitIsGroupLeader("player") and true or false
+end
+
 local function OnRoll(event, rollID)
     if not LC.Ruleset.IsActive() then return end
     local me = LC.Roster.MyKey()
-    if LC.Ruleset.IsML(me) or LC.Ruleset.IsBackup(me) then
+    if IAmLeaderOrML(me) or LC.Ruleset.IsBackup(me) then
         local canNeed, canGreed = LC.Compat.GetRollOptions(rollID)
-        local rollType = canNeed and 1 or (canGreed and 2 or 0)
-        pcall(RollOnLoot, rollID, rollType)
+        local rollType = canNeed and 1 or (canGreed and 2 or nil)
+        -- No roll option known (or none offered): leave Blizzard's roll frame alone rather than passing.
+        if rollType then pcall(RollOnLoot, rollID, rollType) end
         return
     end
     local safe, reason = Loot.SafeToPass()

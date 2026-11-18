@@ -28,6 +28,8 @@ local DIFF_COLOR = { [16] = "ffff8000", [15] = "ffa335ee", [14] = "ff0070dd", [1
 
 local frame, card, search, view, track, thumb, headStrip, summary, textBox, deleteTarget
 local filterText, showUndone, unresolvedOnly = "", true, false
+local masterFilter = nil                     -- nil = every loot master's awards; a character key = only what that character awarded
+local masterDrop
 local days, flat, openState, pool = {}, {}, {}, {}
 local offset = 0
 local dirty, scheduled = false, false
@@ -265,6 +267,11 @@ local function BuildRow()
     row.hover:SetAllPoints()
     STYLE.PaintAccent(row.hover, "SetColorTexture", STYLE.hover_color[4])
     row.hover:SetAlpha(0)
+    -- bonus rolls get a faint gold wash over the row stripe (same as the player history flyout)
+    row.tint = row:CreateTexture(nil, "ARTWORK", nil, -8)
+    row.tint:SetAllPoints()
+    row.tint:SetColorTexture(1, 0.82, 0, 0.12)
+    row.tint:Hide()
 
     row.chev = row:CreateTexture(nil, "ARTWORK")
     row.chev:SetSize(12, 12)
@@ -399,6 +406,7 @@ local function PaintRow(row, desc, idx, now)
         local e = desc.e
         local status = LC.History.Status(e, now)
         row.chev:Hide(); row.label:Hide(); row.counts:Hide()
+        row.tint:SetShown(e.source == "bonus" and status ~= "void")
         local name, _, quality = ItemInfo(e)
         row.icon:SetItem(ItemSource(e))
         row.icon.frame:SetAlpha(status == "void" and 0.45 or 1)
@@ -417,7 +425,7 @@ local function PaintRow(row, desc, idx, now)
         row.hit:Show()
     else
         local node = desc.node
-        row.icon.frame:Hide(); row.hit:Hide()
+        row.icon.frame:Hide(); row.hit:Hide(); row.tint:Hide()
         row.name:Hide(); row.who:Hide(); row.reason:Hide(); row.to:Hide(); row.by:Hide(); row.time:Hide()
         local left = INDENT[kind]
         row.chev:ClearAllPoints()
@@ -487,18 +495,70 @@ local function Haystack(e, status)
         LC.History.BossName(e.encounterID, e.boss), DiffName(e.difficulty), LC.Loc(STATUS_LABEL[status] or "") }, " "):lower()
 end
 
+-- Loot master filter. The history is stored account-wide, so every character sees the awards of every run; this only
+-- narrows the list to one character's sessions: what they awarded, plus the bonus rolls made in their session.
+-- A bonus roll carries its loot master (lm). Older ones do not, so they borrow the loot master of an award from the
+-- same kill.
+local ALL = "__all"
+local function KillMasters(list)
+    local map = {}
+    for _, e in ipairs(list) do
+        if e.by and e.kill then map[e.kill] = map[e.kill] or e.by end
+    end
+    return map
+end
+local function MasterOf(e, killMap)
+    if e.source == "bonus" then return e.lm or (e.kill and killMap[e.kill]) end
+    return e.by
+end
+
+local function MasterItems()
+    local seen, keys = {}, {}
+    local me = LC.Roster.MyKey()
+    local all = LC.History.Query()
+    local killMap = KillMasters(all)
+    for _, e in ipairs(all) do
+        local m = MasterOf(e, killMap)
+        if m and not seen[m] then seen[m] = true; keys[#keys + 1] = m end
+    end
+    if masterFilter and not seen[masterFilter] then keys[#keys + 1] = masterFilter end
+    table.sort(keys, function(a, b)
+        if (a == me) ~= (b == me) then return a == me end
+        return Plain(a):lower() < Plain(b):lower()
+    end)
+    local function pick(_, _, v)
+        masterFilter = (v ~= ALL) and v or nil
+        offset = 0
+        if masterDrop then masterDrop:Refresh() end
+        HF.Refresh()
+    end
+    local items = { { label = LC.Loc("All characters"), value = ALL, onclick = pick } }
+    for _, key in ipairs(keys) do
+        items[#items + 1] = { label = Plain(key) .. (key == me and (" " .. LC.Loc("(this character)")) or ""), value = key, onclick = pick }
+    end
+    return items
+end
+
+local function MasterSelected()
+    if not masterFilter then return LC.Loc("Loot master: All characters") end
+    return LC.Loc("Loot master:") .. " " .. Plain(masterFilter)
+end
+
 function HF.Refresh()
     if not frame or not frame:IsShown() then dirty = true return end
     dirty = false
     local now = GetServerTime()
     local needle = filterText:lower()
     local list = {}
-    for _, e in ipairs(LC.History.Query()) do
+    local all = LC.History.Query()
+    local killMap = masterFilter and KillMasters(all) or nil
+    for _, e in ipairs(all) do
         LC.Roster.NoteClass(e.winner, e.class)
         local status = LC.History.Status(e, now)
         local keep = true
         if status == "void" and not showUndone then keep = false end
         if unresolvedOnly and not (status == "pending" or status == "mismatch" or status == "expired") then keep = false end
+        if masterFilter and MasterOf(e, killMap) ~= masterFilter then keep = false end
         if keep and needle ~= "" and not Haystack(e, status):find(needle, 1, true) then keep = false end
         if keep then list[#list + 1] = e end
     end
@@ -565,6 +625,8 @@ function HF.Build()
     summary = card:CreateFontString(nil, "OVERLAY")
     SetFont(summary, "small")
     summary:SetPoint("RIGHT", search.frame, "LEFT", -14, 0)
+    masterDrop = C.CreateDropdown(card, nil, MasterItems, MasterSelected, 230, 22)
+    masterDrop:SetPoint("RIGHT", summary, "LEFT", -14, 0)
 
     -- column titles, then the list
     headStrip = CreateFrame("Frame", nil, card.content)

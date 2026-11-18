@@ -23,7 +23,7 @@ local function Positions()
     return s.framePos
 end
 
--- opts: name, title, width, height, point = { point, x, y } (default CENTER), strata
+-- opts: name, title, width, height, point = { point, x, y } (default CENTER), strata, growDown (save the top-left corner)
 function Shell.Create(opts)
     local Window = NSI.UI and NSI.UI.Window
     if not Window then return nil end
@@ -52,6 +52,10 @@ function Shell.Create(opts)
 
     f:HookScript("OnMouseUp", function(self)
         local p, _, rp, x, y = self:GetPoint(1)
+        if opts.growDown and self:GetLeft() then
+            -- windows that change height keep their top-left corner still, so they always grow downward
+            p, rp, x, y = "TOPLEFT", "BOTTOMLEFT", self:GetLeft(), self:GetTop()
+        end
         if p then Positions()[opts.name] = { p, rp, x, y } end
     end)
     f:HookScript("OnHide", function(self) if not self.silent then self.dismissed = true end end)

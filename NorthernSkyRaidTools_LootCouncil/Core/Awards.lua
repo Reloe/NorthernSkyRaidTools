@@ -24,6 +24,7 @@ function Awards.Award(dropID, winner, reason, opts)
         response = resp and resp.response, source = opts.source or "council", upgrade = opts.upgrade,
         council = LC.Awards.CouncilSnapshot(dropID),
     })
+    if ok then Awards.AnnounceAward(dropID) end
     return ok
 end
 
@@ -69,6 +70,18 @@ function Awards.Line(dropID)
     if not a then return nil end
     local r = a.reason and LC.Ruleset.ResponseById(a.reason)
     return string.format("%s -> %s (%s)", Awards.ItemText(dropID), LC.Roster.ShortName(a.winner), r and LC.Loc(r.text) or a.reason or "?")
+end
+
+-- Tell the raid who got the item: "Loot Council: <item> -> Player (Reason)". Raid chat follows the ruleset's chat
+-- announce setting; a test or the preview prints to your own chat instead of the group's.
+function Awards.AnnounceAward(dropID)
+    local line = Awards.Line(dropID)
+    if not line then return end
+    local text = string.format(LC.Loc("Loot Council: %s"), line)
+    if LC.Preview or (LC.Sim and LC.Sim.loopback) then LC.Print(text) return end
+    local rs = LC.Ruleset.Get()
+    if rs and rs.chatAnnounce == false then return end
+    LC.Comms.Chat(text)
 end
 
 -- Tell the raid an award changed, then the new award line. Raid chat follows the ruleset's chat announce setting;

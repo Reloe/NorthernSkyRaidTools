@@ -1,12 +1,14 @@
 ## Interface: 120105
-## Title: Northern Sky Raid Tools - Loot Council UI
+## Title: |cFF00FFFFNorthern Sky Raid Tools - Loot Council UI|r
 ## Notes: Council windows for the loot council. Loaded on demand by the Loot Council module.
-## Author: Northern Sky
+## Author: Reloe, Rav
 ## Version: @project-version@
+## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Dependencies: NorthernSkyRaidTools_LootCouncil, NorthernSkyRaidTools_Kit
 ## OptionalDeps: NorthernSkyRaidTools_UI
 ## LoadOnDemand: 1
 ## AllowLoadGameType: standard
+## Category: Dungeons & Raids
 
 UI\PlayerHistory.lua
 UI\VotingFrame.lua

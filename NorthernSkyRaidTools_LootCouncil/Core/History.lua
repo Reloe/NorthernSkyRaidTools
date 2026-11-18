@@ -9,6 +9,7 @@
 --  Entry (v2):
 --    id, itemID, item (item string with bonus IDs), difficulty, encounterID, boss, kill (kill time), time (awarded)
 --    winner, reason, response, source, by (who awarded), council (votes at the award), votes = { for, total }
+--    lm      bonus rolls only: the loot master (raid leader) of the session it was rolled in; awards use `by`
 --    holder  who held the item when it was awarded (the one who has to trade it)
 --    trade   { to, by, at, item } the trade that delivered it: who received it, who traded it, when, and the
 --            exact item string that left the trade window. nil until it is traded.
@@ -72,7 +73,7 @@ function History.Sanitize(e)
         id = e.id, itemID = itemID, item = ItemString(e.item), difficulty = Num(e.difficulty), encounterID = Num(e.encounterID),
         boss = Str(e.boss, 60), kill = Num(e.kill), time = Num(e.time), winner = Str(e.winner), reason = Str(e.reason, 40),
         response = Str(e.response, 40), source = Str(e.source, 20), by = Str(e.by), holder = Str(e.holder), upd = Num(e.upd),
-        class = Str(e.class, 20), reasonText = Str(e.reasonText, 40),
+        class = Str(e.class, 20), reasonText = Str(e.reasonText, 40), lm = Str(e.lm),
     }
     if type(e.trade) == "table" then
         out.trade = { to = Str(e.trade.to), by = Str(e.trade.by), at = Num(e.trade.at), item = ItemString(e.trade.item) }

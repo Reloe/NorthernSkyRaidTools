@@ -306,11 +306,20 @@ function Items.AllowedClasses(item)
 end
 
 -- ---- game-API side of the rules -------------------------------------------------------------------------
+-- A tier token is a Miscellaneous item with no armor type of its own; Season.tokenArmor says which armor it stands for
+-- (1 cloth .. 4 plate). nil for anything else, omni tokens included.
+function Items.TokenArmorType(itemID)
+    local list = LC.Season and LC.Season.tokenArmor
+    return itemID and list and list[itemID] or nil
+end
+
 -- Can this class use the drop? item is an item ID, a link or an item string. true / false / nil (cannot tell).
 function Items.UsableBy(classToken, item)
     if not (classToken and item) then return nil end
     local itemID, _, _, equipLoc, _, classID, subClassID = C_Item.GetItemInfoInstant(item)
     if not itemID then return nil end
+    local tokenType = Items.TokenArmorType(itemID)
+    if tokenType then classID, subClassID = 4, tokenType end      -- a token is judged like the armor it turns into
     local stats
     if classID == 2 and C_Item.GetItemStats then
         local ok, got = pcall(C_Item.GetItemStats, type(item) == "number" and ("item:" .. item) or item)

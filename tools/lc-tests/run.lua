@@ -197,6 +197,17 @@ do
     eq(H.SlotsOverlap(nil, { [1] = true }), false, "unknown slot")
 end
 
+-- Tier tokens are judged by the armor type they stand for (Season.tokenArmor)
+do
+    local I = LC.Items
+    local saved = LC.Season
+    LC.Season = { tokenArmor = { [1] = 1, [2] = 2 } }
+    eq(I.TokenArmorType(1), 1, "token armor type from season data"); eq(I.TokenArmorType(99), nil, "unlisted item has none")
+    eq(I.Judge("PRIEST", { classID = 4, subClassID = 2, equipLoc = "" }), false, "priest cannot use a leather token")
+    eq(I.Judge("ROGUE", { classID = 4, subClassID = 2, equipLoc = "" }), true, "rogue can use a leather token")
+    LC.Season = saved
+end
+
 -- Bonus roll entries
 do
     local B, H = LC.BonusRoll, LC.History
@@ -210,6 +221,8 @@ do
     local old = B.Build("Raider-R", dec, { encounterID = 1, difficulty = 16, killTime = 1, name = "Old" }, 1000000, nil)
     eq(old.boss, nil, "stale kill is not attached"); eq(old.kill, 1000000, "kill falls back to now")
     eq(B.Build(nil, dec, fresh, 1000), nil, "no player, no entry")
+    eq(B.Build("Raider-R", dec, fresh, 1000, "MAGE", "Lead-R").lm, "Lead-R", "bonus roll records the loot master")
+    eq(H.Sanitize(B.Build("Raider-R", dec, fresh, 1000, "MAGE", "Lead-R")).lm, "Lead-R", "loot master survives sanitising")
 end
 
 -- Ruleset

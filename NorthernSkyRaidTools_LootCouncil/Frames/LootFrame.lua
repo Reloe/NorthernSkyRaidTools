@@ -175,7 +175,7 @@ end
 function LootFrame.Build()
     if frame or not (NSI.UI and NSI.UI.Window) then return end
     frame = Shell().Create({ name = "NSLCLootFrame", title = LC.Loc("Loot Council"), width = WIDTH, height = 120,
-        point = { "TOP", 0, -140 } })
+        point = { "TOP", 0, -140 }, growDown = true })
     frame:SetResizable(false)                       -- draggable only: no size grip
     if frame.resizeGrip then frame.resizeGrip:Hide(); frame.resizeGrip:EnableMouse(false) end
     bar = NSI.UI.Components.CreateProgressBar(frame, 100, BAR_H)
@@ -198,6 +198,14 @@ function LootFrame.Build()
     chipFrame:SetMovable(true)
     chipFrame:SetScript("OnDragStart", chipFrame.StartMoving)
     chipFrame:SetScript("OnDragStop", chipFrame.StopMovingOrSizing)
+    -- The chip has no window OnUpdate to watch the clock while the window is hidden, so it ticks itself.
+    local chipAcc = 0
+    chipFrame:SetScript("OnUpdate", function(_, dt)
+        chipAcc = chipAcc + dt
+        if chipAcc < 0.5 then return end
+        chipAcc = 0
+        UpdateBar()
+    end)
     chipFrame:Hide()
 end
 
@@ -299,11 +307,12 @@ function LootFrame.Refresh()
     local unanswered = #pending
     local total = #pending + #voted
     if total == 0 then Shell().Hide(frame); chipFrame:Hide() return end
-    if expired and not reopened then
-        -- time is up: nothing left to answer, so the window closes (a reopened one stays, with locked buttons)
-        if not autoClosed then Shell().Hide(frame) end
+    if expired then
+        -- time is up: nothing can be answered any more, so the window closes for good, even a reopened one
+        Shell().Hide(frame)
         autoClosed, frame.dismissed = true, true
         chipFrame:Hide()
+        if flyout then flyout:Hide() end
         return
     end
     if unanswered > 0 then
@@ -400,6 +409,13 @@ function LootFrame.Refresh()
         votedCard:Hide()
     end
     for i = shown + 1, #rows do rows[i].card:Hide() end
+    -- Grow downward: pin the top-left corner first, so a changed height never moves the top edge
+    -- (a row answered away makes the next one slide up instead of the window re-centering).
+    if frame:IsShown() and frame:GetLeft() and not (IsMouseButtonDown("LeftButton") and frame:IsMouseOver()) then
+        local l, t = frame:GetLeft(), frame:GetTop()
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", l, t)
+    end
     frame:SetHeight(-top + 4)
     if Shell().Show(frame) then
         chipFrame:Hide()
@@ -411,7 +427,7 @@ function LootFrame.Refresh()
 end
 
 function LootFrame.Reopen()
-    if not (frame and chipFrame) then return end
+    if not (frame and chipFrame) or expired then return end    -- nothing to answer once the time is up
     chipFrame:Hide()
     autoClosed, reopened = false, true
     Shell().Reopen(frame)

@@ -166,7 +166,7 @@ local function BuildOptions()
         end,
     })
     add(RulesetToggle("anonymous", "Anonymous voting", "Hide who each council member voted for."))
-    add(RulesetToggle("chatAnnounce", "Announce in raid chat", "A raid chat line when the council is turned on, and when an award is changed to another player."))
+    add(RulesetToggle("chatAnnounce", "Announce in raid chat", "A raid chat line when the council is turned on, for every award (item, winner and reason), and when an award is changed to another player."))
     add({
         type = "range", name = "Response time (seconds)", desc = "How long raiders have to answer.",
         get = function() local r = Ruleset(); return r and r.timeout or 60 end,

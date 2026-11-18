@@ -88,6 +88,34 @@ LC.Season = {
         [270929] = "CHEST",    -- Venomforged Icon
     },
 
+    -- Armor type of each tier token (Enum.ItemArmorSubclass: 1 cloth, 2 leather, 3 mail, 4 plate). A token has no armor
+    -- type of its own in the game data (it is a Miscellaneous item), so this is what lets a class that cannot wear that
+    -- armor auto-pass it. Same 4 tokens per slot as above: woven = cloth, cured = leather, cast = mail, forged = plate.
+    -- An omni token (Ula'tek's curio) or a token not listed here is never judged, so it stays usable by everyone.
+    -- Add the new tokens here every season.
+    tokenArmor = {
+        [270910] = 1, -- Venomwoven Idol (cloth)
+        [270911] = 2, -- Venomcured Idol (leather)
+        [270912] = 3, -- Venomcast Idol (mail)
+        [270913] = 4, -- Venomforged Idol (plate)
+        [270914] = 1, -- Venomwoven Effigy (cloth)
+        [270915] = 2, -- Venomcured Effigy (leather)
+        [270916] = 3, -- Venomcast Effigy (mail)
+        [270917] = 4, -- Venomforged Effigy (plate)
+        [270918] = 1, -- Venomwoven Relic (cloth)
+        [270919] = 2, -- Venomcured Relic (leather)
+        [270920] = 3, -- Venomcast Relic (mail)
+        [270921] = 4, -- Venomforged Relic (plate)
+        [270922] = 1, -- Venomwoven Remnant (cloth)
+        [270923] = 2, -- Venomcured Remnant (leather)
+        [270924] = 3, -- Venomcast Remnant (mail)
+        [270925] = 4, -- Venomforged Remnant (plate)
+        [270926] = 1, -- Venomwoven Icon (cloth)
+        [270927] = 2, -- Venomcured Icon (leather)
+        [270928] = 3, -- Venomcast Icon (mail)
+        [270929] = 4, -- Venomforged Icon (plate)
+    },
+
     -- ---- 3. Weapons convertible to another main stat ------------------------------------------------------
     -- Only needed for the odd weapon that can be turned into a different main stat after it drops, which the stats on
     -- the dropped item cannot show: [itemID] = { "ITEM_MOD_INTELLECT_SHORT", ... } = the stat(s) it can become.

@@ -16,8 +16,9 @@ LC.BonusRoll = BonusRoll
 local type = type
 local KILL_WINDOW = 30 * 60        -- a bonus roll belongs to the kill that happened in the last half hour
 
--- Pure: the history entry for one bonus roll. dec = Items.Decode(link), cur = Loot.Current() or nil.
-function BonusRoll.Build(me, dec, cur, now, class)
+-- Pure: the history entry for one bonus roll. dec = Items.Decode(link), cur = Loot.Current() or nil,
+-- lm = the loot master (raid leader) whose session it was rolled in, so the history can filter by loot master.
+function BonusRoll.Build(me, dec, cur, now, class, lm)
     if not (me and dec and dec.itemID) then return nil end
     local fresh = cur and cur.killTime and (now - cur.killTime) <= KILL_WINDOW
     return {
@@ -27,7 +28,7 @@ function BonusRoll.Build(me, dec, cur, now, class)
         encounterID = fresh and cur.encounterID or nil, boss = fresh and cur.name or nil,
         kill = fresh and cur.killTime or now, time = now,
         winner = me, holder = me, class = class, reason = "bonus", reasonText = LC.Loc("Bonus roll"),
-        source = "bonus", upd = now,
+        source = "bonus", lm = lm, upd = now,
     }
 end
 
@@ -44,7 +45,7 @@ local function OnResult(_, typeIdentifier, itemLink)
     if not (LC.Ruleset.IsActive() and IsInRaid()) then return end
     local me = LC.Roster.MyKey()
     local dec = me and LC.Items.Decode(itemLink)
-    local rec = dec and BonusRoll.Build(me, dec, LC.Loot.Current(), GetServerTime(), LC.Roster.ClassOf(me))
+    local rec = dec and BonusRoll.Build(me, dec, LC.Loot.Current(), GetServerTime(), LC.Roster.ClassOf(me), LC.Ruleset.Leader())
     if not rec then return end
     if Store(rec) then LC.Comms.Send("BONUS", rec, "RAID") end
 end
@@ -59,5 +60,6 @@ function BonusRoll.Receive(d, sender)
     local rec = LC.History.Sanitize(d)
     if not rec or rec.source ~= "bonus" or rec.winner ~= sender then return end
     rec.reason, rec.holder, rec.by, rec.audit, rec.council, rec.trade, rec.void = "bonus", sender, nil, nil, nil, nil, nil
+    rec.lm = LC.Ruleset.Leader()           -- our own view of whose session this is, not the sender's claim
     Store(rec)
 end

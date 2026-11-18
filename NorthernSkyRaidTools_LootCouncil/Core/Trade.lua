@@ -204,6 +204,11 @@ function Trade.Complete(dropID, to, link)
     return true
 end
 
+-- Seconds between items put into the trade window. Picking up and clicking a slot in the same frame, six
+-- times over, leaves items stuck on the cursor; the client needs a moment to finish each placement.
+local PLACE_DELAY = 0.5
+local placeGen = 0
+
 local function OnTradeShow()
     open = true
     local pname = LC.Compat.TradePartner()
@@ -211,14 +216,15 @@ local function OnTradeShow()
     wipe(offered)
     bothAccepted = false
     bagsBefore = Trade.CountByItem()
-    local slot, used = 1, {}
+    placeGen = placeGen + 1
+    local gen = placeGen
+    local slot, used, todo = 1, {}, {}
     for _, q in ipairs(Trade.queue) do
         if q.state == "waiting" and q.player == partner and slot <= 6 then
             local bag, bslot, _, _, link = Trade.FindInBags(q.itemID, q.difficulty, q.item, used)
             if bag then
                 used[bag .. ":" .. bslot] = true
-                LC.Compat.PickupBagItem(bag, bslot)
-                LC.Compat.ClickTradeSlot(slot)
+                todo[#todo + 1] = { q = q, bag = bag, bslot = bslot, slot = slot, link = link }
                 q.state, q.slot = "placed", slot
                 q.from = { bag = bag, slot = bslot, link = link }
                 slot = slot + 1
@@ -227,6 +233,20 @@ local function OnTradeShow()
                 LC.Print(string.format(LC.Loc("Could not find %s in your bags."), tostring(q.itemID)))
             end
         end
+    end
+    -- Place one item every PLACE_DELAY seconds (the first straight away). A trade that closed, or a newer
+    -- trade window, cancels the rest; whatever was not placed is put back to waiting.
+    for i, t in ipairs(todo) do
+        local function place()
+            if LC.dead or gen ~= placeGen or not open then
+                if t.q.state == "placed" then t.q.state, t.q.slot, t.q.from = "waiting", nil, nil end
+                return
+            end
+            LC.Compat.PickupBagItem(t.bag, t.bslot)
+            LC.Compat.ClickTradeSlot(t.slot)
+            if i == #todo then ClearCursor() end
+        end
+        if i == 1 then place() else C_Timer.After((i - 1) * PLACE_DELAY, place) end
     end
     LC.Fire("NSRT_LC_TRADES_CHANGED")
 end
