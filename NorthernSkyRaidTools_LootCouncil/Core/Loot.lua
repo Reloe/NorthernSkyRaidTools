@@ -149,10 +149,26 @@ function Loot.Stage(drops)
     end
 end
 
+-- Why this client is not the loot master, for the chat line under "Only the loot master can start a session."
+function Loot.WhyNotML()
+    local R = LC.Ruleset
+    local cur = R.current
+    local me, lead = LC.Roster.MyKey(), LC.Roster.Leader()
+    local why
+    if not IsInRaid() then why = "you are not in a raid group"
+    elseif not cur then why = "no loot council answer for this raid yet (answer the prompt or use /ns options)"
+    elseif not cur.active then why = "the loot council is switched off for this raid"
+    elseif cur.leader ~= me then why = "the council's leader is not you"
+    else why = "you are the loot master" end
+    return string.format("(%s) me=%s | raid leader=%s | council leader=%s | state=%s", why, tostring(me), tostring(lead),
+        tostring(cur and cur.leader), LC.State.Name())
+end
+
 -- Start a session from the queue (Session Setup "Start"). Excluded items are dropped.
 function Loot.StartSession()
     if not (LC.Ruleset.IsActive() and LC.Ruleset.IAmML()) then
         LC.Print(LC.Loc("Only the loot master can start a session."))
+        LC.Print(Loot.WhyNotML())
         return false
     end
     if LC.Session.IsOpen() and not LC.Preview then

@@ -14,7 +14,7 @@ local ADDON, LC = ...
 local Preview = {}
 LC.Preview_ = Preview          -- LC.Preview itself is the on/off flag read by the rest of the module
 
-local FRAMES = { "NSLCLootFrame", "NSLCSessionBar", "NSLCTradePrompt", "NSLCVotingFrame", "NSLCTradesFrame",
+local FRAMES = { "NSLCLootFrame", "NSLCSessionBar", "NSLCVotingFrame", "NSLCTradesFrame",
     "NSLCHistoryFrame", "NSLCResponseEditor", "NSLCSetupFrame", "NSLCLootChip", "NSLCNoteFlyout" }
 
 -- Real item ids so tooltips resolve.
@@ -179,7 +179,7 @@ end
 
 local function Frames()
     if not LC.EnsureKit() then LC.Print(LC.Loc("The UI kit could not be loaded.")) return false end
-    for _, name in ipairs({ "LootFrame", "SessionBar", "TradePrompt", "SetupFrame" }) do
+    for _, name in ipairs({ "LootFrame", "SessionBar", "SetupFrame" }) do
         local f = LC.Frames[name]
         if f and f.Build then f.Build() end
     end
@@ -215,7 +215,6 @@ function Preview.Run(arg)
     else
         LC.Frames.LootFrame.Reopen()
         LC.Frames.SessionBar.Refresh()
-        LC.Frames.TradePrompt.Refresh()
         LC.Frames.SetupFrame.Open()
         LC.UI.VotingFrame.Open()
         LC.Print(LC.Loc("Preview on. Also try: /ns lc preview setup | council | loot | trades | history | responses | lead | stop"))

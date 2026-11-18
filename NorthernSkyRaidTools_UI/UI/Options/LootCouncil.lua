@@ -61,9 +61,43 @@ local function RulesetToggle(key, name, desc)
     }
 end
 
+-- Green / red dot: is the loot council running for the group you are in right now (armed = the raid leader said
+-- yes and their ruleset is applied). The reason after a red dot says what is missing.
+local DOT_ON, DOT_OFF = "|TInterface\\COMMON\\Indicator-Green:16|t", "|TInterface\\COMMON\\Indicator-Red:16|t"
+local function CouncilStatusText()
+    local lc = LC()
+    if lc and not lc.dead and lc.State.IsArmed() then
+        return DOT_ON .. " |cff33ff66" .. NSI:Loc("Loot council is active for this raid group") .. "|r"
+    end
+    local why
+    if not lc or lc.dead then why = "the loot council is switched off"
+    elseif not IsInRaid() then why = "you are not in a raid group"
+    elseif lc.Roster.IsLeader(lc.Roster.MyKey()) then why = "use \"Use for this raid\" below"
+    else why = "the raid leader has not turned it on" end
+    return DOT_OFF .. " |cffff4040" .. NSI:Loc("Loot council is inactive for this raid group") .. "|r |cff999999(" .. NSI:Loc(why) .. ")|r"
+end
+
+-- The tab is built once, so keep the status line current while the tab is open.
+local statusTicker
+local function KeepStatusFresh()
+    if statusTicker then return end
+    statusTicker = C_Timer.NewTicker(0.5, function()
+        local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
+        local frame = menu and menu.CurrentName and menu.AllFramesByName and menu.AllFramesByName[menu.CurrentName]
+        if not (frame and frame.widget_list and frame:IsVisible()) then return end
+        for _, w in ipairs(frame.widget_list) do
+            if w._get == CouncilStatusText then w:SetText(CouncilStatusText()) end
+        end
+    end)
+end
+
 local function BuildOptions()
     local O = {}
     local function add(t) O[#O + 1] = t end
+
+    add({ type = "label", get = CouncilStatusText })
+    KeepStatusFresh()
+    add({ type = "break" })
 
     add({ type = "label", get = function() return "Loot Council" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") })
     add({

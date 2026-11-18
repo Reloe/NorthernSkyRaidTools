@@ -184,6 +184,15 @@ function Compat.InTradeRange(unit)
     return nil
 end
 
+-- Trade distance (CheckInteractDistance index 2) without the combat guard of InTradeRange, so the trade window can
+-- tell "close enough but in combat" from "too far". true / false, or nil when the game will not say.
+function Compat.TradeRange(unit)
+    if not unit then return nil end
+    local ok, r = pcall(CheckInteractDistance, unit, 2)
+    if ok and not (issecretvalue and issecretvalue(r)) then return r and true or false end
+    return nil
+end
+
 function Compat.Initiate(unit)
     if InCombatLockdown() then return false end
     return pcall(InitiateTrade, unit)

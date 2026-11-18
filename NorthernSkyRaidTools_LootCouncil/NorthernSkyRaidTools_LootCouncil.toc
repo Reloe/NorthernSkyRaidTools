@@ -39,4 +39,3 @@ Frames\Shell.lua
 Frames\SetupFrame.lua
 Frames\LootFrame.lua
 Frames\SessionBar.lua
-Frames\TradePrompt.lua

@@ -53,6 +53,7 @@ function Sim.Status()
     local S = LC.Session.state
     local function yn(v) return v and "yes" or "no" end
     LC.Print(string.format("Queue: %d waiting", LC.Queue.Count()))
+    LC.Print(LC.Loot.WhyNotML and ("Loot master check: " .. LC.Loot.WhyNotML()) or "")
     LC.Print(string.format("State %s | preview %s | test %s | kit %s | windows %s | ruleset %s",
         LC.State.Name(), yn(LC.Preview), yn(Sim.loopback), yn(C_AddOns.IsAddOnLoaded("NorthernSkyRaidTools_Kit")),
         yn(LC.UI.Loaded), yn(LC.Ruleset.IsActive())))

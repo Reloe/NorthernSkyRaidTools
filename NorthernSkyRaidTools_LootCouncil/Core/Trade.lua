@@ -67,6 +67,29 @@ function Trade.Refresh()
     end
 end
 
+-- ---- opening a trade from the Trades window ---------------------------------------------------------
+-- State of the "Trade" link for a queue entry: "ready" (in range, can open the window), "combat" (in range but
+-- you are in combat, so the game will not open a trade), "far" (out of range, offline, or not in your group).
+-- The reason text is for the tooltip / chat.
+function Trade.RangeState(q)
+    local key = q and q.player
+    local unit = key and LC.Roster.Unit(key)
+    if not unit or not LC.Roster.IsOnline(key) then return "far", "not in your group or offline" end
+    if LC.Compat.TradeRange(unit) ~= true then return "far", "out of trade range" end
+    if InCombatLockdown() then return "combat", "you cannot open a trade in combat" end
+    return "ready"
+end
+
+-- Open the trade window with the entry's player. The items are placed by OnTradeShow once the window opens.
+-- Returns true when the request went out, otherwise false and the reason.
+function Trade.Open(q)
+    local state, why = Trade.RangeState(q)
+    if state ~= "ready" then return false, why end
+    local ok = LC.Compat.Initiate(LC.Roster.Unit(q.player))
+    if not ok then return false, "the trade could not be opened" end
+    return true
+end
+
 -- Find the bag slot for itemID at difficulty. Among copies that match those two, the one whose bonus IDs
 -- best match wantItem (the drop's item string) wins; with no wantItem the first copy is used. `skip` is a
 -- set of "bag:slot" already picked in this pass. Returns bag, slot, secondsLeft, score (2 = same bonus IDs,
@@ -233,8 +256,12 @@ local function OnTradeClosed()
                 else
                     q.state = "done"
                     if q.slot then recorded[q.slot] = true end
+                    local sent = snap[q.slot or 0] or (q.from and q.from.link)
+                    -- A queue entry made by hand (import) has no drop: find the awarded drop it delivered, so the
+                    -- history records the trade too.
+                    if not q.dropID and sent and LC.Session.state then q.dropID = Trade.MatchDrop(sent, q.player) end
                     if q.dropID and LC.Session.state then
-                        Trade.Complete(q.dropID, q.player, snap[q.slot or 0] or (q.from and q.from.link))
+                        Trade.Complete(q.dropID, q.player, sent)
                     end
                 end
             end
@@ -274,6 +301,19 @@ function Trade.ReceiveDone(d, sender)
     end
     LC.Fire("NSRT_LC_TRADES_CHANGED")
 end
+
+-- When a session ends and I still hold items to hand out, open the Trades window (the one place trades are listed).
+local lastAutoOpen = 0
+LC.On("NSRT_LC_SESSION_CLOSED", function()
+    if LC.Preview or (LC.Sim and LC.Sim.loopback) then return end
+    local waiting = false
+    for _, q in ipairs(Trade.queue) do if q.state == "waiting" then waiting = true break end end
+    if not waiting then return end
+    local now = GetTime()
+    if now - lastAutoOpen < 2 then return end          -- Clear fires this event again right after Close
+    lastAutoOpen = now
+    if LC.EnsureUI() and LC.UI.TradesFrame then LC.UI.TradesFrame.Open() end
+end)
 
 function Trade.Enable()
     LC.Events.SetGroup("trade", { TRADE_SHOW = OnTradeShow, TRADE_CLOSED = OnTradeClosed,

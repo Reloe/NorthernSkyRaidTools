@@ -16,7 +16,7 @@ strtrim = function(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
 date = os.date
 _G.UIParent = D; _G.GameTooltip = D; _G.UISpecialFrames = {}
 CreateFrame = function() return D end
-C_Timer = { After = function(_, f) end, NewTimer = function() return { Cancel = function() end } end }
+C_Timer = { After = function(_, f) end, NewTimer = function() return { Cancel = function() end } end, NewTicker = function() return { Cancel = function() end } end }
 GetServerTime = function() return os.time() end
 GetTime = function() return os.clock() end
 UnitName = function() return "Tester" end
